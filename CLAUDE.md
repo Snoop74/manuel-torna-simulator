@@ -17,6 +17,11 @@
 - **Yük modeli:** freze'deki gibi ~1 mm yol penceresinde ortalanır; talaş = f/f_önerilen, yük = talaş × (kavrama genişliği / ap). Vc kalem ucunun çapında hesaplanır. Ra = f²/(8rε) (düşük Vc'de ×2.5). Diş pasosunda yük = V kesit artışı / 0.45 mm².
 - **İş emirleri:** `JOBS` Z değerleri bitmiş alına göre (Z0 alın, Z− aynaya). `targets(J)` hedef profili üretir; muayene, puan (70/15/15), yıldız ve teknik resim freze ile aynı mantıkta.
 
+- **Parça verisi:** `extractPiece(i0,i1)` profil, iz ve helis kutularını kopyalar; `mountPiece(d, flip, stick)` geri yazar (ters çevirmede helis fazı u' = −u + c ile yeniden eşlenir). `startIdx/endIdx` malzemenin sınırları; parça a=0'dan başlamak zorunda değil. Çeneler `buildJaws(r)` ile tutulan çapa kapanır.
+- **Parça masası:** ayrı WebGLRenderer (`bench`), yarım kesit için clipping plane + ShapeGeometry kesit kapağı, kumpas/mikrometre raycast ile istasyon okur.
+- **Üst kızak:** U ekseni hareketi `um·cos(α)` Z'ye, `−um·sin(α)` X'e dağıtılır.
+- **Esneme:** `deflection()` ankastre kiriş δ = F·x³/(3EI) + narinlik terimi; döner punta (G4, punta deliği gerekir) oturunca çok azalır. Kesimde profil δ kadar az kesilir, Ra büyür, δ > 0.35 kırar.
+
 ## Test etme
 
 Preview'de `file://` sayfaları çalışmıyor; `python -m http.server` ile servis edip açın. Fizik testleri için geçici olarak `window.__T = { S, motion, ... }` açığa çıkarıp `motion(1/60)`'ı döngüde çağırmak en güvenilir yol (preview sekmesi kare hızını düşürüyor). Yayınlamadan önce kancayı silin.
@@ -24,6 +29,5 @@ Preview'de `file://` sayfaları çalışmıyor; `python -m http.server` ile serv
 ## Sıradaki fikirler
 
 - Kumpas / mikrometre ile ölçme, komparatör
-- Konik tornalama (üst kızak açısı), tırtıl çekme, punta ile destekleme (uzun parça titreşimi)
-- İç diş, kesilen parçanın muayenesi (pul/burç işleri)
+- Tırtıl çekme, iç diş, yumuşak çene (işlenmiş yüzeyde iz bırakmadan bağlama)
 - Takım aşınması ve el çarkı boşluğu (usta modu)

@@ -13,7 +13,11 @@ Tarayıcıda çalışan, 3B bir manuel torna tezgâhı simülasyonu ve oyunu. Te
 - **Kontrol:** taşıyıcı (Z), enine kızak (X, çap okur) ve gelincik kovanı (W) için el çarkları, klavye, otomatik boyuna/enine ilerleme (mm/dev), Z durdurucu, dijital okuma (DRO).
 - **Kesme fiziği:** talaş kalınlığı, kalem yükü, birikerek dolan zorlanma göstergesi; çapa göre değişen kesme hızı (Vc); ilerlemeye bağlı yüzey pürüzlülüğü (Ra); ayna, çene, gelincik ve tutucu çarpışmaları; matkapta gagalama ve punta kontrolü.
 - **Soğutma ve partiküller:** eklemli hortum, dönen parçadan savrulan sıvı, buğu, spiral talaşlar, kırılma kıvılcımları, ısınma dumanı.
-- **İş emirleri:** teknik resim ve tablo, parça üstünde hedef profil çizgisi, teslimde muayene (çap, boy, omuz, pah, kanal, delik, diş, Ra) ve 1–3 yıldızla puanlama. Beş görevlik kampanya: alın ve çap, kademeli mil, kanal ve pah, delik ve bara, M20 cıvata.
+- **Parça masası:** kesilen ya da aynadan sökülen parçalar ayrı bir masada döndürülerek incelenir; yarım kesit, dış/iç çap için kumpas (0.02 mm), boy ölçümü ve mikrometre (0.01 mm). Parça buradan aynaya düz ya da ters bağlanır.
+- **Ters bağlama:** parçanın profili, deliği ve diş helisi çevrilerek seçilen çıkıntıyla aynaya bağlanır; çeneler çapa göre kapanır.
+- **Konik tornalama:** açısı ayarlanan üst kızak (U ekseni) ve kendi el çarkı; D-d-L'den açı hesabı.
+- **Uzun parça:** Ø30 × 180 çubuk ve döner punta. Kesme kuvveti narin parçayı esnetir; puntasız tornalanan uzun parça konik çıkar ve tırlama yapar.
+- **İş emirleri:** teknik resim ve tablo, parça üstünde hedef profil çizgisi, teslimde muayene (çap, boy, omuz, pah, kanal, delik, diş, koni, Ra) ve 1–3 yıldızla puanlama. Dokuz görev: alın ve çap, kademeli mil, kanal ve pah, delik ve bara, M20 cıvata, konik pim, pul (kesilen parça muayene edilir), burç (ters bağlama), uzun mil (punta desteği).
 
 ## Kısayollar
 
@@ -22,6 +26,7 @@ Tarayıcıda çalışan, 3B bir manuel torna tezgâhı simülasyonu ve oyunu. Te
 | ← → | Z ekseni (taşıyıcı) |
 | ↑ ↓ | X ekseni (enine kızak) |
 | PgUp / PgDn | W gelincik kovanı |
+| Home / End | U üst kızak |
 | Shift | Hızlı hareket |
 | Boşluk | Mil start / stop |
 | 1–4 | Kol adımı 0.01 / 0.1 / 1 / 10 mm |

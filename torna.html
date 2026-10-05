@@ -242,6 +242,31 @@ table{color:inherit;font-size:inherit}
 .jog-l button:active,.jog-l button.hold{background:var(--paint);border-color:#8fb3aa}
 .jog-l .hold-btn{background:#3a2a10;border-color:var(--safety);color:var(--safety);font-size:11px;letter-spacing:.06em}
 .drawing{left:auto;right:14px;top:56px;bottom:auto;max-height:calc(100% - 70px)}
+.wheels.w4{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.jog-l{grid-template-columns:repeat(3,1fr) 8px 1fr 1fr !important}
+.jog-l .span2{grid-column:span 2}
+.taper{display:grid;grid-template-columns:auto 1fr auto;gap:6px;align-items:center;font-size:12.5px;color:var(--muted)}
+.taper input{width:100%;min-width:0;background:var(--panel-2);border:1px solid var(--line);border-radius:4px;padding:5px 6px;font-family:var(--f-dro);color:var(--fg)}
+.pendant select{width:100%;background:var(--panel-2);border:1px solid var(--line);border-radius:4px;padding:6px 8px;color:var(--fg)}
+/* Parça masası */
+.bench{position:fixed;inset:0;z-index:20;background:rgba(6,10,12,.72);display:grid;place-items:center;padding:16px}
+.bench-box{background:var(--panel);border:1px solid var(--line);border-radius:8px;width:min(1180px,100%);height:min(760px,100%);display:grid;grid-template-rows:auto minmax(0,1fr);overflow:hidden}
+.bench-head{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--line)}
+.bench-head b{font-family:var(--f-display);letter-spacing:.12em}
+.bench-head span{color:var(--muted);font-size:12.5px;flex:1;min-width:0}
+.bench-body{display:grid;grid-template-columns:minmax(0,1fr) 330px;min-height:0}
+.bench-view{position:relative;min-width:0;min-height:0;background:radial-gradient(120% 100% at 50% 30%,#2a3236 0%,#141a1c 75%)}
+.bench-view canvas{display:block;width:100%;height:100%;touch-action:none}
+.bench-read{position:absolute;pointer-events:none;background:#0b100f;border:1px solid var(--vfd-dim);color:var(--vfd);font-family:var(--f-dro);font-size:20px;padding:3px 9px;border-radius:4px;transform:translate(-50%,-120%);white-space:nowrap;text-shadow:0 0 8px color-mix(in srgb,var(--vfd) 45%,transparent)}
+.bench-hint{position:absolute;left:12px;bottom:10px;right:12px;font-size:12.5px;color:var(--muted);pointer-events:none}
+.bench-side{border-left:1px solid var(--line);padding:12px 14px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;min-width:0}
+.bench-list{display:grid;gap:6px}
+.bench-list button{display:grid;grid-template-columns:1fr auto;gap:2px 8px;text-align:left;background:var(--panel-2);border:1px solid var(--line);border-radius:5px;padding:6px 9px}
+.bench-list button.active{border-color:var(--safety);box-shadow:inset 0 0 0 1px var(--safety)}
+.bench-list small{color:var(--muted);font-family:var(--f-dro);font-size:11.5px}
+#benchTools{flex-wrap:wrap}
+#benchTools button{font-family:var(--f-display);font-size:12px;padding:6px 4px;min-width:30%}
+@media (max-width:900px){.bench-body{grid-template-columns:1fr;grid-template-rows:55% auto}.bench-side{border-left:0;border-top:1px solid var(--line)}}
 .sub{font-family:var(--f-display);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 </style>
 
@@ -257,6 +282,7 @@ table{color:inherit;font-size:inherit}
       <div class="row"><span class="k">Kesme hızı Vc</span><span class="v" id="hVc">—</span></div>
       <div class="row"><span class="k">Kalem hizasında parça</span><span class="v" id="hDia">—</span></div>
       <div class="row"><span class="k">Kaleme mesafe</span><span class="v" id="hGap">—</span></div>
+      <div class="row"><span class="k">Parça esnemesi</span><span class="v" id="hDefl">—</span></div>
       <div class="row"><span class="k">Son yüzey Ra</span><span class="v" id="hRa">—</span></div>
       <div class="row"><span class="k" id="hLoadK">Talaş kalınlığı</span><span class="v" id="hLoad">—</span></div>
       <div class="row"><span class="k">Takım yükü</span><span class="v" id="hStress">kesmiyor</span></div>
@@ -326,8 +352,9 @@ table{color:inherit;font-size:inherit}
         <div class="axis"><span class="ax">X</span><output id="droX">+0.000</output><input id="setX" inputmode="decimal" placeholder="Ø" aria-label="X çap değeri ata"><button class="btn sm" data-set="x">Ata</button><button class="btn sm" data-zero="x">X0</button></div>
         <div class="axis"><span class="ax">Z</span><output id="droZ">+0.000</output><input id="setZ" inputmode="decimal" placeholder="değer" aria-label="Z değeri ata"><button class="btn sm" data-set="z">Ata</button><button class="btn sm" data-zero="z">Z0</button></div>
         <div class="axis"><span class="ax">W</span><output id="droW">+0.000</output><input id="setW" inputmode="decimal" placeholder="değer" aria-label="Gelincik değeri ata"><button class="btn sm" data-set="w">Ata</button><button class="btn sm" data-zero="w">W0</button></div>
+        <div class="axis"><span class="ax">U</span><output id="droU">+0.000</output><input id="setU" inputmode="decimal" placeholder="değer" aria-label="Üst kızak değeri ata"><button class="btn sm" data-set="u">Ata</button><button class="btn sm" data-zero="u">U0</button></div>
       </div>
-      <div class="dro-note">X kalem ucunun çapını gösterir. Z sıfırı başlangıçta ham çubuğun alnında; alın tornaladıktan sonra kalemi alna değdirip Z0'a basın. W gelincikteki matkabın ucudur (Z ile aynı sıfıra göre).</div>
+      <div class="dro-note">X kalem ucunun çapını gösterir. Z sıfırı başlangıçta ham çubuğun alnında; alın tornaladıktan sonra kalemi alna değdirip Z0'a basın. W gelincikteki takımın ucudur (Z ile aynı sıfıra göre). U üst kızağın kendi ekseni boyunca yolunu gösterir.</div>
     </div>
 
     <div class="sec">
@@ -335,10 +362,11 @@ table{color:inherit;font-size:inherit}
       <div class="seg" id="muls">
         <button data-mul="0.01" class="on">×1 · 0.01</button><button data-mul="0.1">×10 · 0.1</button><button data-mul="1">×100 · 1</button>
       </div>
-      <div class="wheels">
+      <div class="wheels w4">
         <figure><canvas id="hwz" aria-label="Taşıyıcı (Z) el çarkı"></canvas><figcaption><b>Z</b><span id="hwzv">+0.000</span></figcaption></figure>
         <figure><canvas id="hwx" aria-label="Enine kızak (X) el çarkı"></canvas><figcaption><b>X</b><span id="hwxv">+0.000</span></figcaption></figure>
         <figure><canvas id="hww" aria-label="Gelincik kovanı (W) el çarkı"></canvas><figcaption><b>W</b><span id="hwwv">+0.000</span></figcaption></figure>
+        <figure><canvas id="hwu" aria-label="Üst kızak (U) el çarkı"></canvas><figcaption><b>U</b><span id="hwuv">+0.000</span></figcaption></figure>
       </div>
       <div class="dro-note">Saat yönü artı yön: Z ve W'de aynadan uzaklaşır, X'te çap büyür. Enine kızak çarkı çap okur; bir çentik çapta 0.01 mm demek, kalem yarıçapta yarısı kadar ilerler.</div>
     </div>
@@ -377,15 +405,22 @@ table{color:inherit;font-size:inherit}
     </div>
 
     <div class="sec">
+      <h2><span>Üst kızak (konik)</span><span id="taperState">0.00°</span></h2>
+      <div class="taper"><span>Açı (°)</span><input id="tsAngIn" inputmode="decimal" value="0"><button class="btn" id="tsAngSet">Döndür</button></div>
+      <div class="taper"><span>D · d · L</span><input id="tsCalc" placeholder="40 30 30"><button class="btn" id="tsCalcBtn">Hesapla</button></div>
+      <div class="dro-note">Üst kızak döndürülünce U çarkı kalemi bu açıyla hem Z hem X'te götürür: konik tornalanır. Açı = atan((D − d) / (2·L)); örneğin Ø40'tan Ø30'a 30 mm'de 9.46°. Otomatik ilerleme üst kızağı sürmez, U elle çevrilir.</div>
+    </div>
+
+    <div class="sec">
       <h2><span>Eksen hareketi</span><span id="rapidState">ilerleme</span></h2>
       <div class="seg-label"><span>Kol adımı (mm, X'te çap)</span><span>tıkla: 1 adım · basılı tut: sürekli</span></div>
       <div class="seg" id="steps">
         <button data-step="0.01">0.01</button><button data-step="0.1">0.1</button><button data-step="1" class="on">1</button><button data-step="10">10</button>
       </div>
       <div class="jog-l" id="jog">
-        <span></span><button data-ax="x" data-dir="1" aria-label="X artı">X+</button><span></span><span></span><button data-ax="w" data-dir="1" aria-label="W geri">W+</button>
-        <button data-ax="z" data-dir="-1" aria-label="Z eksi">Z−</button><button class="hold-btn" id="feedHold">DUR</button><button data-ax="z" data-dir="1" aria-label="Z artı">Z+</button><span></span><button id="rapidBtn" class="hold-btn" style="color:var(--fg);border-color:var(--line);background:var(--panel-2)">HIZLI</button>
-        <span></span><button data-ax="x" data-dir="-1" aria-label="X eksi">X−</button><span></span><span></span><button data-ax="w" data-dir="-1" aria-label="W ileri">W−</button>
+        <span></span><button data-ax="x" data-dir="1" aria-label="X artı">X+</button><span></span><span></span><button data-ax="w" data-dir="1" aria-label="W geri">W+</button><button data-ax="u" data-dir="1" aria-label="U artı">U+</button>
+        <button data-ax="z" data-dir="-1" aria-label="Z eksi">Z−</button><button class="hold-btn" id="feedHold">DUR</button><button data-ax="z" data-dir="1" aria-label="Z artı">Z+</button><span></span><button id="rapidBtn" class="hold-btn span2" style="color:var(--fg);border-color:var(--line);background:var(--panel-2)">HIZLI</button>
+        <span></span><button data-ax="x" data-dir="-1" aria-label="X eksi">X−</button><span></span><span></span><button data-ax="w" data-dir="-1" aria-label="W ileri">W−</button><button data-ax="u" data-dir="-1" aria-label="U eksi">U−</button>
       </div>
       <div class="seg-label"><span>Simülasyon hızı</span></div>
       <div class="seg" id="sims">
@@ -413,10 +448,12 @@ table{color:inherit;font-size:inherit}
         <div class="stat"><span>Kaldırılan talaş</span><b id="stVol">0.00 cm³</b></div>
         <div class="stat"><span>Kesme süresi</span><b id="stTime">0:00</b></div>
       </div>
+      <select id="stockSel" aria-label="Ham parça"><option value="short">Ham çubuk Ø50 × 100 çıkıntı</option><option value="long">Uzun çubuk Ø30 × 180 çıkıntı</option></select>
       <div class="row2">
         <button class="btn" id="clearChips">Talaşları süpür</button>
         <button class="btn" id="newPart">Yeni ham parça</button>
       </div>
+      <button class="btn start" id="benchOpen">Parça masası: incele, ölç, ters bağla</button>
     </div>
 
     <details>
@@ -425,6 +462,7 @@ table{color:inherit;font-size:inherit}
         <kbd>← →</kbd><span>Z ekseni (taşıyıcı)</span>
         <kbd>↑ ↓</kbd><span>X ekseni (enine kızak)</span>
         <kbd>PgUp PgDn</kbd><span>W gelincik kovanı</span>
+        <kbd>Home End</kbd><span>U üst kızak</span>
         <kbd>Shift</kbd><span>basılıyken hızlı hareket</span>
         <kbd>Boşluk</kbd><span>mil start / stop</span>
         <kbd>1 2 3 4</kbd><span>kol adımı 0.01 / 0.1 / 1 / 10</span>
@@ -435,6 +473,32 @@ table{color:inherit;font-size:inherit}
       </div>
     </details>
   </aside>
+</div>
+
+<div class="bench" id="bench" hidden>
+  <div class="bench-box" role="dialog" aria-labelledby="benchHead">
+    <div class="bench-head"><b id="benchHead">PARÇA MASASI</b><span id="benchTitle"></span><button class="btn" id="benchClose">Kapat</button></div>
+    <div class="bench-body">
+      <div class="bench-view">
+        <canvas id="bc" aria-label="Parça inceleme görünümü"></canvas>
+        <div class="bench-read" id="benchRead" hidden></div>
+        <div class="bench-hint" id="benchHint"></div>
+      </div>
+      <div class="bench-side">
+        <div class="sub">Parçalar</div>
+        <div class="bench-list" id="benchList"></div>
+        <div class="sub">Ölçme</div>
+        <div class="seg" id="benchTools">
+          <button data-t="view" class="on">Döndür</button><button data-t="od">Kumpas Ø</button><button data-t="id">Kumpas iç</button><button data-t="len">Boy</button><button data-t="mic">Mikrometre</button><button data-t="sec">Yarım kesit</button>
+        </div>
+        <ul class="log" id="benchMeas"></ul>
+        <div class="sub">Aynaya bağla</div>
+        <div class="stopline"><span>Çıkıntı</span><input id="benchStick" inputmode="decimal" value="40"><button class="btn" id="benchMount">Düz</button><button class="btn" id="benchFlip">Ters</button></div>
+        <div class="dro-note" id="benchMountNote">Çıkıntı, parçanın ayna alnından dışarı uzanan boyudur. Çeneler aynadan 20 mm dışarı uzanır; işlenecek kısım bunun ötesinde kalmalı ve çeneler en az 8 mm tutmalı. "Ters" parçayı çevirip kesilen yüzü dışarı getirir.</div>
+        <button class="btn" id="benchUnclamp">Aynadaki parçayı sök ve masaya al</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -449,20 +513,23 @@ const TAU = Math.PI * 2;
 
 /* ---------------- Parça: eksen boyunca yarıçap profili ----------------
    a: ayna alnından uzaklık (mm, + gelinciğe doğru). Çubuk a=-40'tan (aynanın içi) a=100'e kadar. */
-const DZ = 0.1, AMIN = -40, AMAX = 100;
+const DZ = 0.1, AMIN = -40, AMAX = 200;
 const NS = Math.round((AMAX - AMIN) / DZ) + 1;
 const idx = a => Math.round((a - AMIN) / DZ);
 const A = i => AMIN + i * DZ;
 const I0 = idx(0);
 const STOCK_R = 25, JAW_A = 20, JAW_R = 62, CHUCK_R = 85;
-const R = new Float32Array(NS).fill(STOCK_R);   // dış yarıçap
+const R = new Float32Array(NS);                  // dış yarıçap
 const Ri = new Float32Array(NS);                 // iç (delik) yarıçapı
 const CUTO = new Uint8Array(NS), CUTI = new Uint8Array(NS);
 const RA = new Float32Array(NS), RAI = new Float32Array(NS);   // son kesmenin yüzey pürüzlülüğü (µm)
 const INSP = new Uint8Array(NS);                 // muayene: 1 dış fazla kesik, 2 iç fazla kesik
 const GBMAX = 50;                                 // diş: istasyon başına helis faz kutuları
 const Gr = new Float32Array(NS * GBMAX).fill(1e9);
-let endIdx = NS - 1;
+// Ham çubuklar: çap ve aynadan çıkıntı
+const STOCKS = { short:{ D:50, stick:100, label:'Ø50 × 100' }, long:{ D:30, stick:180, label:'Ø30 × 180 (uzun)' } };
+let stockR = STOCK_R;
+let startIdx = 0, endIdx = idx(100);      // malzemenin ilk ve son istasyonu
 const hasMat = i => R[i] > Ri[i] + 0.01;
 const TAN59 = Math.tan(59 * Math.PI / 180), TAN30 = Math.tan(Math.PI / 6);
 
@@ -480,6 +547,7 @@ const TAILS = [
   { no:'G1', name:'Punta matkabı', type:'spot', d:10, flute:8, len:70, fr:0.04, vc:40, mat:'HSS, 90°' },
   { no:'G2', name:'Matkap Ø10', type:'drill', d:10, flute:60, len:120, fr:0.12, vc:60, mat:'HSS, 118°' },
   { no:'G3', name:'Matkap Ø16', type:'drill', d:16, flute:80, len:140, fr:0.18, vc:60, mat:'HSS, 118°' },
+  { no:'G4', name:'Döner punta', type:'center', d:12, flute:0, len:95, fr:1, vc:1, mat:'60° döner' },
 ];
 function toolF(T, du) {
   switch (T.type) {
@@ -526,12 +594,13 @@ const LIM = { a0:-15, a1:330, r0:-3, r1:140, q0:-20, q1:330 };
 const S = {
   at:125, rt:40, q:300, tool:0, tail:0, spindle:false, rpm:800, feedRev:0.1, step:1, sim:1,
   coolant:false, alarm:false, broken:false, rapidKey:false, rapidBtn:false,
-  zx:0, zz:100, zw:100, pend:{ z:0, x:0, w:0 }, wheel:{ z:0, x:0, w:0 }, wheelMul:0.01,
+  zx:0, zz:100, zw:100, pend:{ z:0, x:0, w:0, u:0 }, wheel:{ z:0, x:0, w:0, u:0 }, wheelMul:0.01, zu:0,
   autoZ:false, autoX:false, halfNut:false, pitch:2.5, zStop:null,
   removed:0, cutTime:0, changing:null, peck:{ active:false, top:0 },
   feedC:0, feedT:0, curFeed:0, win:{ vol:0, path:0, rv:0, idle:0 }, winT:{ vol:0, path:0, idle:0 },
   raNow:0, tailBroken:false, lastChip:0, lastStress:0, lastCut:0, lastMove:0, damage:0, lastRa:null, lastVc:0, rubT:0,
-  muted:false, job:null, zone:null, cutAcc:0, cutting:0, spinAng:0
+  muted:false, job:null, zone:null, cutAcc:0, cutting:0, spinAng:0,
+  stock:'short', u:0, tsAng:0, lastB:0, defl:0, deflNow:0, supported:false, lastPiece:null
 };
 const tool = () => TOOLS[S.tool];
 const tailT = () => TAILS[S.tail];
@@ -680,15 +749,22 @@ const feedrod = cylX(8, 8, -80, 740, M.ground, scene, 12); feedrod.position.set(
 const spinG = new THREE.Group(); scene.add(spinG);
 cylX(CHUCK_R, CHUCK_R, -75, 0, M.dark, spinG, 48);
 cylX(30, 30, -76, 0.5, M.black, spinG, 24);
-for (let k = 0; k < 3; k++) {
-  const g = new THREE.Group(); g.rotation.x = k * TAU / 3; spinG.add(g);
-  boxR(0, JAW_A, STOCK_R, JAW_R, -10, 10, M.steel, g);
-  boxR(0, 6, JAW_R - 8, JAW_R + 6, -12, 12, M.steel, g);
-  boxR(-6, 0, 50, 80, -14, 14, M.ground, g);
+const jawG = new THREE.Group(); spinG.add(jawG);
+let jawR = STOCK_R;
+function buildJaws(r) {           // çeneler bağlanan çapa kadar kapanır
+  jawR = r;
+  while (jawG.children.length) jawG.remove(jawG.children[0]);
+  for (let k = 0; k < 3; k++) {
+    const g = new THREE.Group(); g.rotation.x = k * TAU / 3; jawG.add(g);
+    boxR(0, JAW_A, r, r + 12, -10, 10, M.steel, g);
+    boxR(0, 10, r + 12, JAW_R, -12, 12, M.steel, g);
+    boxR(-6, 0, Math.max(r + 8, 40), 80, -14, 14, M.ground, g);
+  }
 }
+buildJaws(STOCK_R);
 
 /* ---- Parça mesh'i: dış profil + alın + delik tek bir dönel yüzeyde ---- */
-const RS = 0.2, MR = Math.round(AMAX / RS) + 1, ROWS = MR * 2, SEG = 64;
+const RS = 0.2, RMIN = -2, MR = Math.round((AMAX - RMIN) / RS) + 1, ROWS = MR * 2, SEG = 64;
 const COS = new Float32Array(SEG), SIN = new Float32Array(SEG);
 for (let j = 0; j < SEG; j++) { COS[j] = Math.cos(j / SEG * TAU); SIN[j] = Math.sin(j / SEG * TAU); }
 const pPos = new Float32Array(ROWS * SEG * 3), pNor = new Float32Array(ROWS * SEG * 3), pCol = new Float32Array(ROWS * SEG * 3);
@@ -703,11 +779,9 @@ partGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
 partGeo.setAttribute('normal', new THREE.BufferAttribute(pNor, 3));
 partGeo.setAttribute('color', new THREE.BufferAttribute(pCol, 3));
 partGeo.setIndex(new THREE.BufferAttribute(pIdx, 1));
-partGeo.boundingSphere = new THREE.Sphere(new THREE.Vector3(50, 0, 0), 80);
+partGeo.boundingSphere = new THREE.Sphere(new THREE.Vector3(100, 0, 0), 140);
 const partMesh = new THREE.Mesh(partGeo, new THREE.MeshStandardMaterial({ vertexColors:true, roughness:0.32, metalness:0.62, side:THREE.DoubleSide }));
 partMesh.castShadow = true; partMesh.receiveShadow = true; spinG.add(partMesh);
-// aynanın içindeki kısım (görünmez ama alın kapağı için)
-cylX(STOCK_R, STOCK_R, -2, 0.2, new THREE.MeshStandardMaterial({ color:0x8d9396, roughness:0.55, metalness:0.55 }), spinG, 48);
 
 function threadR(i, a, j) {        // istasyon i, açı indeksi j için diş dibi yarıçapı
   const z = S.zone;
@@ -721,8 +795,10 @@ function threadR(i, a, j) {        // istasyon i, açı indeksi j için diş dib
 }
 function fillRow(s) {
   const outer = s < MR, k = outer ? s : ROWS - 1 - s;
-  let a = k * RS, i = idx(a), coll = false;
-  if (i > endIdx) { coll = true; i = Math.max(0, endIdx); a = A(i); }
+  let a = RMIN + k * RS, i = idx(a), coll = false;
+  if (endIdx < startIdx) { coll = true; i = 0; a = A(0); }
+  else if (i > endIdx) { coll = true; i = endIdx; a = A(i); }
+  else if (i < startIdx) { coll = true; i = startIdx; a = A(i); }
   const base = coll ? Ri[i] : outer ? R[i] : Ri[i];
   // renk
   let cr, cg, cb;
@@ -761,7 +837,7 @@ function markDirty(i0, i1) {
 }
 function flushPart() {
   if (!dirty) return;
-  const k0 = clamp(Math.floor(A(dirty[0]) / RS) - 1, 0, MR - 1), k1 = clamp(Math.ceil(A(dirty[1]) / RS) + 1, 0, MR - 1);
+  const k0 = clamp(Math.floor((A(dirty[0]) - RMIN) / RS) - 1, 0, MR - 1), k1 = clamp(Math.ceil((A(dirty[1]) - RMIN) / RS) + 1, 0, MR - 1);
   for (let k = k0; k <= k1; k++) { fillRow(k); fillRow(ROWS - 1 - k); }
   for (let k = Math.max(0, k0 - 1); k <= Math.min(MR - 1, k1 + 1); k++) { normRow(k); normRow(ROWS - 1 - k); }
   partGeo.attributes.position.needsUpdate = true;
@@ -779,6 +855,9 @@ const zWheel3 = new THREE.Group(); zWheel3.position.set(-40, -200, 214); carG.ad
 const crossG = new THREE.Group(); carG.add(crossG);              // z = kalem ucunun yarıçapı
 boxR(-55, 55, -100, -62, 30, 260, M.ground, crossG);              // enine kızak
 const xWheel3 = new THREE.Group(); xWheel3.position.set(0, -82, 280); crossG.add(xWheel3);
+const compG = new THREE.Group(); compG.position.set(5, 0, 125); crossG.add(compG);   // üst kızak tablası (açıyla döner)
+boxR(-50, 50, -62, -54, -42, 42, M.ground, compG);
+boxR(-6, 6, -63, -53, -46, -40, M.yellow, compG);
 const postG = new THREE.Group(); crossG.add(postG);              // kalem bağlama (taret) ve kalem
 function handwheel(parent, axis) {
   const rim = new THREE.Mesh(new THREE.TorusGeometry(42, 4.5, 10, 36), M.steel); rim.castShadow = true; parent.add(rim);
@@ -1086,6 +1165,12 @@ function buildTailVisual() {
   const Tt = tailT(), r = Tt.d / 2, L = Tt.len;
   cylX(20, 20, -40, 0, M.dark, tailToolG, 24);                 // matkap aynası
   cylX(14, 20, -48, -40, M.dark, tailToolG, 24);
+  if (Tt.type === 'center') {
+    cylX(0.01, 6, -L, -L + 10.4, M.ground, tailToolG, 24);
+    cylX(6, 10, -L + 10.4, -L + 30, M.steel, tailToolG, 24);
+    cylX(17, 17, -L + 30, -48, M.dark, tailToolG, 24);
+    return;
+  }
   const cone = Tt.type === 'spot' ? r : r / TAN59;
   const fl = Tt.flute;
   const t = fluteTex.clone(); t.needsUpdate = true; t.repeat.set(2, Math.max(1, fl / (Tt.d * 1.6)));
@@ -1112,7 +1197,7 @@ function outerScan(at, rt, T, apply) {
     if (!hasMat(i)) continue;
     const f = toolF(T, A(i) - at);
     if (f === Infinity) continue;
-    const prof = Math.max(0, rt + f);
+    const prof = Math.max(0, rt + f + (apply ? S.deflNow : 0));
     if (R[i] > prof + 0.002) {
       res.any = true; res.over = Math.max(res.over, R[i] - prof);
       if (apply) {
@@ -1231,7 +1316,7 @@ function carriageHit(at, rt, T, q) {
     if (a < 0 && rr < CHUCK_R) return 'Kalem aynaya çarptı!';
     if (a >= 0 && a <= JAW_A + 0.5 && rr < JAW_R + 1) return 'Kalem dönen ayna çenesine çarptı!';
     if (a >= q && a <= q + Tt.flute + 10 && rr < Tt.d / 2) return 'Kalem gelincikteki matkaba çarptı!';
-    if (a >= q + Tt.len - 48 && rr < 25) return 'Kalem gelincik kovanına çarptı!';
+    if (a >= q + Tt.len - 48 && rr < 24) return 'Kalem gelincik kovanına çarptı!';
   }
   if (at + 80 > q + Tt.len + 50) return 'Taşıyıcı gelincik gövdesine çarptı!';
   return null;
@@ -1260,7 +1345,7 @@ function crash(msg, isTail) {
   updateSpindleUI(); updateToolUI(); updateAutoUI();
 }
 function stopMotion() {
-  S.pend.z = S.pend.x = S.pend.w = 0; S.wheel.z = S.wheel.x = S.wheel.w = 0;
+  S.pend.z = S.pend.x = S.pend.w = S.pend.u = 0; S.wheel.z = S.wheel.x = S.wheel.w = S.wheel.u = 0;
   pressed.forEach(p => p.t0 = Infinity);
 }
 function disengageAll() { S.autoZ = S.autoX = S.halfNut = false; }
@@ -1274,6 +1359,26 @@ function computeRa(T, fRev, vr) {
   if (vr < 0.35) ra *= 2.5;
   if (S.lastStress > 1.3) ra *= 1.5;
   return Math.max(0.3, ra);
+}
+// Uzun parçanın kesme kuvvetiyle esnemesi (mm). Ankastre kiriş: δ = F·x³ / (3·E·I); punta varsa çok azalır.
+function updateSupport() {
+  const Tt = tailT();
+  S.supported = Tt.type === 'center' && !S.tailBroken && endIdx >= startIdx && S.q <= A(endIdx) + 0.3 && Ri[endIdx] >= 1.5;
+}
+function deflection(na) {
+  updateSupport();
+  const x = na - JAW_A;
+  if (x <= 2 || S.lastB <= 0) return 0;
+  let dmin = 1e9;
+  // kalemin altındaki kanal kirişin parçası sayılmaz: ayna ile kalemin solu arasındaki en ince dolu kesit
+  for (let i = Math.max(idx(JAW_A), startIdx); i <= Math.min(endIdx, idx(na - 1.5)); i += 5) if (hasMat(i)) dmin = Math.min(dmin, 2 * R[i]);
+  if (dmin > 1e8) return 0;
+  const I = Math.PI * Math.pow(dmin, 4) / 64;
+  const F = 700 * S.lastB * Math.max(0.01, S.feedC / Math.max(1, S.rpm));
+  let d = F * x * x * x / (3 * 69000 * I);
+  if (!S.supported) d += Math.max(0, x / dmin - 4.5) * 0.02;     // narin parça: hafif pasoda bile tırlama
+  if (S.supported) { const L = Math.max(x, A(endIdx) - JAW_A); d *= Math.pow(Math.max(0, 1 - x / L), 2) * 0.25 + 0.002; }
+  return d;
 }
 function tryCarriage(na, nr) {
   const T = tool();
@@ -1303,6 +1408,13 @@ function tryCarriage(na, nr) {
   const vc = Math.PI * Math.max(dNow, 1) * S.rpm / 1000;
   const vr = vc / T.vc;
   S.raNow = computeRa(T, fRev, vr);
+  S.deflNow = T.type === 'bore' || thread ? 0 : deflection(na);
+  S.defl = S.deflNow;
+  if (S.deflNow > 0.35) { crash('Uzun parça kesme kuvvetiyle esnedi ve kalemin altına girdi. Gelincikten döner puntayla destekleyin ya da pasoyu küçültün.'); return false; }
+  if (S.deflNow > 0.03) {
+    S.raNow *= 1 + S.deflNow * 25;
+    warnOnce('chat', `Titreşim (tırlama): parça ${S.deflNow.toFixed(2)} mm esniyor. Çap konik çıkar, yüzey bozulur; G4 döner puntayla destekleyin.`);
+  }
   const res = scan(na, nr, T, true);
   if (res.i1 >= 0) markDirty(res.i0, res.i1);
   const step = Math.hypot(na - S.at, nr - S.rt);
@@ -1323,6 +1435,7 @@ function tryCarriage(na, nr) {
     if (W.path >= 1) {
       const rc = W.rv / W.vol, b = W.vol / (TAU * Math.max(rc, 0.5) * W.path);
       const chip = fRev / T.frec;
+      S.lastB = b;
       L = { chip, stress:chip * b / T.ap, t:W.path / Math.max(1, S.feedC / 60) };
       S.win = { vol:0, path:0, rv:0, idle:0 };
     }
@@ -1344,6 +1457,14 @@ function tryTail(nq) {
   const Tt = tailT();
   const hit = tailHit(nq);
   if (hit) { crash(hit, true); return false; }
+  if (Tt.type === 'center') {
+    const aE = A(endIdx), hole = endIdx >= startIdx && Ri[endIdx] >= 1.5;
+    if (nq < S.q && endIdx >= startIdx && nq <= aE + 0.05) {
+      if (!hole) { warnOnce('nocenter', 'Alında punta deliği yok. Önce G1 punta matkabıyla merkez açın.'); return false; }
+      if (nq < aE - 2.5) { warnOnce('seated', 'Punta yerine oturdu; parça artık iki uçtan destekleniyor.', 'ok', 4000); return false; }
+    }
+    return true;
+  }
   const it = tailScan(nq, Tt, false);
   if (S.peck.active && !it.any && nq > A(endIdx) + 0.3) S.peck.active = false;
   if (it.shank && it.any) { crash(`Matkabın kanal boyu (${Tt.flute} mm) aşıldı, matkap sıkışıp kırıldı.`, true); return false; }
@@ -1400,7 +1521,7 @@ function tryTail(nq) {
 const pieces = [];
 function checkDetach() {
   let s = -1;
-  for (let i = I0; i <= endIdx; i++) if (!hasMat(i)) { s = i; break; }
+  for (let i = Math.max(I0, startIdx); i <= endIdx; i++) if (!hasMat(i)) { s = i; break; }
   if (s < 0) return;
   let has = false;
   for (let i = s + 1; i <= endIdx; i++) if (hasMat(i)) { has = true; break; }
@@ -1411,22 +1532,133 @@ function checkDetach() {
   markDirty(Math.min(s, endIdx), NS - 1);
   endIdx = s - 1;
 }
+let pieceSeq = 0;
+// Bir parçanın tüm verisini (profil, delik, işleme izleri, diş helisi) ayrı bir nesneye kopyalar
+function extractPiece(i0, i1) {
+  while (i0 < i1 && !hasMat(i0)) i0++;
+  while (i1 > i0 && !hasMat(i1)) i1--;
+  const n = i1 - i0 + 1;
+  const d = { id:++pieceSeq, n, a0:A(i0), R:R.slice(i0, i1 + 1), Ri:Ri.slice(i0, i1 + 1), CUTO:CUTO.slice(i0, i1 + 1), CUTI:CUTI.slice(i0, i1 + 1),
+    RA:RA.slice(i0, i1 + 1), RAI:RAI.slice(i0, i1 + 1), gr:null, zone:null };
+  const z = S.zone;
+  if (z && z.i1 >= i0 && z.i0 <= i1) {
+    d.gr = Gr.slice(i0 * GBMAX, (i1 + 1) * GBMAX);
+    d.zone = { p:z.p, gb:z.gb, bw:z.bw, uref:z.uref, i0:Math.max(z.i0, i0) - i0, i1:Math.min(z.i1, i1) - i0 };
+  }
+  let rmax = 0; for (let k = 0; k < n; k++) rmax = Math.max(rmax, d.R[k]);
+  d.rmax = rmax; d.len = n * DZ;
+  return d;
+}
+function pieceThreadR(d, k, j, seg) {
+  const z = d.zone;
+  if (!z || k < z.i0 || k > z.i1) return 1e9;
+  const a = d.a0 + k * DZ, th = j / seg * TAU;
+  const b = Math.floor(mod(a - z.p * th / TAU, z.p) / z.bw) % z.gb;
+  const g = d.gr[k * GBMAX + b];
+  return g > 1e8 ? 1e9 : g;
+}
+// Parçanın kapalı dönel yüzeyi: dış profil → sağ alın → delik → sol alın
+function pieceGeometry(d, seg = 72) {
+  const rows = [], has = k => d.R[k] > d.Ri[k] + 0.01, half = d.len / 2;
+  for (let k = 0; k < d.n; k += 2) if (has(k)) rows.push({ k, x:k * DZ - half, outer:true });
+  if (has(d.n - 1) && rows[rows.length - 1].k !== d.n - 1) rows.push({ k:d.n - 1, x:(d.n - 1) * DZ - half, outer:true });
+  const nOut = rows.length;
+  for (let q = nOut - 1; q >= 0; q--) rows.push({ k:rows[q].k, x:rows[q].x, outer:false });
+  const nr = rows.length, pos = new Float32Array(nr * seg * 3), col = new Float32Array(nr * seg * 3);
+  rows.forEach((rw, q) => {
+    const k = rw.k;
+    let c;
+    if (rw.outer) c = d.CUTO[k] ? 0.9 - Math.min(0.24, d.RA[k] * 0.022) : 0.6;
+    else c = d.CUTI[k] ? 0.84 - Math.min(0.2, d.RAI[k] * 0.02) : 0.6;
+    for (let j = 0; j < seg; j++) {
+      let r = rw.outer ? d.R[k] : d.Ri[k];
+      if (rw.outer) r = Math.min(r, pieceThreadR(d, k, j, seg));
+      const th = j / seg * TAU, v = (q * seg + j) * 3;
+      pos[v] = rw.x; pos[v + 1] = r * Math.cos(th); pos[v + 2] = r * Math.sin(th);
+      col[v] = c; col[v + 1] = c + 0.015; col[v + 2] = c + 0.035;
+    }
+  });
+  const ix = [];
+  for (let q = 0; q < nr; q++) {
+    const q2 = (q + 1) % nr;
+    for (let j = 0; j < seg; j++) {
+      const a = q * seg + j, b = q * seg + (j + 1) % seg, c2 = q2 * seg + j, e = q2 * seg + (j + 1) % seg;
+      ix.push(a, b, c2, b, e, c2);
+    }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  g.setIndex(ix); g.computeVertexNormals();
+  return g;
+}
+const pieceMat = new THREE.MeshStandardMaterial({ vertexColors:true, roughness:0.32, metalness:0.62, side:THREE.DoubleSide });
+function addPieceToScene(d, x, y, z, falling) {
+  const m = new THREE.Mesh(pieceGeometry(d, 56), pieceMat); m.castShadow = true;
+  const holder = new THREE.Group(); holder.add(m); holder.position.set(x, y, z); scene.add(holder);
+  m.userData.piece = d;
+  pieces.push({ d, g:holder, mesh:m, vy:0, vz:falling ? 60 : 0, rmax:d.rmax, rest:!falling, spin:falling ? (Math.random() - .5) * 3 : 0 });
+}
 function dropPiece(i0, i1) {
-  const pts = [], ac = (A(i0) + A(i1)) / 2;
-  let rmax = 0;
-  pts.push(new THREE.Vector2(Math.max(0.01, Ri[i0]), A(i0) - ac));
-  for (let i = i0; i <= i1; i += 2) if (hasMat(i)) { pts.push(new THREE.Vector2(R[i], A(i) - ac)); rmax = Math.max(rmax, R[i]); }
-  pts.push(new THREE.Vector2(Math.max(0.01, Ri[i1]), A(i1) - ac));
-  for (let i = i1; i >= i0; i -= 2) if (hasMat(i)) pts.push(new THREE.Vector2(Math.max(0.01, Ri[i]), A(i) - ac));
-  pts.push(pts[0].clone());
-  const g = new THREE.LatheGeometry(pts, 48);
-  const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color:0xc9cfd4, roughness:0.3, metalness:0.7, side:THREE.DoubleSide }));
-  m.castShadow = true;
-  const holder = new THREE.Group(); holder.add(m); m.rotation.z = -Math.PI / 2;
-  holder.position.set(ac, 0, 0); scene.add(holder);
-  pieces.push({ g:holder, vy:0, vz:60, rmax, rest:false, spin:(Math.random() - .5) * 3 });
-  log(`Parça kesildi ve kızağa düştü (boy ${(A(i1) - A(i0) + DZ).toFixed(1)} mm).`, 'ok');
+  const d = extractPiece(i0, i1);
+  addPieceToScene(d, d.a0 + d.len / 2, 0, 0, true);
+  S.lastPiece = d;
+  log(`Parça kesildi ve kızağa düştü (boy ${d.len.toFixed(1)} mm). Üstüne tıklayarak parça masasında inceleyin.`, 'ok');
   beep(500, 0.25, 0.12);
+}
+function removePiece(d) {
+  const k = pieces.findIndex(p => p.d === d);
+  if (k >= 0) { scene.remove(pieces[k].g); pieces[k].mesh.geometry.dispose(); pieces.splice(k, 1); }
+}
+// Aynadaki parçayı söküp kızağın üstüne koyar
+function unclampPart() {
+  if (endIdx < startIdx) return null;
+  const d = extractPiece(startIdx, endIdx);
+  clearChuck();
+  const k = pieces.length % 3;
+  addPieceToScene(d, 420 + k * 20, -150 + d.rmax, 80 - k * 55, false);
+  return d;
+}
+function clearChuck() {
+  R.fill(0); Ri.fill(0); CUTO.fill(0); CUTI.fill(0); RA.fill(0); RAI.fill(0); INSP.fill(0); Gr.fill(1e9);
+  S.zone = null; startIdx = 1; endIdx = 0; markDirty(0, NS - 1);
+}
+// Parçayı aynaya bağlar; flip = ters çevir; stick = aynadan çıkıntı (mm)
+function mountPiece(d, flip, stick) {
+  const n = d.n, a0 = stick - (n - 1) * DZ;
+  if (stick > AMAX - 1) return 'Çıkıntı en fazla ' + (AMAX - 1) + ' mm olabilir.';
+  if (a0 < AMIN) return 'Parça mil deliğine bu kadar giremez; çıkıntıyı artırın.';
+  const src = k => flip ? n - 1 - k : k;
+  for (let k = 0; k < n; k++) { const a = a0 + k * DZ; if (a < -1 && d.R[src(k)] > 29) return 'Bu çap mil deliğine (Ø58) girmez; çıkıntıyı artırın.'; }
+  const grip = Math.min(stick, JAW_A) - Math.max(a0, 0);
+  if (grip < 8) return `Çeneler parçayı yalnızca ${Math.max(0, grip).toFixed(1)} mm tutuyor; en az 8 mm gerekli.`;
+  if (endIdx >= startIdx) unclampPart();
+  const b = idx(a0);
+  for (let k = 0; k < n; k++) {
+    const i = b + k, q = src(k);
+    R[i] = d.R[q]; Ri[i] = d.Ri[q]; CUTO[i] = d.CUTO[q]; CUTI[i] = d.CUTI[q]; RA[i] = d.RA[q]; RAI[i] = d.RAI[q];
+  }
+  if (d.zone) {
+    const z = d.zone, sign = flip ? -1 : 1;
+    const c = flip ? A(b) + (d.a0 + (n - 1) * DZ) : A(b) - d.a0;   // a' = sign·a + c ; θ' = sign·θ
+    for (let k = z.i0; k <= z.i1; k++) {
+      const i = b + (flip ? n - 1 - k : k);
+      for (let bb = 0; bb < z.gb; bb++) {
+        const u = mod(sign * (bb + 0.5) * z.bw + c, z.p), nb = Math.floor(u / z.bw) % z.gb;
+        Gr[i * GBMAX + nb] = d.gr[k * GBMAX + bb];
+      }
+    }
+    S.zone = { p:z.p, gb:z.gb, bw:z.bw, uref:mod(sign * z.uref + c, z.p),
+      i0:b + (flip ? n - 1 - z.i1 : z.i0), i1:b + (flip ? n - 1 - z.i0 : z.i1) };
+  }
+  startIdx = b; endIdx = b + n - 1;
+  let gr = 0;
+  for (let i = Math.max(startIdx, I0); i <= Math.min(endIdx, idx(JAW_A)); i++) gr = Math.max(gr, R[i]);
+  buildJaws(gr);
+  removePiece(d);
+  S.zz = A(endIdx); S.zw = A(endIdx); markDirty(0, NS - 1); INSP.fill(0);
+  S.peck.active = false; hoseKey = '';
+  return null;
 }
 function updatePieces(dt) {
   for (const p of pieces) {
@@ -1442,7 +1674,7 @@ function updatePieces(dt) {
     }
   }
 }
-function clearPieces() { for (const p of pieces) scene.remove(p.g); pieces.length = 0; }
+function clearPieces() { for (const p of pieces) { scene.remove(p.g); p.mesh.geometry.dispose(); } pieces.length = 0; }
 
 /* ---------------- Hareket ---------------- */
 const pressed = new Map();
@@ -1466,9 +1698,9 @@ function motion(dt) {
   if (S.alarm) return;
   if (S.changing) { toolChangeStep(dt); return; }
   const v = jogSpeed(), budget = v / 60 * S.sim * dt, wb = 6000 / 60 * dt;
-  const jm = { z:0, x:0, w:0 }, wm = { z:0, x:0, w:0 };
+  const jm = { z:0, x:0, w:0, u:0 }, wm = { z:0, x:0, w:0, u:0 };
   let jogC = false, jogT = false, wdC = 0, wdT = 0;
-  for (const ax of ['z', 'x', 'w']) {
+  for (const ax of ['z', 'x', 'w', 'u']) {
     const h = heldDir(ax);
     if (h) { jm[ax] = h * budget; S.pend[ax] = 0; }
     else if (Math.abs(S.pend[ax]) > 1e-7) jm[ax] = clamp(S.pend[ax], -budget, budget);
@@ -1491,7 +1723,9 @@ function motion(dt) {
   S.feedC = Math.max(jogC ? v : 0, wdC / dt * 60, autoV);
   S.feedT = Math.max(jogT ? v : 0, wdT / dt * 60);
   // Taşıyıcı + enine kızak
-  let mz = jm.z + wm.z + az, mx = jm.x + wm.x + ax2;
+  // Üst kızak: U ekseni kalemi açılı yönde götürür (konik tornalama)
+  const tsa = S.tsAng * Math.PI / 180, um = jm.u + wm.u;
+  let mz = jm.z + wm.z + az + um * Math.cos(tsa), mx = jm.x + wm.x + ax2 - um * Math.sin(tsa);
   if (mz || mx) {
     const step = S.halfNut ? 0.05 : 0.1;
     const n = Math.max(1, Math.ceil(Math.max(Math.abs(mz), Math.abs(mx)) / step));
@@ -1500,16 +1734,16 @@ function motion(dt) {
       let na = S.at + mz / n, nr = S.rt + mx / n;
       if (S.zStop !== null && (S.autoZ || S.halfNut) && mz < 0 && na <= S.zStop) { na = Math.max(S.zStop, Math.min(S.at, na)); stopped = true; }
       const ca = clamp(na, LIM.a0, LIM.a1), cr = clamp(nr, LIM.r0, LIM.r1);
-      if (ca !== na) { mz = 0; S.pend.z = S.wheel.z = 0; S.autoZ = S.halfNut = false; updateAutoUI(); warnOnce('lim', 'Eksen hareket sınırına ulaşıldı.'); }
+      if (ca !== na) { mz = 0; S.pend.z = S.wheel.z = S.pend.u = S.wheel.u = 0; S.autoZ = S.halfNut = false; updateAutoUI(); warnOnce('lim', 'Eksen hareket sınırına ulaşıldı.'); }
       if (cr !== nr) { mx = 0; S.pend.x = S.wheel.x = 0; S.autoX = false; updateAutoUI(); warnOnce('lim', 'Eksen hareket sınırına ulaşıldı.'); }
       if (ca === S.at && cr === S.rt) break;
       if (!tryCarriage(ca, cr)) { blocked = true; break; }
       S.at = ca; S.rt = cr; done++;
       if (stopped) { S.autoZ = S.halfNut = false; updateAutoUI(); log('Z durdurucuya gelindi; otomatik ilerleme ayrıldı.', 'ok'); beep(1300, 0.12); break; }
     }
-    if (done) { S.lastMove = performance.now(); S.curFeed += (S.feedC - S.curFeed) * 0.3; }
-    if (blocked) { S.pend.z = S.pend.x = 0; S.wheel.z = S.wheel.x = 0; if (S.autoZ || S.autoX || S.halfNut) { disengageAll(); updateAutoUI(); } }
-    else for (const a of ['z', 'x']) {
+    if (done) { S.lastMove = performance.now(); S.curFeed += (S.feedC - S.curFeed) * 0.3; S.u += um * done / n; }
+    if (blocked) { S.pend.z = S.pend.x = S.pend.u = 0; S.wheel.z = S.wheel.x = S.wheel.u = 0; if (S.autoZ || S.autoX || S.halfNut) { disengageAll(); updateAutoUI(); } }
+    else for (const a of ['z', 'x', 'u']) {
       if (!heldDir(a) && S.pend[a]) { S.pend[a] -= jm[a] * done / n; if (Math.abs(S.pend[a]) < 1e-6) S.pend[a] = 0; }
       if (S.wheel[a]) { S.wheel[a] -= wm[a] * done / n; if (Math.abs(S.wheel[a]) < 1e-6) S.wheel[a] = 0; }
     }
@@ -1665,6 +1899,17 @@ $('zStopSet').addEventListener('click', () => {
   $('zStopNote').textContent = `Durdurucu Z ${fmt(v)} konumunda. Otomatik boyuna ilerleme ve somun kolu burada ayrılır.`;
   log(`Z durdurucu ${fmt(v)} konumuna ayarlandı.`, 'ok');
 });
+function setTaper(v) {
+  if (!isFinite(v) || Math.abs(v) > 45) { log('Üst kızak açısı −45° ile 45° arasında olmalı.', 'warn'); return; }
+  S.tsAng = v; $('tsAngIn').value = v.toFixed(2);
+  log(`Üst kızak ${v.toFixed(2)}° döndürüldü. U çarkı artık kalemi bu açıyla ilerletir.`, 'ok');
+}
+$('tsAngSet').addEventListener('click', () => setTaper(parseFloat($('tsAngIn').value.replace(',', '.'))));
+$('tsCalcBtn').addEventListener('click', () => {
+  const v = $('tsCalc').value.replace(/,/g, '.').trim().split(/[\s;]+/).map(Number);
+  if (v.length < 3 || v.some(x => !isFinite(x)) || v[2] <= 0) { log('Hesap için "D d L" yazın, örneğin 40 30 30.', 'warn'); return; }
+  setTaper(Math.atan((v[0] - v[1]) / (2 * v[2])) * 180 / Math.PI);
+});
 $('zStopClr').addEventListener('click', () => { S.zStop = null; $('zStopNote').textContent = 'Durdurucu yok.'; });
 $('coolant').addEventListener('click', toggleCoolant);
 function toggleCoolant() { S.coolant = !S.coolant; $('coolant').textContent = 'Soğutma sıvısı: ' + (S.coolant ? 'AÇIK' : 'KAPALI'); $('coolant').classList.toggle('on', S.coolant); }
@@ -1700,11 +1945,12 @@ document.querySelectorAll('[data-set]').forEach(b => b.addEventListener('click',
   if (!isFinite(v)) { log(`${ax.toUpperCase()} için bir sayı girin.`, 'warn'); return; }
   setAxis(ax, v); inp.value = '';
 }));
-['X', 'Z', 'W'].forEach(a => $('set' + a).addEventListener('keydown', e => { if (e.key === 'Enter') document.querySelector(`[data-set="${a.toLowerCase()}"]`).click(); }));
+['X', 'Z', 'W', 'U'].forEach(a => $('set' + a).addEventListener('keydown', e => { if (e.key === 'Enter') document.querySelector(`[data-set="${a.toLowerCase()}"]`).click(); }));
 function setAxis(ax, v) {
   if (ax === 'x') S.zx = 2 * S.rt - v;
   if (ax === 'z') S.zz = S.at - v;
   if (ax === 'w') S.zw = S.q - v;
+  if (ax === 'u') S.zu = S.u - v;
   log(`${ax.toUpperCase()} ekseni ${fmt(v)} olarak ayarlandı.`, 'ok');
 }
 $('alarmReset').addEventListener('click', () => { S.alarm = false; $('alarm').hidden = true; log('Alarm sıfırlandı. Kırık takımı değiştirin.'); });
@@ -1714,20 +1960,28 @@ $('newPart').addEventListener('click', () => {
   const now = performance.now();
   if (now - newPartArm > 3000) { newPartArm = now; $('newPart').textContent = 'Onayla: parçayı değiştir'; setTimeout(() => $('newPart').textContent = 'Yeni ham parça', 3000); return; }
   newPartArm = 0; $('newPart').textContent = 'Yeni ham parça';
-  resetPart();
-  log('Aynaya yeni Ø50 çubuk bağlandı (çıkıntı 100 mm).', 'ok');
+  resetPart($('stockSel').value);
+  log(`Aynaya yeni ${STOCKS[S.stock].label} çubuk bağlandı.`, 'ok');
 });
-function resetPart() {
+function resetPart(key) {
   if (S.spindle) spindle(false);
   stopAll();
-  R.fill(STOCK_R); Ri.fill(0); CUTO.fill(0); CUTI.fill(0); RA.fill(0); RAI.fill(0); INSP.fill(0); Gr.fill(1e9);
-  S.zone = null; endIdx = NS - 1; markDirty(0, NS - 1);
-  S.removed = 0; S.cutTime = 0; S.peck.active = false; S.lastRa = null;
+  S.stock = key || S.stock;
+  const st = STOCKS[S.stock];
+  stockR = st.D / 2;
+  R.fill(0); Ri.fill(0); CUTO.fill(0); CUTI.fill(0); RA.fill(0); RAI.fill(0); INSP.fill(0); Gr.fill(1e9);
+  startIdx = 0; endIdx = idx(st.stick);
+  for (let i = 0; i <= endIdx; i++) R[i] = stockR;
+  buildJaws(stockR);
+  S.zone = null; markDirty(0, NS - 1);
+  S.removed = 0; S.cutTime = 0; S.peck.active = false; S.lastRa = null; S.lastPiece = null;
   clearChips(); clearPieces();
-  if (S.at < 110 && S.rt < 30) S.rt = 40;
-  if (S.at < 105) S.at = 125;
-  if (S.q < 200) S.q = 300;
-  S.zz = 100; S.zw = 100;
+  const aE = A(endIdx);
+  if (S.at < aE + 10 && S.rt < stockR + 5) S.rt = stockR + 15;
+  if (S.at < aE + 5) S.at = aE + 25;
+  if (S.q < aE + 100) S.q = Math.min(LIM.q1, aE + 200);
+  S.zz = aE; S.zw = aE;
+  hoseKey = '';
 }
 
 /* ---- El çarkları ---- */
@@ -1735,7 +1989,7 @@ const rootCss = getComputedStyle(document.documentElement);
 const tok = n => rootCss.getPropertyValue(n).trim();
 const COL = { panel2:tok('--panel-2'), line:tok('--line'), fg:tok('--fg'), muted:tok('--muted'), steel:tok('--steel'), safety:tok('--safety'), knob:tok('--bg') };
 const TICK = TAU / 100;
-const HW = ['z', 'x', 'w'].map(ax => ({ ax, cv:$('hw' + ax), acc:0, last:null }));
+const HW = ['z', 'x', 'w', 'u'].map(ax => ({ ax, cv:$('hw' + ax), acc:0, last:null }));
 let lastClick = 0;
 function wheelClick() {
   if (!ac || S.muted) return;
@@ -1777,7 +2031,7 @@ $('muls').addEventListener('click', e => {
   [...$('muls').children].forEach(x => x.classList.toggle('on', x === b));
 });
 function drawWheels() {
-  const pos = { z:S.at, x:2 * S.rt, w:S.q };
+  const pos = { z:S.at, x:2 * S.rt, w:S.q, u:S.u };
   for (const w of HW) {
     const c = w.cv, s = c.clientWidth;
     if (!s) continue;
@@ -1811,8 +2065,293 @@ function drawWheels() {
   }
 }
 
+/* ---------------- Parça masası: inceleme, ölçme, aynaya bağlama ---------------- */
+const bench = { r:null, open:false, d:null, chuck:false, tool:'view', section:false, lenA:null, mesh:null, caps:[], hover:null, cal:null };
+function initBench() {
+  if (bench.r) return true;
+  try { bench.r = new THREE.WebGLRenderer({ canvas:$('bc'), antialias:true }); } catch (e) { return false; }
+  bench.r.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+  bench.r.outputEncoding = THREE.sRGBEncoding; bench.r.localClippingEnabled = true;
+  const sc = bench.scene = new THREE.Scene();
+  sc.background = new THREE.Color(0x1d2427);
+  sc.add(new THREE.HemisphereLight(0xe8eef5, 0x2a2622, 0.85));
+  const l1 = new THREE.DirectionalLight(0xffffff, 0.95); l1.position.set(80, 160, 140); sc.add(l1);
+  const l2 = new THREE.DirectionalLight(0x9fc4ff, 0.45); l2.position.set(-140, 40, -100); sc.add(l2);
+  bench.plate = new THREE.Mesh(new THREE.BoxGeometry(420, 16, 260), new THREE.MeshStandardMaterial({ color:0x2c3235, roughness:0.85 }));   // granit ölçü pleyti
+  sc.add(bench.plate);
+  bench.cam = new THREE.PerspectiveCamera(35, 1, 1, 5000);
+  bench.ctl = new THREE.OrbitControls(bench.cam, $('bc')); bench.ctl.enableDamping = true;
+  bench.clip = new THREE.Plane(new THREE.Vector3(0, 0, -1), 0);
+  bench.mat = new THREE.MeshStandardMaterial({ vertexColors:true, roughness:0.3, metalness:0.6, side:THREE.DoubleSide });
+  bench.capMat = new THREE.MeshStandardMaterial({ color:0xa8b0b6, roughness:0.55, metalness:0.35, side:THREE.DoubleSide });
+  // Kumpas: kiriş + iki çene + sürgü (birim kutular, her karede ölçeklenir)
+  const steel = new THREE.MeshStandardMaterial({ color:0xc9d0d4, roughness:0.25, metalness:0.85 });
+  bench.steelMat = steel;
+  bench.micMat = new THREE.MeshStandardMaterial({ color:0x3b6ea8, roughness:0.4, metalness:0.4 });
+  const ub = () => new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), steel);
+  const g = new THREE.Group(); sc.add(g);
+  bench.cal = { g, beam:ub(), j1:ub(), j2:ub(), slider:ub(), cur:0, axis:'y', c:0, p1:0, p2:0, show:false };
+  ['beam', 'j1', 'j2', 'slider'].forEach(k => g.add(bench.cal[k]));
+  bench.ray = new THREE.Raycaster(); bench.ptr = new THREE.Vector2();
+  const cv = $('bc');
+  let down = null;
+  cv.addEventListener('pointerdown', e => { down = [e.clientX, e.clientY]; });
+  cv.addEventListener('pointermove', e => benchHover(e));
+  cv.addEventListener('pointerleave', () => { bench.hover = null; });
+  cv.addEventListener('pointerup', e => { if (down && Math.hypot(e.clientX - down[0], e.clientY - down[1]) < 5) benchClick(e); down = null; });
+  new ResizeObserver(benchResize).observe(document.querySelector('.bench-view'));
+  return true;
+}
+function benchResize() {
+  if (!bench.r) return;
+  const v = document.querySelector('.bench-view'), w = v.clientWidth, h = v.clientHeight;
+  if (!w || !h) return;
+  bench.r.setSize(w, h, false); bench.cam.aspect = w / h; bench.cam.updateProjectionMatrix();
+}
+function benchItems() {
+  const items = pieces.map(p => ({ d:p.d, chuck:false }));
+  if (endIdx >= startIdx) items.unshift({ d:null, chuck:true });
+  return items;
+}
+function renderBenchList() {
+  const L = $('benchList'); L.innerHTML = '';
+  const items = benchItems();
+  if (!items.length) { L.innerHTML = '<div class="dro-note">Masada parça yok. Kesme kalemiyle bir parça kesin ya da aynadaki parçayı sökün.</div>'; return; }
+  items.forEach(it => {
+    const d = it.chuck ? null : it.d;
+    const b = document.createElement('button');
+    const len = it.chuck ? (A(endIdx) - A(startIdx) + DZ) : d.len;
+    let rm = 0; if (it.chuck) { for (let i = startIdx; i <= endIdx; i++) rm = Math.max(rm, R[i]); } else rm = d.rmax;
+    b.innerHTML = `<span>${it.chuck ? 'Aynadaki parça' : 'Parça #' + d.id}</span><small>${len.toFixed(1)} mm</small><small>en büyük Ø${(2 * rm).toFixed(1)}</small><small>${it.chuck ? 'bağlı' : 'masada'}</small>`;
+    b.classList.toggle('active', it.chuck ? bench.chuck : bench.d === d && !bench.chuck);
+    b.addEventListener('click', () => benchSelect(it.chuck ? null : d));
+    L.append(b);
+  });
+}
+function openBench(d) {
+  if (!initBench()) { log('Parça masası için WebGL açılamadı.', 'bad'); return; }
+  $('bench').hidden = false; bench.open = true;
+  requestAnimationFrame(benchResize);
+  const items = benchItems();
+  if (d) benchSelect(d);
+  else if (S.lastPiece && pieces.some(p => p.d === S.lastPiece)) benchSelect(S.lastPiece);
+  else if (items.length) benchSelect(items[0].chuck ? null : items[0].d);
+  else { renderBenchList(); $('benchTitle').textContent = ''; }
+}
+function closeBench() { $('bench').hidden = true; bench.open = false; $('benchRead').hidden = true; }
+function benchSelect(d) {
+  bench.chuck = !d;
+  bench.d = d || extractPiece(startIdx, endIdx);
+  if (!d) pieceSeq--;               // anlık görüntü, numara harcamasın
+  bench.lenA = null;
+  const p = bench.d;
+  if (bench.mesh) { bench.scene.remove(bench.mesh); bench.mesh.geometry.dispose(); }
+  bench.caps.forEach(c => { bench.scene.remove(c); c.geometry.dispose(); }); bench.caps = [];
+  bench.mesh = new THREE.Mesh(pieceGeometry(p, 96), bench.mat); bench.scene.add(bench.mesh);
+  buildCaps(p);
+  bench.plate.position.y = -p.rmax - 8;
+  const L = Math.max(p.len, p.rmax * 2);
+  bench.cam.position.set(L * 0.35, p.rmax * 2.2 + L * 0.55, L * 1.5 + p.rmax * 3);
+  bench.ctl.target.set(0, 0, 0); bench.ctl.update();
+  $('benchTitle').textContent = `${bench.chuck ? 'Aynadaki parça (anlık görüntü)' : 'Parça #' + p.id} · boy ${p.len.toFixed(2)} mm · en büyük Ø${(2 * p.rmax).toFixed(2)}`;
+  $('benchStick').value = Math.round(clamp(p.len - 1, 10, AMAX - 1));
+  $('benchMountNote').style.color = '';
+  setBenchSection(bench.section);
+  renderBenchList();
+  benchHint();
+}
+function buildCaps(p) {
+  const half = p.len / 2, has = k => p.R[k] > p.Ri[k] + 0.01;
+  for (const side of [1, -1]) {
+    const j = side > 0 ? 0 : 48, pts = [], back = [];
+    for (let k = 0; k < p.n; k++) {
+      if (!has(k) || (k % 2 && k !== p.n - 1)) continue;
+      const x = k * DZ - half, r = Math.min(p.R[k], pieceThreadR(p, k, j, 96));
+      pts.push(new THREE.Vector2(x, side * r));
+      back.push(new THREE.Vector2(x, side * p.Ri[k]));
+    }
+    if (pts.length < 2) continue;
+    const sh = new THREE.Shape(pts.concat(back.reverse()));
+    const m = new THREE.Mesh(new THREE.ShapeGeometry(sh), bench.capMat);
+    m.position.z = 0.02; m.visible = bench.section; bench.scene.add(m); bench.caps.push(m);
+  }
+}
+function setBenchSection(on) {
+  bench.section = on;
+  bench.mat.clippingPlanes = on ? [bench.clip] : [];
+  bench.mat.needsUpdate = true;
+  bench.caps.forEach(c => c.visible = on);
+  [...$('benchTools').children].forEach(b => { if (b.dataset.t === 'sec') b.classList.toggle('on', on); });
+}
+function benchHint() {
+  const t = bench.tool;
+  $('benchHint').textContent = t === 'view' ? 'Fareyle döndürün, tekerlekle yakınlaştırın. Ölçmek için bir alet seçin.'
+    : t === 'od' ? 'Kumpas (0.02 mm): parçanın üstünde gezdirin, okumayı kaydetmek için tıklayın.'
+    : t === 'mic' ? 'Mikrometre (0.01 mm): dış çapta gezdirin, tıklayınca kaydedilir.'
+    : t === 'id' ? 'Kumpasın iç çeneleri: deliğin bulunduğu yerde gezdirin. Yarım kesit açıkken iç yapı görünür.'
+    : bench.lenA === null ? 'Boy ölçümü: ilk yüzeye tıklayın (alın ve omuzlara yapışır).' : 'Şimdi ikinci yüzeye tıklayın.';
+}
+function benchPick(e) {
+  if (!bench.mesh) return null;
+  const r = $('bc').getBoundingClientRect();
+  bench.ptr.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1);
+  bench.cam.updateMatrixWorld();
+  bench.ray.setFromCamera(bench.ptr, bench.cam);
+  const hit = bench.ray.intersectObject(bench.mesh)[0];
+  if (!hit) return null;
+  const p = bench.d, half = p.len / 2;
+  return { x:hit.point.x, k:clamp(Math.round((hit.point.x + half) / DZ), 0, p.n - 1) };
+}
+function snapFace(k) {
+  const p = bench.d, half = p.len / 2;
+  if (k < 15) return -half;
+  if (k > p.n - 16) return half - DZ;
+  let best = -1, bj = 0.3;
+  for (let q = Math.max(0, k - 15); q < Math.min(p.n - 1, k + 15); q++) { const j = Math.abs(p.R[q + 1] - p.R[q]); if (j > bj) { bj = j; best = q; } }
+  return best >= 0 ? (best + 0.5) * DZ - half : k * DZ - half;
+}
+const roundTo = (v, res) => Math.round(v / res) * res;
+function benchHover(e) {
+  const t = bench.tool;
+  if (t === 'view' || t === 'sec') { bench.hover = null; return; }
+  const h = benchPick(e);
+  if (!h) { bench.hover = null; return; }
+  const p = bench.d, c = bench.cal;
+  const res = t === 'mic' ? 0.01 : 0.02;
+  if (t === 'od' || t === 'mic') {
+    const r = p.R[h.k];
+    bench.hover = { k:h.k, v:2 * r, txt:'Ø ' + roundTo(2 * r, res).toFixed(2) };
+    Object.assign(c, { axis:'y', c:h.x, p1:-r, p2:r, show:true });
+  } else if (t === 'id') {
+    const r = p.Ri[h.k];
+    bench.hover = { k:h.k, v:2 * r, txt:r < 0.5 ? 'delik yok' : 'iç Ø ' + roundTo(2 * r, 0.02).toFixed(2) };
+    Object.assign(c, { axis:'y', c:h.x, p1:-r, p2:r, show:r >= 0.5 });
+  } else {
+    const xs = snapFace(h.k);
+    if (bench.lenA === null) { bench.hover = { x:xs, txt:'1. yüzey' }; Object.assign(c, { axis:'x', c:0, p1:xs, p2:xs + 0.01, show:true }); }
+    else { const L = Math.abs(xs - bench.lenA); bench.hover = { x:xs, v:L, txt:'L ' + roundTo(L, 0.02).toFixed(2) }; Object.assign(c, { axis:'x', c:0, p1:Math.min(xs, bench.lenA), p2:Math.max(xs, bench.lenA), show:true }); }
+  }
+}
+function benchClick(e) {
+  const t = bench.tool;
+  if (t === 'view' || t === 'sec') return;
+  benchHover(e);
+  const h = bench.hover; if (!h) return;
+  const p = bench.d, half = p.len / 2, tool = t === 'mic' ? 'Mikrometre' : 'Kumpas';
+  if (t === 'len') {
+    if (bench.lenA === null) { bench.lenA = h.x; benchHint(); beep(1800, 0.05, 0.04); return; }
+    addMeas(`Boy ${roundTo(h.v, 0.02).toFixed(2)} mm (kumpas)`);
+    bench.lenA = null; benchHint(); return;
+  }
+  if (h.txt === 'delik yok') return;
+  addMeas(`${h.txt} · sağ uçtan ${(half - h.k * DZ).toFixed(1)} mm (${tool.toLocaleLowerCase('tr')})`);
+}
+function addMeas(txt) {
+  const li = document.createElement('li'); li.className = 'ok'; li.textContent = txt;
+  $('benchMeas').prepend(li);
+  while ($('benchMeas').children.length > 8) $('benchMeas').lastChild.remove();
+  beep(2200, 0.05, 0.05);
+}
+function updateBench(dt) {
+  if (!bench.open || !bench.r) return;
+  const c = bench.cal, p = bench.d;
+  c.g.visible = c.show && !!bench.hover;
+  if (c.g.visible && p) {
+    // çene animasyonu: hareketli çene hedefe yumuşakça kapanır
+    c.cur += (c.p2 - c.cur) * Math.min(1, dt * 14);
+    const mic = bench.tool === 'mic';
+    const mm = mic ? bench.micMat : bench.steelMat;
+    [c.beam, c.j1, c.j2, c.slider].forEach(m => m.material = mm);
+    const zb = -(p.rmax + 24), R0 = p.rmax;      // kumpas kirişi parçanın arkasında, çeneler öne uzanır
+    if (c.axis === 'y') {
+      const lo = c.p1, hi = c.cur;
+      c.beam.scale.set(5, (hi - lo) + 70, 3); c.beam.position.set(c.c, (lo + hi) / 2 + 20, zb);
+      c.j1.scale.set(5, 2.5, -zb + 8); c.j1.position.set(c.c, lo - 1.25, zb / 2 + 4);
+      c.j2.scale.set(5, 2.5, -zb + 8); c.j2.position.set(c.c, hi + 1.25, zb / 2 + 4);
+      c.slider.scale.set(9, 16, 6); c.slider.position.set(c.c, hi + 10, zb);
+    } else {
+      const lo = c.p1, hi = Math.max(c.p1 + 0.01, c.cur);
+      c.beam.scale.set((hi - lo) + 70, 5, 3); c.beam.position.set((lo + hi) / 2 + 20, R0 + 22, 0);
+      c.j1.scale.set(2.5, R0 + 22, 5); c.j1.position.set(lo - 1.25, (R0 + 22) / 2, 0);
+      c.j2.scale.set(2.5, R0 + 22, 5); c.j2.position.set(hi + 1.25, (R0 + 22) / 2, 0);
+      c.slider.scale.set(16, 9, 6); c.slider.position.set(hi + 10, R0 + 22, 0);
+    }
+  }
+  bench.ctl.update();
+  bench.r.render(bench.scene, bench.cam);
+  const rd = $('benchRead');
+  if (bench.hover && c.g.visible) {
+    const v = new THREE.Vector3();
+    if (c.axis === 'y') v.set(c.c, c.cur + 12, 0); else v.set((c.p1 + c.cur) / 2, p.rmax + 30, 0);
+    v.project(bench.cam);
+    const box = document.querySelector('.bench-view');
+    rd.style.left = ((v.x + 1) / 2 * box.clientWidth) + 'px';
+    rd.style.top = ((1 - v.y) / 2 * box.clientHeight) + 'px';
+    rd.textContent = bench.hover.txt; rd.hidden = false;
+  } else if (bench.hover && bench.hover.txt === 'delik yok') {
+    rd.textContent = 'delik yok'; rd.hidden = false;
+  } else rd.hidden = true;
+}
+$('benchOpen').addEventListener('click', () => { initAudio(); openBench(null); });
+$('benchClose').addEventListener('click', closeBench);
+$('benchTools').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.t === 'sec') { setBenchSection(!bench.section); return; }
+  bench.tool = b.dataset.t; bench.lenA = null; bench.hover = null;
+  [...$('benchTools').children].forEach(x => { if (x.dataset.t !== 'sec') x.classList.toggle('on', x === b); });
+  benchHint();
+});
+function benchMount(flip) {
+  const note = $('benchMountNote');
+  const fail = m => { note.textContent = m; note.style.color = 'var(--warn)'; };
+  if (S.spindle) return fail('Parça bağlamak için önce mili durdurun.');
+  if (S.alarm || S.changing) return fail('Önce alarmı ya da takım değişimini bitirin.');
+  const stick = parseFloat($('benchStick').value.replace(',', '.'));
+  if (!isFinite(stick) || stick <= 0) return fail('Çıkıntı için mm cinsinden bir sayı girin.');
+  let d = bench.d;
+  if (bench.chuck) {
+    if (!flip) return fail('Bu parça zaten aynada bağlı.');
+    d = unclampPart();
+  }
+  // kalemi ve gelinciği güvenli yere çek
+  disengageAll(); stopMotion(); updateAutoUI();
+  const err = mountPiece(d, flip, stick);
+  if (err) { if (bench.chuck) mountPiece(d, false, d.a0 + d.len - DZ); return fail(err); }
+  const aE = A(endIdx);
+  let rm = 0; for (let i = startIdx; i <= endIdx; i++) rm = Math.max(rm, R[i]);
+  if (S.at < aE + 10) S.at = aE + 25;
+  if (S.rt < rm + 10) S.rt = rm + 15;
+  if (S.q < aE + 60) S.q = Math.min(LIM.q1, aE + 160);
+  hoseKey = '';
+  log(`Parça aynaya ${flip ? 'ters' : 'düz'} bağlandı: çıkıntı ${stick.toFixed(1)} mm. Z sıfırı yeni alına alındı; işlenmiş yüzeyi sert çenelerle sıkmak iz bırakabilir.`, 'ok');
+  if (S.job && !S.job.done) buildGuide(S.job.J);
+  closeBench();
+}
+$('benchMount').addEventListener('click', () => benchMount(false));
+$('benchFlip').addEventListener('click', () => benchMount(true));
+$('benchUnclamp').addEventListener('click', () => {
+  if (S.spindle) { $('benchMountNote').textContent = 'Parçayı sökmek için önce mili durdurun.'; return; }
+  const d = unclampPart();
+  if (d) { log('Aynadaki parça söküldü ve masaya kondu.', 'ok'); benchSelect(d); }
+});
+// Kızaktaki bir parçaya tıklayınca masada aç
+{
+  let down = null;
+  const ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
+  canvas.addEventListener('pointerdown', e => { down = [e.clientX, e.clientY]; });
+  canvas.addEventListener('pointerup', e => {
+    if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 5 || !pieces.length) { down = null; return; }
+    down = null;
+    const r = canvas.getBoundingClientRect();
+    ptr.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1);
+    ray.setFromCamera(ptr, camera);
+    const hit = ray.intersectObjects(pieces.map(p => p.mesh))[0];
+    if (hit) { initAudio(); openBench(hit.object.userData.piece); }
+  });
+}
+
 /* ---- Klavye ---- */
-const KEYMAP = { ArrowLeft:['z',-1], ArrowRight:['z',1], ArrowUp:['x',1], ArrowDown:['x',-1], PageUp:['w',1], PageDown:['w',-1] };
+const KEYMAP = { ArrowLeft:['z',-1], ArrowRight:['z',1], ArrowUp:['x',1], ArrowDown:['x',-1], PageUp:['w',1], PageDown:['w',-1], Home:['u',1], End:['u',-1] };
 window.addEventListener('keydown', e => {
   if (e.target instanceof Element && e.target.matches('input, select, textarea')) return;
   if (e.key === 'Shift') { S.rapidKey = true; return; }
@@ -1838,9 +2377,10 @@ const VIEWS = {
 };
 let camAnim = null;
 function setView(id, instant) {
-  const v = VIEWS[id];
-  if (instant) { camera.position.set(...v.p); controls.target.set(...v.t); controls.update(); return; }
-  camAnim = { t:0, p0:camera.position.clone(), t0:controls.target.clone(), p1:new THREE.Vector3(...v.p), t1:new THREE.Vector3(...v.t) };
+  const v = VIEWS[id], dx = endIdx >= startIdx ? clamp(A(endIdx) - 100, -60, 90) * 0.6 : 0;   // uzun parçada görünüm kayar
+  const p1 = new THREE.Vector3(v.p[0] + dx, v.p[1], v.p[2] + Math.max(0, dx) * 0.8), t1 = new THREE.Vector3(v.t[0] + dx, v.t[1], v.t[2]);
+  if (instant) { camera.position.copy(p1); controls.target.copy(t1); controls.update(); return; }
+  camAnim = { t:0, p0:camera.position.clone(), t0:controls.target.clone(), p1, t1 };
 }
 Object.keys(VIEWS).forEach(id => $(id).addEventListener('click', () => setView(id)));
 setView('vOp', true);
@@ -1855,21 +2395,34 @@ new ResizeObserver(resize).observe(stage); resize();
 /* ---------------- İş emirleri ---------------- */
 // Z değerleri bitmiş alından ölçülür (Z0 = alın, Z− aynaya doğru). end: alının aynadan uzaklığı.
 const JOBS = [
-  { title:'Alın ve çap', target:360, end:99,
+  { title:'Alın ve çap', target:360, end:99, stock:'short',
     brief:'Alından 1.00 mm alın (aynadan çıkıntı 99.00). Kalemi yeni alna değdirip Z0 yapın. Uçtan 50 mm boyunca çapı Ø45.00\'e indirin; son pasoyu düşük ilerlemeyle verin (Ra ≤ 3.2 µm).',
     od:[{ z0:0, z1:-50, d:45, tol:0.05, ra:3.2 }] },
-  { title:'Kademeli mil', target:540, end:99,
+  { title:'Kademeli mil', target:540, end:99, stock:'short',
     brief:'Alın 1.00 mm. Uçtan Ø30 × 20 mm, ardından Ø40 × 25 mm kademe. Omuz konumları ±0.1. Z durdurucuyu omuzlarda kullanın.',
     od:[{ z0:0, z1:-20, d:30, tol:0.05, ra:3.2 }, { z0:-20, z1:-45, d:40, tol:0.05, ra:3.2 }] },
-  { title:'Kanal ve pah', target:480, end:99,
+  { title:'Kanal ve pah', target:480, end:99, stock:'short',
     brief:'Uçtan 50 mm boyunca Ø40. Ucuna T2 ile 1×45° pah. Z−25 merkezli, 3 mm genişliğinde Ø36 kanal (T3; kalemin sol köşesi Z−26.5\'te).',
     od:[{ z0:0, z1:-50, d:40, tol:0.05, ra:3.2 }], chamfer:{ c:1, tol:0.2 }, groove:{ zc:-25, w:3, d:36, tol:0.1 } },
-  { title:'Delik ve bara', target:540, end:99,
+  { title:'Delik ve bara', target:540, end:99, stock:'short',
     brief:'Alın 1.00 mm. G1 ile punta, G3 Ø16 matkapla 30 mm (tam çap) derinlik, sonra T6 delik kalemiyle Ø20 × 15 mm. Ø20 delikte Ra ≤ 3.2.',
     bore:[{ z1:-15, d:20, tol:0.05, ra:3.2 }, { z1:-30, d:16, tol:0.3 }] },
-  { title:'M20 cıvata', target:900, end:99,
+  { title:'M20 cıvata', target:900, end:99, stock:'short',
     brief:'Alın 1.00 mm. Uçtan 35 mm Ø20, ucuna 1.5×45° pah. T5 ile 25 mm boyunca M20×2.5 dış diş (derinlik 1.53): somun kolunu kapatın, Z durdurucuyu Z−25\'e koyun, her pasoda X\'i biraz ilerletin.',
     od:[{ z0:0, z1:-35, d:20, tol:0.1 }], chamfer:{ c:1.5, tol:0.3 }, thread:{ z1:-25, p:2.5, depth:1.53, tol:0.12 } },
+  { title:'Konik pim', target:660, end:99, stock:'short',
+    brief:'Alın 1.00 mm, uçtan 40 mm Ø40. Üst kızağı 9.46° döndürün (Hesapla: 40 30 30) ve U çarkıyla pasolar verin: koni Z0\'da Ø30, Z−30\'da Ø40 olmalı. Kalem burnunun yarıçapı koniyi yaklaşık 0.13 mm büyük çıkarır; parça masasında ölçüp son pasoyu düzeltin.',
+    od:[{ z0:-30, z1:-40, d:40, tol:0.05 }], taper:{ z0:0, z1:-30, d0:30, d1:40, tol:0.15, angTol:0.15 } },
+  { title:'Pul', target:660, end:99, stock:'short', inspect:'cut',
+    brief:'Alın 1.00 mm, uçtan 20 mm Ø40 (Ra ≤ 3.2). G1 punta, G3 Ø16 matkapla 20 mm delin. T4 kesme kalemiyle 8 mm kalınlıkta kesin (3 mm genişlikteki kalemin sol köşesi Z−11\'de). Muayene kesilen pulda yapılır.',
+    pre:{ od:[{ z0:0, z1:-20, d:40 }], bore:[{ z1:-20, d:16 }] },
+    piece:{ len:8, lenTol:0.1, od:40, odTol:0.05, ra:3.2, id:16, idTol:0.3 } },
+  { title:'Burç: ters bağlama', target:1260, stock:'short', len:30,
+    brief:'Uçtan 40 mm Ø40, ucuna 1×45° pah, Ø16 matkapla 40 mm delin, T4 ile kesin (sol köşe Z−35 → 32 mm parça). Parça masasında burcu TERS bağlayın (çıkıntı ~31: çeneler aynadan 20 mm dışarı uzanır, pah kalemine de yer kalmalı), kesilen yüzü alın tornalayıp boyu 30.00 yapın, o uca da 1×45° pah kırın.',
+    od:[{ z0:0, z1:-30, d:40, tol:0.05 }], bore:[{ z1:-31, d:16, tol:0.3 }], chamfer:{ c:1, tol:0.2 }, chamferStart:{ c:1, tol:0.25 } },
+  { title:'Uzun mil', target:960, end:179, stock:'long', centerHole:true,
+    brief:'Ø30 × 180 uzun çubuk. Alın 1.00 mm, G1 ile punta deliği açın, G4 döner puntayı yerine oturtun. Uçtan 150 mm boyunca Ø25.00 ±0.05 (Ra ≤ 3.2). Puntasız tornalarsanız parça esner: konik çıkar ve tırlama yapar.',
+    od:[{ z0:0, z1:-150, d:25, tol:0.05, ra:3.2 }] },
 ];
 JOBS.forEach(J => { J.od = J.od || []; J.bore = J.bore || []; });
 
@@ -1879,24 +2432,45 @@ function saveProgress() { try { localStorage.setItem('torna-progress', JSON.stri
 const bestStars = i => (progress['j' + i] && progress['j' + i].stars) || 0;
 const unlocked = i => i === 0 || bestStars(i - 1) >= 1;
 
-function odEndR(J) { const s = J.od.find(s => s.z0 >= 0 && s.z1 < 0); return s ? s.d / 2 : STOCK_R; }
-function targets(J) {
-  const tR = new Float32Array(NS), tRi = new Float32Array(NS), end = J.end;
+const stockOf = J => STOCKS[J.stock || 'short'].D / 2;
+function odEndR(J) { const s = J.od.find(s => s.z0 >= 0 && s.z1 < 0); return s ? s.d / 2 : stockOf(J); }
+function odStartR(J) { const s = J.od.find(s => s.z1 <= -J.len); return s ? s.d / 2 : stockOf(J); }
+function measuredFace() {
+  let fe = endIdx;
+  while (fe > Math.max(I0, startIdx) && R[fe] < 2) fe--;   // alın tornalamada merkezde kalan çıkıntıyı yok say
+  return { fe, aEnd:endIdx >= startIdx ? A(fe) + DZ / 2 : 0, aStart:A(startIdx) - DZ / 2 };
+}
+// İşin bitmiş alın konumu (a) ve başlangıcı: ters bağlanan işlerde ölçülen alından hesaplanır
+function jobFrame(J) {
+  if (J.len) { const m = measuredFace(); return { end:m.aEnd, start:m.aEnd - J.len }; }
+  return { end:J.end, start:-1e9 };
+}
+function targets(J, end, start) {
+  const tR = new Float32Array(NS), tRi = new Float32Array(NS), sr = stockOf(J);
   const last = J.bore[J.bore.length - 1];
   for (let i = 0; i < NS; i++) {
     const a = A(i);
-    if (a > end + 1e-6) continue;
-    let r = STOCK_R;
-    for (const s of J.od) if (a >= end + s.z1 - 1e-6 && a <= end + s.z0 + 1e-6) r = s.d / 2;
-    if (J.groove) { const g = J.groove; if (Math.abs(a - (end + g.zc)) <= g.w / 2 + 1e-6) r = g.d / 2; }
-    if (J.chamfer && a > end - J.chamfer.c) r = Math.min(r, odEndR(J) - (a - (end - J.chamfer.c)));
+    if (a > end + 1e-6 || a < start - 1e-6) continue;
+    const z = a - end;
+    let r = sr;
+    for (const s of J.od) if (z >= s.z1 - 1e-6 && z <= s.z0 + 1e-6) r = s.d / 2;
+    if (J.taper) { const t = J.taper; if (z >= t.z1 - 1e-6 && z <= t.z0 + 1e-6) r = t.d0 / 2 + (t.d1 / 2 - t.d0 / 2) * (z - t.z0) / (t.z1 - t.z0); }
+    if (J.groove) { const g = J.groove; if (Math.abs(z - g.zc) <= g.w / 2 + 1e-6) r = g.d / 2; }
+    if (J.chamfer && z > -J.chamfer.c) r = Math.min(r, odEndR(J) - (z + J.chamfer.c));
+    if (J.chamferStart && a < start + J.chamferStart.c) r = Math.min(r, odStartR(J) - (start + J.chamferStart.c - a));
     tR[i] = r;
     let ri = 0;
-    for (const s of J.bore) if (a >= end + s.z1 - 1e-6) ri = Math.max(ri, s.d / 2);
-    if (last) { const zb = end + last.z1, h = last.d / 2 / TAN59; if (a >= zb - h && a < zb) ri = Math.max(ri, (a - (zb - h)) * TAN59); }
+    for (const s of J.bore) if (z >= s.z1 - 1e-6) ri = Math.max(ri, s.d / 2);
+    if (last && end + last.z1 > start) { const zb = end + last.z1, h = last.d / 2 / TAN59; if (a >= zb - h && a < zb) ri = Math.max(ri, (a - (zb - h)) * TAN59); }
+    if (J.centerHole && z > -5.5) ri = Math.max(ri, 5 + z + 0.5);
     tRi[i] = ri;
   }
   return { tR, tRi };
+}
+// Pul gibi kesilerek teslim edilen işlerde resim ve kılavuz için bitmiş parçanın tanımı
+function pieceSpec(J) {
+  const P = J.piece;
+  return { od:[{ z0:0, z1:-P.len, d:P.od }], bore:[{ z1:-P.len - 1, d:P.id }], len:P.len, stock:J.stock };
 }
 
 /* -- Hedef profil çizgisi (parçanın üstünde, dönmez) -- */
@@ -1906,74 +2480,130 @@ const guideMat2 = new THREE.LineDashedMaterial({ color:0xf0b429, transparent:tru
 function buildGuide(J) {
   while (guide.children.length) { const c = guide.children.pop(); c.geometry.dispose(); }
   if (!J) return;
-  const { tR, tRi } = targets(J);
+  let G = J, fr;
+  if (J.inspect === 'cut') { G = Object.assign({ stock:J.stock }, J.pre); G.od = G.od || []; G.bore = G.bore || []; fr = { end:J.end, start:-1e9 }; }
+  else fr = jobFrame(J);
+  const { tR, tRi } = targets(G, fr.end, fr.start);
   const top = [], bore = [];
-  for (let i = idx(JAW_A); i <= idx(J.end); i += 2) top.push(new THREE.Vector3(A(i), tR[i] + 0.15, 0));
-  top.push(new THREE.Vector3(J.end, tRi[idx(J.end)], 0));
-  for (let i = idx(JAW_A); i <= idx(J.end); i += 2) if (tRi[i] > 0) bore.push(new THREE.Vector3(A(i), tRi[i], 0));
+  const i0 = Math.max(idx(JAW_A), idx(Math.max(fr.start, -40))), i1 = idx(fr.end);
+  for (let i = i0; i <= i1; i += 2) top.push(new THREE.Vector3(A(i), tR[i] + 0.15, 0));
+  top.push(new THREE.Vector3(fr.end, tRi[i1], 0));
+  for (let i = i0; i <= i1; i += 2) if (tRi[i] > 0) bore.push(new THREE.Vector3(A(i), tRi[i], 0));
+  if (top.length < 2) return;
   const l1 = new THREE.Line(new THREE.BufferGeometry().setFromPoints(top), guideMat); l1.renderOrder = 4; guide.add(l1);
-  const front = top.map(p => new THREE.Vector3(p.x, 0, p.y));
-  const l2 = new THREE.Line(new THREE.BufferGeometry().setFromPoints(front), guideMat); l2.renderOrder = 4; guide.add(l2);
+  const l2 = new THREE.Line(new THREE.BufferGeometry().setFromPoints(top.map(p => new THREE.Vector3(p.x, 0, p.y))), guideMat); l2.renderOrder = 4; guide.add(l2);
   if (bore.length > 1) { const l3 = new THREE.Line(new THREE.BufferGeometry().setFromPoints(bore), guideMat2); l3.computeLineDistances(); l3.renderOrder = 4; guide.add(l3); }
+  if (J.inspect === 'cut') {   // kesme çizgisi
+    const ac = J.end - J.piece.len, rr = stockOf(J) + 4;
+    const l4 = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(ac, -rr, 0), new THREE.Vector3(ac, rr, 0)]), guideMat2); l4.computeLineDistances(); l4.renderOrder = 4; guide.add(l4);
+  }
 }
 
 /* -- Teknik resim -- */
 function drawingSVG(J) {
-  const { tR, tRi } = targets(J);
-  const s = 1.55, ox = 22, cy = 62, X = a => ox + a * s, Y = r => cy - r * s;
+  // Kesilen ya da ters bağlanan işlerde yalnız bitmiş parça çizilir; diğerlerinde ayna çeneleriyle birlikte
+  const solo = J.inspect === 'cut' || !!J.len;
+  const G = J.inspect === 'cut' ? pieceSpec(J) : J;
+  if (J.inspect === 'cut') { G.od = G.od || []; G.bore = G.bore || []; }
+  const end = solo ? G.len : J.end, start = solo ? 0 : -1e9, a0 = solo ? 0 : 0;
+  const { tR, tRi } = targets(G, end, start);
+  const sr = stockOf(J);
+  const s = Math.min(1.55, 150 / (end - a0 + 12), 42 / sr), ox = 22, cy = 62, X = a => ox + (a - a0) * s, Y = r => cy - r * s;
+  const iA = idx(a0), iE = idx(end), step = Math.max(1, Math.round(0.4 / (s * DZ)));
   let top = '', bot = '';
-  for (let i = I0; i <= idx(J.end); i += 3) { top += `${X(A(i)).toFixed(1)},${Y(tR[i]).toFixed(1)} `; bot = `${X(A(i)).toFixed(1)},${Y(-tR[i]).toFixed(1)} ` + bot; }
-  const ie = idx(J.end);
-  top += `${X(J.end).toFixed(1)},${Y(tR[ie]).toFixed(1)} `;
-  bot = `${X(J.end).toFixed(1)},${Y(-tR[ie]).toFixed(1)} ` + bot;
+  for (let i = iA; i <= iE; i += step) { top += `${X(A(i)).toFixed(1)},${Y(tR[i]).toFixed(1)} `; bot = `${X(A(i)).toFixed(1)},${Y(-tR[i]).toFixed(1)} ` + bot; }
+  top += `${X(end).toFixed(1)},${Y(tR[iE]).toFixed(1)} `; bot = `${X(end).toFixed(1)},${Y(-tR[iE]).toFixed(1)} ` + bot;
+  if (solo) { top = `${X(a0).toFixed(1)},${Y(tRi[iA]).toFixed(1)} ` + top; bot += `${X(a0).toFixed(1)},${Y(-tRi[iA]).toFixed(1)} `; }
   let g = `<svg viewBox="0 0 200 130" role="img" aria-label="Teknik resim yandan görünüş">
     <defs><pattern id="hatch" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="4" style="stroke:var(--ink-2);stroke-width:.6"/></pattern></defs>`;
-  g += `<rect x="${X(0)}" y="${Y(STOCK_R + 10)}" width="${JAW_A * s}" height="${10 * s}" style="fill:url(#hatch);stroke:var(--ink-2);stroke-width:.4"/>`;
-  g += `<rect x="${X(0)}" y="${Y(-STOCK_R)}" width="${JAW_A * s}" height="${10 * s}" style="fill:url(#hatch);stroke:var(--ink-2);stroke-width:.4"/>`;
+  if (!solo) {
+    g += `<rect x="${X(0)}" y="${Y(sr + 10)}" width="${JAW_A * s}" height="${10 * s}" style="fill:url(#hatch);stroke:var(--ink-2);stroke-width:.4"/>`;
+    g += `<rect x="${X(0)}" y="${Y(-sr)}" width="${JAW_A * s}" height="${10 * s}" style="fill:url(#hatch);stroke:var(--ink-2);stroke-width:.4"/>`;
+  }
   g += `<polygon class="dw-part" style="fill:var(--paper)" points="${top}${bot}"/>`;
-  if (J.bore.length) {
+  if (G.bore.length) {
     let b1 = '', b2 = '';
-    for (let i = I0; i <= ie; i += 3) if (tRi[i] > 0) { b1 += `${X(A(i)).toFixed(1)},${Y(tRi[i]).toFixed(1)} `; b2 += `${X(A(i)).toFixed(1)},${Y(-tRi[i]).toFixed(1)} `; }
+    for (let i = iA; i <= iE; i += step) if (tRi[i] > 0) { b1 += `${X(A(i)).toFixed(1)},${Y(tRi[i]).toFixed(1)} `; b2 += `${X(A(i)).toFixed(1)},${Y(-tRi[i]).toFixed(1)} `; }
     g += `<polyline points="${b1}" style="fill:none;stroke:var(--ink);stroke-width:.6;stroke-dasharray:2 1.2"/><polyline points="${b2}" style="fill:none;stroke:var(--ink);stroke-width:.6;stroke-dasharray:2 1.2"/>`;
   }
   if (J.thread) {
     const th = J.thread, rm = odEndR(J) - th.depth;
-    g += `<line x1="${X(J.end + th.z1)}" y1="${Y(rm)}" x2="${X(J.end)}" y2="${Y(rm)}" style="stroke:var(--ink);stroke-width:.4"/><line x1="${X(J.end + th.z1)}" y1="${Y(-rm)}" x2="${X(J.end)}" y2="${Y(-rm)}" style="stroke:var(--ink);stroke-width:.4"/>`;
-    g += `<text x="${X(J.end + th.z1 / 2) - 12}" y="${Y(odEndR(J)) - 3}" font-size="5">M${odEndR(J) * 2}×${th.p}</text>`;
+    g += `<line x1="${X(end + th.z1)}" y1="${Y(rm)}" x2="${X(end)}" y2="${Y(rm)}" style="stroke:var(--ink);stroke-width:.4"/><line x1="${X(end + th.z1)}" y1="${Y(-rm)}" x2="${X(end)}" y2="${Y(-rm)}" style="stroke:var(--ink);stroke-width:.4"/>`;
+    g += `<text x="${X(end + th.z1 / 2) - 12}" y="${Y(odEndR(J)) - 3}" font-size="5">M${odEndR(J) * 2}×${th.p}</text>`;
   }
-  g += `<line class="dw-cl" x1="${X(-5)}" y1="${cy}" x2="${X(J.end + 8)}" y2="${cy}"/>`;
-  J.od.forEach(sg => { if (!J.thread || sg.z1 < J.thread.z1) g += `<text x="${X(J.end + (sg.z0 + sg.z1) / 2) - 7}" y="${Y(sg.d / 2) - 2.5}" font-size="5">Ø${sg.d}</text>`; });
-  if (J.groove) g += `<text x="${X(J.end + J.groove.zc) - 6}" y="${Y(-J.groove.d / 2) + 7}" font-size="4.5">Ø${J.groove.d}</text>`;
-  J.bore.forEach((sg, k) => g += `<text x="${X(J.end + sg.z1 / 2 + (k ? -6 : 0)) - 6}" y="${cy + (k ? 3.5 : -1.5)}" font-size="4.3">Ø${sg.d}</text>`);
-  g += `<line class="dw-dim" x1="${X(0)}" y1="${Y(-STOCK_R) + 13}" x2="${X(J.end)}" y2="${Y(-STOCK_R) + 13}"/><text x="${X(J.end / 2) - 8}" y="${Y(-STOCK_R) + 19}" font-size="5">${J.end.toFixed(2)}</text>`;
-  g += `<text x="${X(J.end) + 2}" y="${cy - 2}" font-size="4.5">Z0</text><text x="${X(0) - 2}" y="${Y(STOCK_R + 10) - 2}" font-size="4.2">ayna</text>`;
+  if (J.taper) {
+    const t = J.taper, ang = Math.atan((t.d1 - t.d0) / (2 * Math.abs(t.z1 - t.z0))) * 180 / Math.PI;
+    g += `<text x="${X(end + (t.z0 + t.z1) / 2) - 16}" y="${Y(t.d1 / 2) - 3}" font-size="4.6">Ø${t.d0}→Ø${t.d1} · ${ang.toFixed(2)}°</text>`;
+  }
+  g += `<line class="dw-cl" x1="${X(a0) - 5}" y1="${cy}" x2="${X(end) + 8}" y2="${cy}"/>`;
+  G.od.forEach(sg => { if (!J.thread || sg.z1 < J.thread.z1) g += `<text x="${X(end + (sg.z0 + sg.z1) / 2) - 7}" y="${Y(sg.d / 2) - 2.5}" font-size="5">Ø${sg.d}</text>`; });
+  if (J.groove) g += `<text x="${X(end + J.groove.zc) - 6}" y="${Y(-J.groove.d / 2) + 7}" font-size="4.5">Ø${J.groove.d}</text>`;
+  G.bore.forEach((sg, k) => g += `<text x="${X(end + Math.max(sg.z1, -(end - a0)) / 2 + (k ? -6 : 0)) - 6}" y="${cy + (k ? 3.5 : -1.5)}" font-size="4.3">Ø${sg.d}</text>`);
+  const yd = Y(-sr) + 13;
+  g += `<line class="dw-dim" x1="${X(a0)}" y1="${yd}" x2="${X(end)}" y2="${yd}"/><text x="${X((a0 + end) / 2) - 8}" y="${yd + 6}" font-size="5">${(end - a0).toFixed(2)}</text>`;
+  g += `<text x="${X(end) + 2}" y="${cy - 2}" font-size="4.5">Z0</text>`;
+  if (!solo) g += `<text x="${X(0) - 2}" y="${Y(sr + 10) - 2}" font-size="4.2">ayna</text>`;
   return g + '</svg>';
 }
 function drawingTable(J) {
   let t = '<tr><th>Özellik</th><th>Z</th><th>Ölçü</th><th>Tol.</th><th>Ra</th></tr>';
-  t += `<tr><td>Alın</td><td>0</td><td>çıkıntı ${J.end.toFixed(2)}</td><td>±0.1</td><td>—</td></tr>`;
+  if (J.inspect === 'cut') {
+    const P = J.piece;
+    t += `<tr><td>Kalınlık</td><td>—</td><td>${P.len.toFixed(2)}</td><td>±${P.lenTol}</td><td>—</td></tr>`;
+    t += `<tr><td>Dış çap</td><td>—</td><td>Ø${P.od.toFixed(2)}</td><td>±${P.odTol}</td><td>${P.ra}</td></tr>`;
+    t += `<tr><td>Delik</td><td>boydan</td><td>Ø${P.id.toFixed(2)}</td><td>±${P.idTol}</td><td>—</td></tr>`;
+    return t;
+  }
+  if (J.len) t += `<tr><td>Toplam boy</td><td>0…${-J.len}</td><td>${J.len.toFixed(2)}</td><td>±0.1</td><td>—</td></tr>`;
+  else t += `<tr><td>Alın</td><td>0</td><td>çıkıntı ${J.end.toFixed(2)}</td><td>±0.1</td><td>—</td></tr>`;
   J.od.forEach(s => t += `<tr><td>Çap</td><td>${s.z0}…${s.z1}</td><td>Ø${s.d.toFixed(2)}</td><td>±${s.tol}</td><td>${s.ra || '—'}</td></tr>`);
+  if (J.taper) { const tp = J.taper; t += `<tr><td>Koni</td><td>${tp.z0}…${tp.z1}</td><td>Ø${tp.d0}→Ø${tp.d1}</td><td>±${tp.tol}, ±${tp.angTol}°</td><td>—</td></tr>`; }
   if (J.chamfer) t += `<tr><td>Pah</td><td>0</td><td>${J.chamfer.c}×45°</td><td>±${J.chamfer.tol}</td><td>—</td></tr>`;
+  if (J.chamferStart) t += `<tr><td>Pah (öbür uç)</td><td>${-J.len}</td><td>${J.chamferStart.c}×45°</td><td>±${J.chamferStart.tol}</td><td>—</td></tr>`;
   if (J.groove) t += `<tr><td>Kanal</td><td>${J.groove.zc}</td><td>${J.groove.w} gen. Ø${J.groove.d}</td><td>±${J.groove.tol}</td><td>—</td></tr>`;
-  J.bore.forEach(s => t += `<tr><td>Delik</td><td>0…${s.z1}</td><td>Ø${s.d.toFixed(2)}</td><td>±${s.tol}</td><td>${s.ra || '—'}</td></tr>`);
+  J.bore.forEach(s => t += `<tr><td>Delik</td><td>0…${J.len && -s.z1 >= J.len ? 'boydan' : s.z1}</td><td>Ø${s.d.toFixed(2)}</td><td>±${s.tol}</td><td>${s.ra || '—'}</td></tr>`);
   if (J.thread) t += `<tr><td>Diş</td><td>0…${J.thread.z1}</td><td>M${odEndR(J) * 2}×${J.thread.p}, der. ${J.thread.depth}</td><td>±${J.thread.tol}</td><td>—</td></tr>`;
+  if (J.centerHole) t += `<tr><td>Punta deliği</td><td>0</td><td>izin verilir</td><td>—</td><td>—</td></tr>`;
   return t;
 }
 
 /* -- Muayene -- */
+function inspectPiece(J) {
+  const items = [], P = J.piece, d = S.lastPiece;
+  const add = (grp, label, nom, meas, ok, sc, w = 1) => items.push({ grp, label, nom, meas, ok:!!ok, sc:clamp(sc, 0, 1), w });
+  const dev = (x, tol) => x <= tol ? 1 : Math.max(0, 1 - (x - tol) / (2 * tol));
+  if (!d) { ['Kalınlık', 'Dış çap', 'Delik'].forEach(l => add('Parça', l, '', 'kesilmiş parça yok', false, 0, 2)); return items; }
+  add('Parça', 'Kalınlık', `${P.len.toFixed(2)} ±${P.lenTol}`, d.len.toFixed(2), Math.abs(d.len - P.len) <= P.lenTol, dev(Math.abs(d.len - P.len), P.lenTol), 2);
+  let n = 0, so = 0, mo = 0, si = 0, mi = 0, ra = 0, raw = 0;
+  for (let k = 3; k < d.n - 3; k++) {
+    if (d.R[k] <= d.Ri[k] + 0.01) continue;
+    n++; so += 2 * d.R[k]; si += 2 * d.Ri[k];
+    mo = Math.max(mo, Math.abs(2 * d.R[k] - P.od)); mi = Math.max(mi, Math.abs(2 * d.Ri[k] - P.id));
+    if (d.CUTO[k]) ra = Math.max(ra, d.RA[k]); else raw++;
+  }
+  if (!n) n = 1;
+  add('Parça', 'Dış çap', `Ø${P.od.toFixed(2)} ±${P.odTol}`, `Ø${(so / n).toFixed(3)} (sapma ${mo.toFixed(3)})`, mo <= P.odTol, dev(mo, P.odTol), 2);
+  add('Parça', 'Dış yüzey', `Ra ≤ ${P.ra}`, raw ? 'işlenmemiş' : `Ra ${ra.toFixed(1)}`, !raw && ra <= P.ra, raw ? 0 : ra <= P.ra ? 1 : Math.max(0, 1 - (ra - P.ra) / (2 * P.ra)));
+  add('Parça', 'Delik', `Ø${P.id.toFixed(2)} ±${P.idTol}`, `Ø${(si / n).toFixed(3)} (sapma ${mi.toFixed(3)})`, mi <= P.idTol, dev(mi, P.idTol), 2);
+  return items;
+}
 function inspect(J) {
-  const items = [], end = J.end;
+  if (J.inspect === 'cut') return inspectPiece(J);
+  const items = [];
   const add = (grp, label, nom, meas, ok, sc, w = 1) => items.push({ grp, label, nom, meas, ok:!!ok, sc:clamp(sc, 0, 1), w });
   const dev = (d, tol) => d <= tol ? 1 : Math.max(0, 1 - (d - tol) / (2 * tol));
-  let fe = endIdx;
-  while (fe > I0 && R[fe] < 2) fe--;                    // merkezdeki çıkıntıyı yok say, alın düzlemini ölç
-  const aEnd = endIdx >= I0 ? A(fe) + DZ / 2 : 0;
-  add('Alın', 'Aynadan çıkıntı', end.toFixed(2) + ' ±0.10', aEnd.toFixed(2), Math.abs(aEnd - end) <= 0.1, dev(Math.abs(aEnd - end), 0.1), 2);
+  const m = measuredFace(), fe = m.fe, aEnd = m.aEnd;
+  const { end, start } = jobFrame(J);
+  if (J.len) {
+    const L = m.aEnd - m.aStart;
+    add('Boy', 'Toplam boy', `${J.len.toFixed(2)} ±0.10`, L.toFixed(2), Math.abs(L - J.len) <= 0.1, dev(Math.abs(L - J.len), 0.1), 2);
+  } else add('Alın', 'Aynadan çıkıntı', end.toFixed(2) + ' ±0.10', aEnd.toFixed(2), Math.abs(aEnd - end) <= 0.1, dev(Math.abs(aEnd - end), 0.1), 2);
   const inGroove = a => J.groove && Math.abs(a - (end + J.groove.zc)) < J.groove.w / 2 + 0.6;
-  const inCham = a => J.chamfer && a > end - J.chamfer.c - 0.6;
+  const inCham = a => (J.chamfer && a > end - J.chamfer.c - 0.6) || (J.chamferStart && a < start + J.chamferStart.c + 0.6);
+  const sr = stockOf(J);
   J.od.forEach((sg, k) => {
     let n = 0, sum = 0, mx = 0, raMax = 0, raw = 0;
-    for (let i = idx(end + sg.z1 + 0.6); i <= idx(end + sg.z0 - 0.6); i++) {
+    for (let i = idx(Math.max(end + sg.z1, start) + 0.6); i <= idx(end + sg.z0 - 0.6); i++) {
       const a = A(i); if (inGroove(a) || inCham(a)) continue;
       const D = hasMat(i) ? 2 * R[i] : 0; n++; sum += D; mx = Math.max(mx, Math.abs(D - sg.d));
       if (CUTO[i]) raMax = Math.max(raMax, RA[i]); else raw++;
@@ -1982,7 +2612,8 @@ function inspect(J) {
     if (!n) return;
     add(g, `Çap (Z${sg.z0}…${sg.z1})`, `Ø${sg.d.toFixed(2)} ±${sg.tol}`, `Ø${(sum / n).toFixed(3)} (sapma ${mx.toFixed(3)})`, mx <= sg.tol, dev(mx, sg.tol), 2);
     if (sg.ra) add(g, 'Yüzey pürüzlülüğü', `Ra ≤ ${sg.ra}`, raw ? 'işlenmemiş' : `Ra ${raMax.toFixed(1)}`, !raw && raMax <= sg.ra, raw ? 0 : raMax <= sg.ra ? 1 : Math.max(0, 1 - (raMax - sg.ra) / (2 * sg.ra)));
-    const nxt = J.od[k + 1], dl = nxt && Math.abs(nxt.z0 - sg.z1) < 1e-6 ? nxt.d : 50;
+    if (J.len) return;
+    const nxt = J.od[k + 1], dl = nxt && Math.abs(nxt.z0 - sg.z1) < 1e-6 ? nxt.d : 2 * sr;
     if (dl > sg.d) {
       const aS = end + sg.z1, thr = (sg.d + dl) / 2;
       let am = null;
@@ -1990,13 +2621,36 @@ function inspect(J) {
       add(g, `Omuz Z${sg.z1}`, `Z${sg.z1.toFixed(2)} ±0.10`, am === null ? 'yok' : 'Z' + (am - end).toFixed(2), am !== null && Math.abs(am - aS) <= 0.1, am === null ? 0 : dev(Math.abs(am - aS), 0.1));
     }
   });
+  if (J.taper) {
+    const t = J.taper;
+    let n = 0, sx = 0, sy = 0, sxx = 0, sxy = 0;
+    for (let i = idx(end + t.z1 + 1); i <= idx(end + t.z0 - 1); i++) { if (!hasMat(i)) continue; const x = A(i) - end, y = R[i]; n++; sx += x; sy += y; sxx += x * x; sxy += x * y; }
+    if (n < 10) ['Koni açısı', 'Koni küçük çap', 'Koni büyük çap'].forEach(l => add('Koni', l, '', 'yok', false, 0, 2));
+    else {
+      const mm = (n * sxy - sx * sy) / (n * sxx - sx * sx), b = (sy - mm * sx) / n;
+      const angN = Math.atan((t.d1 - t.d0) / (2 * Math.abs(t.z1 - t.z0))) * 180 / Math.PI, ang = Math.atan(-mm) * 180 / Math.PI;
+      const d0 = 2 * (b + mm * t.z0), d1 = 2 * (b + mm * t.z1);
+      add('Koni', 'Koni açısı (yarım)', `${angN.toFixed(2)}° ±${t.angTol}`, ang.toFixed(2) + '°', Math.abs(ang - angN) <= t.angTol, dev(Math.abs(ang - angN), t.angTol), 2);
+      add('Koni', `Küçük çap (Z${t.z0})`, `Ø${t.d0.toFixed(2)} ±${t.tol}`, 'Ø' + d0.toFixed(3), Math.abs(d0 - t.d0) <= t.tol, dev(Math.abs(d0 - t.d0), t.tol));
+      add('Koni', `Büyük çap (Z${t.z1})`, `Ø${t.d1.toFixed(2)} ±${t.tol}`, 'Ø' + d1.toFixed(3), Math.abs(d1 - t.d1) <= t.tol, dev(Math.abs(d1 - t.d1), t.tol));
+    }
+  }
   if (J.chamfer) {
     const c = J.chamfer, rod = odEndR(J);
-    const cr = endIdx >= I0 ? rod - R[fe] : 0;
+    const cr = endIdx >= startIdx ? rod - R[fe] : 0;
     let ca = 0;
-    for (let i = endIdx; i >= I0; i--) if (R[i] >= rod - 0.05) { ca = aEnd - (A(i) + DZ / 2); break; }
+    for (let i = endIdx; i >= startIdx; i--) if (R[i] >= rod - 0.05) { ca = aEnd - (A(i) + DZ / 2); break; }
     const d = Math.max(Math.abs(ca - c.c), Math.abs(cr - c.c));
     add('Pah', `Pah ${c.c}×45°`, `${c.c} ±${c.tol}`, `${ca.toFixed(2)} × ${cr.toFixed(2)}`, d <= c.tol, dev(d, c.tol));
+  }
+  if (J.chamferStart) {
+    const c = J.chamferStart, rod = odStartR(J);
+    let fs = startIdx; while (fs < endIdx && R[fs] < 2) fs++;
+    const cr = rod - R[fs];
+    let ca = 0;
+    for (let i = startIdx; i <= endIdx; i++) if (R[i] >= rod - 0.05) { ca = A(i) - DZ / 2 - m.aStart; break; }
+    const d = Math.max(Math.abs(ca - c.c), Math.abs(cr - c.c));
+    add('Pah', `Öbür uçtaki pah ${c.c}×45°`, `${c.c} ±${c.tol}`, `${ca.toFixed(2)} × ${cr.toFixed(2)}`, d <= c.tol, dev(d, c.tol));
   }
   if (J.groove) {
     const gq = J.groove, ac = end + gq.zc, thr = (gq.d + odEndR(J) * 2) / 2;
@@ -2005,29 +2659,31 @@ function inspect(J) {
     if (!n) ['Kanal genişliği', 'Kanal çapı', 'Kanal konumu'].forEach(l => add('Kanal', l, '', 'yok', false, 0));
     else {
       const wM = n * DZ, cM = sa / n;
-      let m = 0, ds = 0;
-      for (let i = idx(cM - gq.w / 2 + 0.4); i <= idx(cM + gq.w / 2 - 0.4); i++) { m++; ds += 2 * R[i]; }
-      const dM = m ? ds / m : 0;
+      let q = 0, ds = 0;
+      for (let i = idx(cM - gq.w / 2 + 0.4); i <= idx(cM + gq.w / 2 - 0.4); i++) { q++; ds += 2 * R[i]; }
+      const dM = q ? ds / q : 0;
       add('Kanal', 'Kanal genişliği', `${gq.w.toFixed(2)} ±${gq.tol}`, wM.toFixed(2), Math.abs(wM - gq.w) <= gq.tol, dev(Math.abs(wM - gq.w), gq.tol));
       add('Kanal', 'Kanal çapı', `Ø${gq.d.toFixed(2)} ±${gq.tol}`, 'Ø' + dM.toFixed(3), Math.abs(dM - gq.d) <= gq.tol, dev(Math.abs(dM - gq.d), gq.tol));
       add('Kanal', 'Kanal konumu', `Z${gq.zc.toFixed(2)} ±${gq.tol}`, 'Z' + (cM - end).toFixed(2), Math.abs(cM - ac) <= gq.tol, dev(Math.abs(cM - ac), gq.tol));
     }
   }
   J.bore.forEach((sg, k) => {
-    const up = k === 0 ? end - 0.6 : end + J.bore[k - 1].z1 - 0.6, lo = end + sg.z1 + 0.6;
+    const through = J.len && -sg.z1 >= J.len;
+    const up = k === 0 ? end - 0.6 : end + J.bore[k - 1].z1 - 0.6, lo = Math.max(end + sg.z1, start) + 0.6;
     let n = 0, sum = 0, mx = 0, raMax = 0, uncut = 0;
     for (let i = idx(lo); i <= idx(up); i++) {
       if (!hasMat(i)) continue;
       const D = 2 * Ri[i]; n++; sum += D; mx = Math.max(mx, Math.abs(D - sg.d));
-      if (CUTI[i] && CUTI[i] < 10) raMax = Math.max(raMax, RAI[i]); else if (CUTI[i]) raMax = Math.max(raMax, RAI[i]); else uncut++;
+      if (CUTI[i]) raMax = Math.max(raMax, RAI[i]); else uncut++;
     }
     const g = 'Delik Ø' + sg.d;
     if (!n) return;
-    add(g, `Delik çapı (Z0…${sg.z1})`, `Ø${sg.d.toFixed(2)} ±${sg.tol}`, `Ø${(sum / n).toFixed(3)} (sapma ${mx.toFixed(3)})`, mx <= sg.tol, dev(mx, sg.tol), 2);
+    add(g, through ? 'Delik çapı (boydan boya)' : `Delik çapı (Z0…${sg.z1})`, `Ø${sg.d.toFixed(2)} ±${sg.tol}`, `Ø${(sum / n).toFixed(3)} (sapma ${mx.toFixed(3)})`, mx <= sg.tol, dev(mx, sg.tol), 2);
     if (sg.ra) add(g, 'Delik yüzeyi', `Ra ≤ ${sg.ra}`, uncut ? 'delinmemiş' : `Ra ${raMax.toFixed(1)}`, !uncut && raMax <= sg.ra, uncut ? 0 : raMax <= sg.ra ? 1 : Math.max(0, 1 - (raMax - sg.ra) / (2 * sg.ra)));
+    if (through) return;
     const nxt = J.bore[k + 1], thr = nxt ? (sg.d + nxt.d) / 2 : sg.d - 0.5;
     let am = null;
-    for (let i = endIdx; i >= I0; i--) if (2 * Ri[i] < thr) { am = A(i) + DZ / 2; break; }
+    for (let i = endIdx; i >= Math.max(I0, startIdx); i--) if (2 * Ri[i] < thr) { am = A(i) + DZ / 2; break; }
     const tol = sg.tol <= 0.1 ? 0.1 : 0.5, depth = am === null ? 0 : aEnd - am;
     add(g, 'Derinlik', `${(-sg.z1).toFixed(2)} ±${tol}`, depth.toFixed(2), Math.abs(depth + sg.z1) <= tol, dev(Math.abs(depth + sg.z1), tol));
   });
@@ -2049,12 +2705,13 @@ function inspect(J) {
     }
   }
   // Resme göre fazla kesilmiş bölgeler
-  const { tR, tRi } = targets(J);
+  const { tR, tRi } = targets(J, end, start);
   let go = 0, gi = 0;
   INSP.fill(0);
-  for (let i = idx(JAW_A); i <= Math.min(endIdx, idx(end)); i++) {
+  const g0 = J.len ? Math.max(startIdx, idx(start)) : idx(JAW_A);
+  for (let i = g0; i <= Math.min(endIdx, idx(end)); i++) {
     let mnR = 1e9, mxRi = 0;
-    for (let j = Math.max(0, i - 3); j <= Math.min(NS - 1, i + 3); j++) { mnR = Math.min(mnR, A(j) <= end ? tR[j] : 0); mxRi = Math.max(mxRi, tRi[j]); }
+    for (let j = Math.max(0, i - 3); j <= Math.min(NS - 1, i + 3); j++) { const a = A(j); mnR = Math.min(mnR, a <= end && a >= start ? tR[j] : 0); mxRi = Math.max(mxRi, tRi[j]); }
     if (R[i] < mnR - 0.1) { INSP[i] |= 1; go++; }
     if (Ri[i] > mxRi + 0.1) { INSP[i] |= 2; gi++; }
   }
@@ -2069,7 +2726,7 @@ function scoreJob(J, run, items) {
   const accPts = 70 * acc;
   const timePts = 15 * clamp(1 - (run.time - J.target) / (1.5 * J.target), 0, 1);
   const st = run.stats;
-  const carePts = clamp(15 - 6 * st.breaks - st.load - 3 * st.spot - 2 * st.peck - st.rub - st.vc, 0, 15);
+  const carePts = clamp(15 - 6 * st.breaks - st.load - 3 * st.spot - 2 * st.peck - st.rub - st.vc - st.chat, 0, 15);
   const total = Math.round(accPts + timePts + carePts);
   const allOk = items.every(i => i.ok);
   const stars = allOk ? (total >= 90 ? 3 : total >= 75 ? 2 : total >= 55 ? 1 : 0) : (total >= 60 ? 1 : 0);
@@ -2122,9 +2779,11 @@ function selectJob(i) {
 function startJob() {
   initAudio();
   if (selJob < 0) return;
-  resetPart();
+  resetPart(JOBS[selJob].stock || 'short');
+  $('stockSel').value = S.stock;
   INSP.fill(0);
-  S.job = { idx:selJob, J:JOBS[selJob], time:0, done:false, stats:{ breaks:0, load:0, spot:0, peck:0, rub:0, vc:0 } };
+  S.job = { idx:selJob, J:JOBS[selJob], time:0, done:false, stats:{ breaks:0, load:0, spot:0, peck:0, rub:0, vc:0, chat:0 } };
+  buildGuide(JOBS[selJob]);
   $('report').hidden = true;
   $('jobStart').textContent = 'Yeniden başla';
   log(`İş ${selJob + 1} başladı: ${JOBS[selJob].title}. Yeni çubuk bağlandı, makine süresi işliyor.`, 'ok');
@@ -2143,7 +2802,7 @@ function submitJob() {
   saveProgress();
   showReport(run, items, r, record && !!prev);
   renderJobs(); selectJob(run.idx);
-  const cx = J.end - 30, cy = 30;
+  const cx = measuredFace().aEnd - 15, cy = 30;
   if (r.stars) for (let s = 0; s < r.stars; s++) setTimeout(() => { burst('gold', 110, cx, cy, 0, 260, 900, 1.8); beep(1200 + s * 300); }, 250 + s * 250);
   else burst('smoke', 30, cx, cy, 0, 60, 80, 2.2);
 }
@@ -2158,7 +2817,7 @@ function showReport(run, items, r, newBest) {
   const bar = (name, v, max) => `<div class="rp-bar"><span>${name}</span><div class="meter"><i style="width:${v / max * 100}%;background:${v / max > 0.8 ? 'var(--ok)' : v / max > 0.5 ? 'var(--warn)' : 'var(--bad)'}"></i></div><span>${Math.round(v)} / ${max}</span></div>`;
   const st = run.stats;
   $('rpBars').innerHTML = bar('Ölçü doğruluğu', r.accPts, 70) + bar('Süre', r.timePts, 15) + bar('Takım bakımı', r.carePts, 15) +
-    `<div class="dro-note">Süre: ${mmss(run.time)} (hedef ${mmss(run.J.target)}) · kırılan takım ${st.breaks} · aşırı yük ${st.load} · puntasız delme ${st.spot} · gagalama ${st.peck} · düşük kesme hızı ${st.rub} · aşırı kesme hızı ${st.vc}</div>`;
+    `<div class="dro-note">Süre: ${mmss(run.time)} (hedef ${mmss(run.J.target)}) · kırılan takım ${st.breaks} · aşırı yük ${st.load} · puntasız delme ${st.spot} · gagalama ${st.peck} · düşük kesme hızı ${st.rub} · aşırı kesme hızı ${st.vc} · tırlama ${st.chat}</div>`;
   $('rpTable').innerHTML = '<tr><th></th><th>Ölçü</th><th>İstenen</th><th>Ölçülen</th><th></th></tr>' +
     items.map(i => `<tr><td>${i.grp}</td><td>${i.label}</td><td class="num">${i.nom}</td><td class="num">${i.meas}</td><td class="${i.ok ? 'ok-t' : 'bad-t'}">${i.ok ? '✓' : '✗'}</td></tr>`).join('');
   $('rpNext').hidden = !(run.idx + 1 < JOBS.length && unlocked(run.idx + 1));
@@ -2192,6 +2851,11 @@ function frame(now) {
   ambientParticles(dt);
   updatePS(psAdd, dt); updatePS(psAlpha, dt);
   if (S.job && !S.job.done && (S.spindle || now - S.lastMove < 120)) S.job.time += dt * S.sim;
+  updateSupport();
+  if (now - S.lastCut > 300) { S.lastB = 0; S.defl = 0; }
+  spinG.position.y = now - S.lastCut < 200 && S.defl > 0.02 ? (Math.random() - 0.5) * Math.min(1.5, S.defl * 6) : 0;
+  compG.rotation.y = S.tsAng * Math.PI / 180;
+  updateBench(dt);
   drawWheels();
   if (camAnim) {
     camAnim.t = Math.min(1, camAnim.t + dt * 2.2);
@@ -2201,7 +2865,7 @@ function frame(now) {
     if (camAnim.t >= 1) camAnim = null;
   }
   controls.update();
-  renderer.render(scene, camera);
+  if (!bench.open) renderer.render(scene, camera);
   updateAudio();
   uiT += dt;
   if (uiT > 0.066) { uiT = 0; updateHud(); }
@@ -2211,6 +2875,10 @@ function updateHud() {
   const T = tool(), d = droVals();
   $('droX').textContent = fmt(d.x); $('droZ').textContent = fmt(d.z); $('droW').textContent = fmt(d.w);
   $('hwzv').textContent = fmt(d.z); $('hwxv').textContent = fmt(d.x); $('hwwv').textContent = fmt(d.w);
+  $('droU').textContent = fmt(S.u - S.zu); $('hwuv').textContent = fmt(S.u - S.zu);
+  $('hDefl').textContent = S.defl > 0.002 ? S.defl.toFixed(3) + ' mm' : S.supported ? 'punta destekli' : '—';
+  $('hDefl').style.color = S.defl > 0.03 ? 'var(--warn)' : S.supported ? 'var(--ok)' : 'var(--fg)';
+  $('taperState').textContent = S.tsAng.toFixed(2) + '°';
   $('hTool').textContent = `${T.no} ${T.name.toLocaleLowerCase('tr')}${S.broken ? ' (kırık)' : ''}`;
   $('hSpin').textContent = S.spindle ? `${S.rpm} dev/dk` : 'DURUYOR';
   $('hSpin').style.color = S.spindle ? 'var(--ok)' : 'var(--muted)';
@@ -2259,6 +2927,7 @@ function updateHud() {
 // Başlangıç
 buildToolVisual(); buildTailVisual(); updateToolUI(); updateSpindleUI(); updateAutoUI();
 setRpm(800); setFeed(0.1);
+resetPart('short');
 renderJobs(); selectJob(-1);
 log('Torna hazır. T1 sağ torna kalemi takılı, gelincikte punta matkabı. Z sıfırı ham çubuğun alnında.', 'ok');
 requestAnimationFrame(frame);
