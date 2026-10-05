@@ -1,0 +1,2266 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Manuel Torna Tezgâhı</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=Share+Tech+Mono&display=swap">
+<style>
+/* Layout: full-bleed 3D atölye görünümü solda, makine kumanda panosu (pendant) sağda; dar ekranda alt alta.
+   Tek tema: makine kumanda paneli bilinçli olarak koyu. */
+:root{
+  color-scheme: dark;
+  --bg:#121618;          /* atölye zemini */
+  --panel:#1b2124;       /* pano gövdesi */
+  --panel-2:#232b2f;     /* gömme kutular */
+  --line:#33403f;
+  --fg:#dfe6e4;
+  --muted:#8c9b98;
+  --paint:#56766f;       /* makine boyası */
+  --safety:#f0b429;      /* emniyet sarısı */
+  --steel:#a3adb2;       /* el çarkı kolları */
+  --paper:#e6e9e3;       /* teknik resim kâğıdı */
+  --ink:#1c2a2e;
+  --ink-2:#5b6c70;
+  --vfd:#5fe3c0;         /* DRO VFD ekran */
+  --vfd-dim:#1f4a40;
+  --ok:#46c27f; --warn:#f0b429; --bad:#e5484d;
+  --f-display:"Chakra Petch", "Segoe UI", system-ui, sans-serif;
+  --f-body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-dro:"Share Tech Mono", "Consolas", ui-monospace, monospace;
+}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:14px;margin:0;overflow:hidden}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--safety);outline-offset:2px}
+
+.app{display:grid;grid-template-columns:minmax(0,1fr) 392px;height:100%}
+.stage{position:relative;min-width:0;min-height:0;background:radial-gradient(120% 90% at 40% 30%,#20292b 0%,var(--bg) 70%)}
+#c{display:block;width:100%;height:100%;touch-action:none}
+
+.hud{position:absolute;left:14px;top:14px;display:grid;gap:6px;padding:10px 12px;background:color-mix(in srgb,var(--panel) 86%,transparent);border:1px solid var(--line);border-radius:6px;font-size:12.5px;min-width:230px;max-width:calc(100% - 28px);pointer-events:none;backdrop-filter:blur(4px)}
+.hud .row{display:flex;justify-content:space-between;gap:12px}
+.hud .k{color:var(--muted)}
+.hud .v{font-family:var(--f-dro);font-variant-numeric:tabular-nums;font-size:13.5px}
+.meter{height:6px;border-radius:3px;background:var(--panel-2);overflow:hidden;position:relative}
+.meter i{position:absolute;inset:0 auto 0 0;width:0;background:var(--ok);transition:width .15s,background .15s}
+.meter::after{content:"";position:absolute;left:25%;top:0;bottom:0;width:1px;background:var(--muted);opacity:.6}
+.meter.dmg::after{display:none}
+.paper{color:var(--vfd);font-weight:600}
+
+/* El çarkları */
+.wheels{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.wheels figure{margin:0;display:grid;gap:4px;justify-items:center}
+.wheels canvas{width:100%;max-width:118px;aspect-ratio:1;touch-action:none;cursor:grab;border-radius:50%}
+.wheels canvas:active{cursor:grabbing}
+.wheels figcaption{font-family:var(--f-dro);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.wheels figcaption b{font-family:var(--f-display);color:var(--safety);margin-right:4px}
+
+.views{position:absolute;right:14px;top:14px;display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.views button{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:5px 9px;font-size:12px;font-family:var(--f-display);letter-spacing:.04em}
+.views button:hover{border-color:var(--muted)}
+
+.toast{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);max-width:min(560px,calc(100% - 28px));padding:9px 14px;border-radius:5px;background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--muted);font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+.toast.warn{border-left-color:var(--warn)}
+.toast.bad{border-left-color:var(--bad)}
+.toast.ok{border-left-color:var(--vfd)}
+
+.alarm{position:absolute;inset:0;display:grid;place-items:center;background:rgba(40,6,6,.45)}
+.alarm .box{background:var(--panel);border:2px solid var(--bad);border-radius:8px;padding:20px 22px;max-width:min(420px,calc(100% - 32px));display:grid;gap:12px}
+.alarm h2{margin:0;font-family:var(--f-display);color:var(--bad);letter-spacing:.12em;font-size:22px}
+.alarm p{margin:0;line-height:1.5}
+.alarm small{color:var(--muted);line-height:1.45}
+
+.pendant{background:var(--panel);border-left:1px solid var(--line);overflow-y:auto;padding:14px 16px 24px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.brand{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.brand h1{margin:0;font-family:var(--f-display);font-size:19px;letter-spacing:.06em;text-transform:uppercase;text-wrap:balance}
+.brand span{font-family:var(--f-dro);color:var(--muted);font-size:12px}
+.sec{display:grid;gap:9px;padding-top:12px;border-top:1px solid var(--line)}
+.sec>h2{margin:0;font-family:var(--f-display);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600;display:flex;justify-content:space-between}
+
+/* DRO */
+.dro{background:#0b100f;border:1px solid var(--line);border-radius:6px;padding:8px 10px;display:grid;gap:4px}
+.axis{display:grid;grid-template-columns:22px 1fr 66px 36px 34px;align-items:center;gap:6px}
+.axis .ax{font-family:var(--f-display);font-weight:700;color:var(--safety);font-size:17px}
+.axis output{font-family:var(--f-dro);font-size:30px;color:var(--vfd);text-align:right;text-shadow:0 0 10px color-mix(in srgb,var(--vfd) 45%,transparent);font-variant-numeric:tabular-nums;line-height:1.1;white-space:nowrap}
+.axis input{width:100%;min-width:0;background:var(--panel-2);border:1px solid var(--line);border-radius:4px;padding:4px 5px;font-family:var(--f-dro);font-size:13px}
+.btn{background:var(--panel-2);border:1px solid var(--line);border-radius:4px;padding:6px 8px;font-size:12.5px;font-family:var(--f-display);font-weight:600;letter-spacing:.03em}
+.btn:hover{border-color:var(--muted)}
+.btn:active{transform:translateY(1px)}
+.btn.sm{padding:4px 0;font-size:12px}
+.btn.on{background:var(--vfd-dim);border-color:var(--vfd);color:var(--vfd)}
+.dro-note{font-size:11.5px;color:var(--muted)}
+
+/* Spindle */
+.spin-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.big{padding:10px 8px;font-size:14px;border-radius:6px;letter-spacing:.08em}
+.start{background:#1d3a2a;border-color:var(--ok);color:#b9f0cf}
+.stop{background:#3a1d1d;border-color:var(--bad);color:#ffc9c9}
+.field{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px}
+.field label{font-size:12.5px;color:var(--muted);min-width:66px}
+.field output{font-family:var(--f-dro);font-size:15px;min-width:82px;text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--safety)}
+.rec{font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}
+.rec b{color:var(--fg);font-weight:500;font-family:var(--f-dro)}
+
+.seg{display:flex;border:1px solid var(--line);border-radius:5px;overflow:hidden}
+.seg button{flex:1;background:var(--panel-2);border:0;border-right:1px solid var(--line);padding:6px 0;font-family:var(--f-dro);font-size:13px}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--safety);color:#1a1405}
+.seg-label{font-size:12px;color:var(--muted);display:flex;justify-content:space-between}
+
+/* Jog pad */
+.jog{display:grid;grid-template-columns:repeat(3,1fr) 14px 1fr;grid-template-rows:repeat(3,42px);gap:6px}
+.jog button{background:var(--panel-2);border:1px solid var(--line);border-radius:6px;font-family:var(--f-display);font-weight:700;font-size:14px;user-select:none;-webkit-user-select:none;touch-action:none}
+.jog button:active,.jog button.hold{background:var(--paint);border-color:#8fb3aa}
+.jog .hold-btn{background:#3a2a10;border-color:var(--safety);color:var(--safety);font-size:11px;letter-spacing:.06em}
+.goto{display:grid;grid-template-columns:auto 1fr auto 1fr auto;gap:6px;align-items:center;font-size:12.5px;color:var(--muted)}
+.goto input{width:100%;min-width:0;background:var(--panel-2);border:1px solid var(--line);border-radius:4px;padding:5px 6px;font-family:var(--f-dro);color:var(--fg)}
+
+/* Tools */
+.cur-tool{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:center;background:var(--panel-2);border:1px solid var(--line);border-radius:6px;padding:9px 11px}
+.cur-tool .tno{grid-row:span 2;font-family:var(--f-display);font-weight:700;font-size:24px;color:var(--safety)}
+.cur-tool .tname{font-weight:600}
+.cur-tool .tmeta{font-size:12px;color:var(--muted)}
+.cur-tool.broken{border-color:var(--bad)}
+.cur-tool.broken .tno{color:var(--bad)}
+.rack{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.rack button{display:grid;grid-template-columns:34px 1fr;align-items:center;text-align:left;gap:2px 6px;background:var(--panel-2);border:1px solid var(--line);border-radius:5px;padding:6px 8px}
+.rack button:hover{border-color:var(--muted)}
+.rack button.active{border-color:var(--safety);box-shadow:inset 0 0 0 1px var(--safety)}
+.rack .n{grid-row:span 2;font-family:var(--f-display);font-weight:700;color:var(--muted)}
+.rack .active .n{color:var(--safety)}
+.rack .nm{font-size:12.5px;line-height:1.2}
+.rack .d{font-family:var(--f-dro);font-size:12px;color:var(--muted)}
+
+.log{list-style:none;margin:0;padding:0;display:grid;gap:5px;font-size:12.5px;line-height:1.4}
+.log li{padding-left:10px;border-left:3px solid var(--line);color:var(--muted)}
+.log li.ok{border-left-color:var(--vfd);color:var(--fg)}
+.log li.warn{border-left-color:var(--warn);color:var(--fg)}
+.log li.bad{border-left-color:var(--bad);color:var(--fg)}
+.log time{font-family:var(--f-dro);font-size:11px;margin-right:6px;color:var(--muted)}
+
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.stat{background:var(--panel-2);border-radius:5px;padding:6px 9px}
+.stat span{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.stat b{font-family:var(--f-dro);font-weight:400;font-size:17px;font-variant-numeric:tabular-nums}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+.job{margin:0;padding-left:20px;display:grid;gap:4px;font-size:12.5px;line-height:1.45;color:var(--fg)}
+.job li::marker{color:var(--safety);font-family:var(--f-dro)}
+details{font-size:12.5px;color:var(--muted)}
+details summary{cursor:pointer;font-family:var(--f-display);letter-spacing:.1em;text-transform:uppercase;font-size:12px}
+.keys{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;margin-top:8px}
+kbd{font-family:var(--f-dro);background:var(--panel-2);border:1px solid var(--line);border-bottom-width:2px;border-radius:3px;padding:0 5px;color:var(--fg);font-size:12px;white-space:nowrap}
+
+/* İş emirleri */
+.jobs{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.jobs button{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;gap:1px 8px;text-align:left;background:var(--panel-2);border:1px solid var(--line);border-radius:5px;padding:6px 8px;align-items:center}
+.jobs button:hover:not(:disabled){border-color:var(--muted)}
+.jobs button.active{border-color:var(--safety);box-shadow:inset 0 0 0 1px var(--safety)}
+.jobs button:disabled{opacity:.45;cursor:not-allowed}
+.jobs .jn{grid-row:span 2;font-family:var(--f-display);font-weight:700;color:var(--muted);font-size:15px}
+.jobs .active .jn{color:var(--safety)}
+.jobs .jt{font-size:12.5px;line-height:1.2}
+.jobs .js{font-size:12px;letter-spacing:.12em;color:var(--safety)}
+.jobs .js i{font-style:normal;color:var(--line)}
+.jobs .free{grid-column:1/-1}
+.job-card{background:var(--panel-2);border:1px solid var(--line);border-radius:6px;padding:10px 11px;display:grid;gap:8px}
+.jc-head{display:flex;gap:8px;align-items:baseline}
+.jc-no{font-family:var(--f-display);font-weight:700;color:var(--safety);font-size:12px;letter-spacing:.1em}
+.job-card p{margin:0;font-size:12.5px;line-height:1.5;color:var(--muted)}
+.jc-meta{font-size:12px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 12px}
+.jc-meta b{color:var(--fg);font-weight:500;font-family:var(--f-dro)}
+
+/* Teknik resim: kâğıt üstüne mürekkep, bilinçli olarak açık renkli bir nesne */
+.drawing{position:absolute;left:14px;bottom:14px;width:min(310px,calc(100% - 28px));max-height:calc(100% - 230px);min-height:120px;overflow:auto;background:var(--paper);color:var(--ink);border-radius:4px;box-shadow:0 8px 30px rgba(0,0,0,.45);padding:10px 12px;display:grid;gap:6px;font-size:11.5px}
+.dw-head{display:flex;justify-content:space-between;align-items:center;font-family:var(--f-display);font-weight:700;letter-spacing:.12em;font-size:11.5px;border-bottom:1.5px solid var(--ink);padding-bottom:4px}
+.dw-head button{background:none;border:1px solid var(--ink-2);color:var(--ink);border-radius:3px;font-size:11px;padding:1px 7px;font-family:var(--f-body);letter-spacing:0}
+.drawing svg{width:100%;height:auto;display:block}
+.drawing svg text{font-family:var(--f-dro);fill:var(--ink)}
+.dw-part{fill:none;stroke:var(--ink);stroke-width:1}
+.dw-feat{fill:none;stroke:var(--ink);stroke-width:.9}
+.dw-cl{stroke:var(--ink-2);stroke-width:.4;stroke-dasharray:4 1.5 1 1.5}
+.dw-dim{stroke:var(--ink-2);stroke-width:.4}
+.dw-face{fill:url(#hatch);stroke:none;opacity:.5}
+.dw-tab{overflow-x:auto}
+.dw-tab table,.rp-tab table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+table{color:inherit;font-size:inherit}
+.dw-tab th,.dw-tab td{color:var(--ink);font-size:11px;border:1px solid var(--ink-2);padding:2px 5px;text-align:left;font-family:var(--f-dro);font-weight:400;white-space:nowrap}
+.dw-tab th{font-family:var(--f-display);font-weight:600;font-size:10.5px;letter-spacing:.06em}
+.dw-note{color:var(--ink-2);font-size:10.5px;line-height:1.4}
+
+/* Muayene raporu */
+.report{position:absolute;inset:0;display:grid;place-items:center;background:rgba(6,10,12,.55);padding:16px}
+.report .box{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px 20px;width:min(560px,100%);max-height:100%;overflow:auto;display:grid;gap:12px}
+.rp-head{display:grid;gap:2px}
+.rp-head span{font-family:var(--f-display);font-size:11.5px;letter-spacing:.14em;color:var(--muted)}
+.rp-head h2{margin:0;font-family:var(--f-display);font-size:20px;letter-spacing:.04em;text-wrap:balance}
+.stars{display:flex;gap:10px;justify-content:center}
+.stars svg{width:52px;height:52px}
+.stars .on path{fill:var(--safety);stroke:var(--safety)}
+.stars .off path{fill:none;stroke:var(--line)}
+.stars svg{animation:pop .5s cubic-bezier(.3,1.6,.5,1) both}
+.stars svg:nth-child(2){animation-delay:.25s}.stars svg:nth-child(3){animation-delay:.5s}
+@keyframes pop{from{transform:scale(.2);opacity:0}to{transform:scale(1);opacity:1}}
+.rp-score{display:flex;align-items:baseline;justify-content:center;gap:6px;flex-wrap:wrap}
+.rp-score b{font-family:var(--f-dro);font-weight:400;font-size:40px;color:var(--vfd)}
+.rp-score span{color:var(--muted)}
+.rp-score em{font-style:normal;font-family:var(--f-display);letter-spacing:.1em;margin-left:10px;font-size:13px}
+.rp-bars{display:grid;gap:6px}
+.rp-bar{display:grid;grid-template-columns:120px 1fr 54px;gap:8px;align-items:center;font-size:12.5px}
+.rp-bar span:last-child{font-family:var(--f-dro);text-align:right;font-variant-numeric:tabular-nums}
+.rp-bar .meter{height:8px}
+.rp-bar .meter::after{display:none}
+.rp-tab{overflow-x:auto;border:1px solid var(--line);border-radius:5px}
+.rp-tab th,.rp-tab td{color:var(--fg);padding:5px 8px;border-bottom:1px solid var(--line);text-align:left;font-size:12px;white-space:nowrap}
+.rp-tab th{color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+.rp-tab td.num{font-family:var(--f-dro)}
+.rp-tab tr:last-child td{border-bottom:0}
+.rp-tab .ok-t{color:var(--ok);font-weight:600}.rp-tab .bad-t{color:var(--bad);font-weight:600}
+.rp-btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.rp-btns .btn{padding:8px 12px}
+
+@media (max-width:900px){
+  body{overflow:auto}
+  .app{grid-template-columns:1fr;grid-template-rows:56vh auto;height:auto}
+  .stage{height:56vh}
+  .pendant{border-left:0;border-top:1px solid var(--line);overflow:visible}
+  .hud{font-size:11.5px;min-width:0;padding:7px 9px}
+}
+@media (prefers-reduced-motion:reduce){.toast,.meter i{transition:none}}
+/* Torna'ya özgü */
+.row3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.btn.engaged{background:var(--safety);border-color:var(--safety);color:#1a1405}
+.stopline{display:grid;grid-template-columns:auto 1fr auto auto;gap:6px;align-items:center;font-size:12.5px;color:var(--muted)}
+.stopline input{width:100%;min-width:0;background:var(--panel-2);border:1px solid var(--line);border-radius:4px;padding:5px 6px;font-family:var(--f-dro);color:var(--fg)}
+.jog-l{display:grid;grid-template-columns:repeat(3,1fr) 14px 1fr;grid-template-rows:repeat(3,42px);gap:6px}
+.jog-l button{background:var(--panel-2);border:1px solid var(--line);border-radius:6px;font-family:var(--f-display);font-weight:700;font-size:14px;user-select:none;-webkit-user-select:none;touch-action:none}
+.jog-l button:active,.jog-l button.hold{background:var(--paint);border-color:#8fb3aa}
+.jog-l .hold-btn{background:#3a2a10;border-color:var(--safety);color:var(--safety);font-size:11px;letter-spacing:.06em}
+.drawing{left:auto;right:14px;top:56px;bottom:auto;max-height:calc(100% - 70px)}
+.sub{font-family:var(--f-display);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+</style>
+
+<div class="app">
+  <section class="stage" id="stage">
+    <canvas id="c" aria-label="Torna tezgâhının 3B görünümü"></canvas>
+    <div class="hud" aria-live="polite">
+      <div class="row" id="hJobRow" hidden><span class="k">İş</span><span class="v" id="hJob">—</span></div>
+      <div class="row" id="hTimeRow" hidden><span class="k">Makine süresi</span><span class="v" id="hTime">—</span></div>
+      <div class="row"><span class="k">Kalem</span><span class="v" id="hTool">—</span></div>
+      <div class="row"><span class="k">Mil</span><span class="v" id="hSpin">DURUYOR</span></div>
+      <div class="row"><span class="k">İlerleme</span><span class="v" id="hFeed">—</span></div>
+      <div class="row"><span class="k">Kesme hızı Vc</span><span class="v" id="hVc">—</span></div>
+      <div class="row"><span class="k">Kalem hizasında parça</span><span class="v" id="hDia">—</span></div>
+      <div class="row"><span class="k">Kaleme mesafe</span><span class="v" id="hGap">—</span></div>
+      <div class="row"><span class="k">Son yüzey Ra</span><span class="v" id="hRa">—</span></div>
+      <div class="row"><span class="k" id="hLoadK">Talaş kalınlığı</span><span class="v" id="hLoad">—</span></div>
+      <div class="row"><span class="k">Takım yükü</span><span class="v" id="hStress">kesmiyor</span></div>
+      <div class="meter"><i id="hMeter"></i></div>
+      <div class="row"><span class="k">Takım zorlanması</span><span class="v" id="hDmg">0%</span></div>
+      <div class="meter dmg"><i id="hDmgBar"></i></div>
+      <div class="paper" id="hPaper" hidden>Kağıt sıkışıyor: kalem yüzeyde, eksen sıfırlanabilir</div>
+    </div>
+    <div class="views">
+      <button id="vOp">Operatör</button>
+      <button id="vNear">Yakın</button>
+      <button id="vTop">Üstten</button>
+      <button id="vFront">Önden</button>
+      <button id="vDraw" hidden>Resim</button>
+    </div>
+    <div class="drawing" id="drawing" hidden>
+      <div class="dw-head"><span id="dwTitle">TEKNİK RESİM</span><button id="dwClose" aria-label="Resmi gizle">gizle</button></div>
+      <div id="dwSvg"></div>
+      <div class="dw-tab"><table id="dwTable"></table></div>
+      <div class="dw-note">Ölçüler mm. Z sıfırı bitmiş alın yüzeyi, Z− aynaya doğru. X değerleri çaptır. Sarı çizgi parçanın üstündeki hedef profildir.</div>
+    </div>
+    <div class="toast" id="toast"></div>
+    <div class="alarm" id="alarm" hidden>
+      <div class="box" role="alert" aria-labelledby="alarmTitle">
+        <h2 id="alarmTitle">ALARM</h2>
+        <p id="alarmMsg"></p>
+        <small>Mil ve otomatik ilerlemeler durduruldu, kalem kırıldı. Alarmı sıfırlayın, kalemi geri çekin ve yeni bir kalem takın.</small>
+        <button class="btn big stop" id="alarmReset">Alarmı sıfırla</button>
+      </div>
+    </div>
+    <div class="report" id="report" hidden>
+      <div class="box" role="dialog" aria-labelledby="rpTitle">
+        <div class="rp-head"><span id="rpJob">İŞ 1</span><h2 id="rpTitle">Muayene raporu</h2></div>
+        <div class="stars" id="rpStars"></div>
+        <div class="rp-score"><b id="rpTotal">0</b><span>/ 100</span><em id="rpVerdict"></em></div>
+        <div class="rp-bars" id="rpBars"></div>
+        <div class="rp-tab"><table id="rpTable"></table></div>
+        <div class="rp-btns">
+          <button class="btn" id="rpInspect">Parçayı incele</button>
+          <button class="btn" id="rpRetry">Tekrar dene</button>
+          <button class="btn start" id="rpNext">Sonraki iş</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <aside class="pendant">
+    <div class="brand"><h1>Manuel Torna</h1><span>Al 6061 · Ø50 çubuk</span></div>
+
+    <div class="sec">
+      <h2><span>İş emirleri</span><span id="starTotal">0 / 15 yıldız</span></h2>
+      <div class="jobs" id="jobList"></div>
+      <div class="job-card" id="jobCard">
+        <div class="jc-head"><span class="jc-no" id="jcNo">SERBEST</span><b id="jcTitle">Serbest çalışma</b></div>
+        <p id="jcBrief"></p>
+        <div class="jc-meta" id="jcMeta"></div>
+        <div class="row2" id="jcBtns" hidden>
+          <button class="btn" id="jobStart">İşe başla</button>
+          <button class="btn start" id="jobSubmit">Parçayı teslim et</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <h2><span>Dijital okuma (DRO)</span><span>mm · X çap</span></h2>
+      <div class="dro">
+        <div class="axis"><span class="ax">X</span><output id="droX">+0.000</output><input id="setX" inputmode="decimal" placeholder="Ø" aria-label="X çap değeri ata"><button class="btn sm" data-set="x">Ata</button><button class="btn sm" data-zero="x">X0</button></div>
+        <div class="axis"><span class="ax">Z</span><output id="droZ">+0.000</output><input id="setZ" inputmode="decimal" placeholder="değer" aria-label="Z değeri ata"><button class="btn sm" data-set="z">Ata</button><button class="btn sm" data-zero="z">Z0</button></div>
+        <div class="axis"><span class="ax">W</span><output id="droW">+0.000</output><input id="setW" inputmode="decimal" placeholder="değer" aria-label="Gelincik değeri ata"><button class="btn sm" data-set="w">Ata</button><button class="btn sm" data-zero="w">W0</button></div>
+      </div>
+      <div class="dro-note">X kalem ucunun çapını gösterir. Z sıfırı başlangıçta ham çubuğun alnında; alın tornaladıktan sonra kalemi alna değdirip Z0'a basın. W gelincikteki matkabın ucudur (Z ile aynı sıfıra göre).</div>
+    </div>
+
+    <div class="sec">
+      <h2><span>El çarkları</span><span>sürükle · kaydır</span></h2>
+      <div class="seg" id="muls">
+        <button data-mul="0.01" class="on">×1 · 0.01</button><button data-mul="0.1">×10 · 0.1</button><button data-mul="1">×100 · 1</button>
+      </div>
+      <div class="wheels">
+        <figure><canvas id="hwz" aria-label="Taşıyıcı (Z) el çarkı"></canvas><figcaption><b>Z</b><span id="hwzv">+0.000</span></figcaption></figure>
+        <figure><canvas id="hwx" aria-label="Enine kızak (X) el çarkı"></canvas><figcaption><b>X</b><span id="hwxv">+0.000</span></figcaption></figure>
+        <figure><canvas id="hww" aria-label="Gelincik kovanı (W) el çarkı"></canvas><figcaption><b>W</b><span id="hwwv">+0.000</span></figcaption></figure>
+      </div>
+      <div class="dro-note">Saat yönü artı yön: Z ve W'de aynadan uzaklaşır, X'te çap büyür. Enine kızak çarkı çap okur; bir çentik çapta 0.01 mm demek, kalem yarıçapta yarısı kadar ilerler.</div>
+    </div>
+
+    <div class="sec">
+      <h2><span>İş mili</span><span id="spinState">DURUYOR</span></h2>
+      <div class="spin-row">
+        <button class="btn big start" id="spStart">MİL START</button>
+        <button class="btn big stop" id="spStop">MİL STOP</button>
+      </div>
+      <div class="field"><label for="rpm">Devir</label><input type="range" id="rpm" min="50" max="2500" step="10" value="800"><output id="rpmOut">800 dev/dk</output></div>
+      <div class="rec"><span>Önerilen: <b id="recTxt">—</b></span><button class="btn" id="applyRec">Uygula</button></div>
+      <div class="row2">
+        <button class="btn" id="coolant">Soğutma sıvısı: KAPALI</button>
+        <button class="btn" id="mute">Ses: AÇIK</button>
+      </div>
+    </div>
+
+    <div class="sec">
+      <h2><span>Otomatik ilerleme</span><span id="autoState">kapalı</span></h2>
+      <div class="seg-label"><span>İlerleme (mm/dev)</span><span>mil dönerken ilerler</span></div>
+      <div class="seg" id="feeds">
+        <button data-f="0.02">0.02</button><button data-f="0.05">0.05</button><button data-f="0.1" class="on">0.1</button><button data-f="0.15">0.15</button><button data-f="0.2">0.2</button><button data-f="0.3">0.3</button>
+      </div>
+      <div class="row3">
+        <button class="btn" id="autoZ">Z ← boyuna</button>
+        <button class="btn" id="autoX">X ↓ enine</button>
+        <button class="btn" id="halfNut">Somun kolu</button>
+      </div>
+      <div class="seg-label"><span>Diş adımı (mm)</span><span>somun kolu bu adımla ilerletir</span></div>
+      <div class="seg" id="pitches">
+        <button data-p="1">1.0</button><button data-p="1.5">1.5</button><button data-p="2">2.0</button><button data-p="2.5" class="on">2.5</button>
+      </div>
+      <div class="stopline"><span>Z durdurucu</span><input id="zStopIn" inputmode="decimal" placeholder="Z değeri"><button class="btn" id="zStopSet">Ayarla</button><button class="btn" id="zStopClr">Kaldır</button></div>
+      <div class="dro-note" id="zStopNote">Durdurucu yok. Otomatik boyuna ilerleme ve somun kolu durdurucuya gelince kendiliğinden ayrılır.</div>
+    </div>
+
+    <div class="sec">
+      <h2><span>Eksen hareketi</span><span id="rapidState">ilerleme</span></h2>
+      <div class="seg-label"><span>Kol adımı (mm, X'te çap)</span><span>tıkla: 1 adım · basılı tut: sürekli</span></div>
+      <div class="seg" id="steps">
+        <button data-step="0.01">0.01</button><button data-step="0.1">0.1</button><button data-step="1" class="on">1</button><button data-step="10">10</button>
+      </div>
+      <div class="jog-l" id="jog">
+        <span></span><button data-ax="x" data-dir="1" aria-label="X artı">X+</button><span></span><span></span><button data-ax="w" data-dir="1" aria-label="W geri">W+</button>
+        <button data-ax="z" data-dir="-1" aria-label="Z eksi">Z−</button><button class="hold-btn" id="feedHold">DUR</button><button data-ax="z" data-dir="1" aria-label="Z artı">Z+</button><span></span><button id="rapidBtn" class="hold-btn" style="color:var(--fg);border-color:var(--line);background:var(--panel-2)">HIZLI</button>
+        <span></span><button data-ax="x" data-dir="-1" aria-label="X eksi">X−</button><span></span><span></span><button data-ax="w" data-dir="-1" aria-label="W ileri">W−</button>
+      </div>
+      <div class="seg-label"><span>Simülasyon hızı</span></div>
+      <div class="seg" id="sims">
+        <button data-sim="1" class="on">1×</button><button data-sim="2">2×</button><button data-sim="5">5×</button><button data-sim="10">10×</button>
+      </div>
+      <div class="goto"><span>Ø</span><input id="gx" inputmode="decimal" value="55"><span>Z</span><input id="gz" inputmode="decimal" value="5"><button class="btn" id="goBtn">Git</button></div>
+    </div>
+
+    <div class="sec">
+      <h2><span>Kalemler</span><span>taret</span></h2>
+      <div class="cur-tool" id="curTool"><span class="tno" id="ctNo">T1</span><span class="tname" id="ctName">—</span><span class="tmeta" id="ctMeta">—</span></div>
+      <div class="rack" id="rack"></div>
+      <div class="sub">Gelincik</div>
+      <div class="rack" id="tailRack"></div>
+    </div>
+
+    <div class="sec">
+      <h2><span>Olay kaydı</span></h2>
+      <ul class="log" id="log"></ul>
+    </div>
+
+    <div class="sec">
+      <h2><span>Parça</span></h2>
+      <div class="stats">
+        <div class="stat"><span>Kaldırılan talaş</span><b id="stVol">0.00 cm³</b></div>
+        <div class="stat"><span>Kesme süresi</span><b id="stTime">0:00</b></div>
+      </div>
+      <div class="row2">
+        <button class="btn" id="clearChips">Talaşları süpür</button>
+        <button class="btn" id="newPart">Yeni ham parça</button>
+      </div>
+    </div>
+
+    <details>
+      <summary>Klavye kısayolları</summary>
+      <div class="keys">
+        <kbd>← →</kbd><span>Z ekseni (taşıyıcı)</span>
+        <kbd>↑ ↓</kbd><span>X ekseni (enine kızak)</span>
+        <kbd>PgUp PgDn</kbd><span>W gelincik kovanı</span>
+        <kbd>Shift</kbd><span>basılıyken hızlı hareket</span>
+        <kbd>Boşluk</kbd><span>mil start / stop</span>
+        <kbd>1 2 3 4</kbd><span>kol adımı 0.01 / 0.1 / 1 / 10</span>
+        <kbd>F</kbd><span>otomatik boyuna ilerleme</span>
+        <kbd>T</kbd><span>somun kolu (diş çekme)</span>
+        <kbd>C</kbd><span>soğutma sıvısı</span>
+        <kbd>Esc</kbd><span>tüm hareketleri durdur</span>
+      </div>
+    </details>
+  </aside>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const mod = (v, m) => ((v % m) + m) % m;
+const TAU = Math.PI * 2;
+
+/* ---------------- Parça: eksen boyunca yarıçap profili ----------------
+   a: ayna alnından uzaklık (mm, + gelinciğe doğru). Çubuk a=-40'tan (aynanın içi) a=100'e kadar. */
+const DZ = 0.1, AMIN = -40, AMAX = 100;
+const NS = Math.round((AMAX - AMIN) / DZ) + 1;
+const idx = a => Math.round((a - AMIN) / DZ);
+const A = i => AMIN + i * DZ;
+const I0 = idx(0);
+const STOCK_R = 25, JAW_A = 20, JAW_R = 62, CHUCK_R = 85;
+const R = new Float32Array(NS).fill(STOCK_R);   // dış yarıçap
+const Ri = new Float32Array(NS);                 // iç (delik) yarıçapı
+const CUTO = new Uint8Array(NS), CUTI = new Uint8Array(NS);
+const RA = new Float32Array(NS), RAI = new Float32Array(NS);   // son kesmenin yüzey pürüzlülüğü (µm)
+const INSP = new Uint8Array(NS);                 // muayene: 1 dış fazla kesik, 2 iç fazla kesik
+const GBMAX = 50;                                 // diş: istasyon başına helis faz kutuları
+const Gr = new Float32Array(NS * GBMAX).fill(1e9);
+let endIdx = NS - 1;
+const hasMat = i => R[i] > Ri[i] + 0.01;
+const TAN59 = Math.tan(59 * Math.PI / 180), TAN30 = Math.tan(Math.PI / 6);
+
+/* ---------------- Takımlar ---------------- */
+// Dış takımlar için profil f(du): kalem ucunun du = a - a_uç konumundaki en alçak noktasının uca göre yüksekliği
+const TOOLS = [
+  { no:'T1', name:'Sağ torna kalemi', type:'turn', rn:0.4, reach:10, ap:2.5, frec:0.2, vc:300, mat:'Karbür CNMG, rε 0.4', hx:[1.3, 20] },
+  { no:'T2', name:'Pah kalemi 45°', type:'chamfer', reach:6, ap:1.5, frec:0.1, vc:250, mat:'Karbür, 45°', hx:[-8, 8] },
+  { no:'T3', name:'Kanal kalemi 3 mm', type:'groove', w:3, reach:12, ap:3, frec:0.06, vc:180, mat:'Karbür, 3 mm', hx:[-4, 15] },
+  { no:'T4', name:'Kesme kalemi 3 mm', type:'groove', w:3, reach:28, ap:3, frec:0.05, vc:150, mat:'HSS bıçak, 3 mm', hx:[-4, 15] },
+  { no:'T5', name:'Diş kalemi 60°', type:'thread', reach:5, ap:0.45, vc:120, mat:'Karbür, 60°', hx:[-6, 6] },
+  { no:'T6', name:'Delik kalemi', type:'bore', rn:0.4, rb:6, reach:0, ap:1.5, frec:0.12, vc:250, mat:'Karbür, Ø12 bara', hx:[0, 0] },
+];
+const TAILS = [
+  { no:'G1', name:'Punta matkabı', type:'spot', d:10, flute:8, len:70, fr:0.04, vc:40, mat:'HSS, 90°' },
+  { no:'G2', name:'Matkap Ø10', type:'drill', d:10, flute:60, len:120, fr:0.12, vc:60, mat:'HSS, 118°' },
+  { no:'G3', name:'Matkap Ø16', type:'drill', d:16, flute:80, len:140, fr:0.18, vc:60, mat:'HSS, 118°' },
+];
+function toolF(T, du) {
+  switch (T.type) {
+    case 'turn': case 'bore':
+      // 95° kalem: burun aynaya bakar, ana ağız gelinciğe doğru 5° yatık yükselir, yardımcı ağız neredeyse eksene paralel
+      // referans noktası burnun en sol (du=0) ve en alt (f=0, du=rε) teğetleri: alına ve çapa değdirme bunlarla yapılır
+      if (du < 0 || du > 10) return Infinity;
+      if (du <= T.rn) return T.rn - Math.sqrt(Math.max(0, T.rn * T.rn - (T.rn - du) * (T.rn - du)));
+      return (du - T.rn) * 0.0875;
+    case 'chamfer': return Math.abs(du) > 6 ? Infinity : Math.abs(du);
+    case 'groove': return du < 0 || du > T.w ? Infinity : 0;
+    case 'thread': return Math.abs(du) > 3 ? Infinity : Math.max(0, Math.abs(du) - 0.15) * 1.732;
+  }
+  return Infinity;
+}
+const SPAN = { turn:[0, 10], bore:[0, 10], chamfer:[-6, 6], groove:[0, 3], thread:[-3, 3] };
+function drillR(Tt, d) {           // gelincik takımının uçtan d kadar gerideki yarıçapı
+  if (d < 0) return 0;
+  return Math.min(Tt.d / 2, Tt.type === 'spot' ? d : d * TAN59);
+}
+// Çarpışma için kalem dış hatları (du, dr) — tutucu dahil
+const OUTLINE = {
+  turn:   [[0,0.4],[0.4,0],[10,0.84],[12,10],[20,10],[20,150],[1.3,150],[1.3,10]],
+  chamfer:[[0,0],[6,6],[8,6],[8,150],[-8,150],[-8,6],[-6,6]],
+  groove: w => [[0,0],[w,0],[w,12],[w+12,12],[w+12,150],[-4,150],[-4,12],[0,12]],
+  thread: [[0,0],[3,5.2],[6,5.2],[6,150],[-6,150],[-6,5.2],[-3,5.2]],
+  bore:   rb => [[0,0],[110,0],[110,-2*rb],[0,-2*rb],[100,-2*rb],[145,-2*rb],[145,150],[100,150]],
+};
+TOOLS.forEach(T => {
+  let o = OUTLINE[T.type]; if (typeof o === 'function') o = o(T.type === 'bore' ? T.rb : T.w);
+  if (T.type === 'groove') o = o.map(([u, r]) => [u, r === 12 ? T.reach : r]);
+  const s = [];
+  for (let k = 0; k < o.length; k++) {
+    const [u1, r1] = o[k], [u2, r2] = o[(k + 1) % o.length];
+    const n = Math.max(1, Math.ceil(Math.hypot(u2 - u1, r2 - r1) / 2));
+    for (let q = 0; q < n; q++) s.push([u1 + (u2 - u1) * q / n, r1 + (r2 - r1) * q / n]);
+  }
+  T.samples = s;
+});
+
+/* ---------------- Durum ---------------- */
+const RAPID = 2000;
+const LIM = { a0:-15, a1:330, r0:-3, r1:140, q0:-20, q1:330 };
+const S = {
+  at:125, rt:40, q:300, tool:0, tail:0, spindle:false, rpm:800, feedRev:0.1, step:1, sim:1,
+  coolant:false, alarm:false, broken:false, rapidKey:false, rapidBtn:false,
+  zx:0, zz:100, zw:100, pend:{ z:0, x:0, w:0 }, wheel:{ z:0, x:0, w:0 }, wheelMul:0.01,
+  autoZ:false, autoX:false, halfNut:false, pitch:2.5, zStop:null,
+  removed:0, cutTime:0, changing:null, peck:{ active:false, top:0 },
+  feedC:0, feedT:0, curFeed:0, win:{ vol:0, path:0, rv:0, idle:0 }, winT:{ vol:0, path:0, idle:0 },
+  raNow:0, tailBroken:false, lastChip:0, lastStress:0, lastCut:0, lastMove:0, damage:0, lastRa:null, lastVc:0, rubT:0,
+  muted:false, job:null, zone:null, cutAcc:0, cutting:0, spinAng:0
+};
+const tool = () => TOOLS[S.tool];
+const tailT = () => TAILS[S.tail];
+const rapid = () => S.rapidKey || S.rapidBtn;
+
+/* ---------------- Mesaj / kayıt ---------------- */
+const logEl = $('log'), toastEl = $('toast');
+let toastTimer = 0;
+const lastWarn = {};
+function log(msg, lvl = '') {
+  const li = document.createElement('li');
+  if (lvl) li.className = lvl;
+  const t = new Date();
+  li.innerHTML = `<time>${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}:${String(t.getSeconds()).padStart(2,'0')}</time>`;
+  li.append(document.createTextNode(msg));
+  logEl.prepend(li);
+  while (logEl.children.length > 7) logEl.lastChild.remove();
+  toastEl.textContent = msg;
+  toastEl.className = 'toast show ' + lvl;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.className = 'toast ' + lvl, 3400);
+}
+function warnOnce(key, msg, lvl = 'warn', gap = 3000) {
+  const now = performance.now();
+  if (lastWarn[key] && now - lastWarn[key] < gap) return false;
+  lastWarn[key] = now;
+  log(msg, lvl);
+  if (S.job && !S.job.done && key in S.job.stats) S.job.stats[key]++;
+  return true;
+}
+
+/* ---------------- Ses ---------------- */
+let ac = null, spOsc, spGain, cutGain, cutFilter, master;
+function initAudio() {
+  if (ac) return;
+  try {
+    ac = new (window.AudioContext || window.webkitAudioContext)();
+    master = ac.createGain(); master.gain.value = S.muted ? 0 : 0.9; master.connect(ac.destination);
+    spOsc = ac.createOscillator(); spOsc.type = 'sawtooth';
+    const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 700;
+    spGain = ac.createGain(); spGain.gain.value = 0;
+    spOsc.connect(lp); lp.connect(spGain); spGain.connect(master); spOsc.start();
+    const buf = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate);
+    const d = buf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    const ns = ac.createBufferSource(); ns.buffer = buf; ns.loop = true;
+    cutFilter = ac.createBiquadFilter(); cutFilter.type = 'bandpass'; cutFilter.frequency.value = 2000; cutFilter.Q.value = 2.5;
+    cutGain = ac.createGain(); cutGain.gain.value = 0;
+    ns.connect(cutFilter); cutFilter.connect(cutGain); cutGain.connect(master); ns.start();
+  } catch (e) { ac = null; }
+}
+function crashSound() {
+  if (!ac) return;
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.type = 'square'; o.frequency.setValueAtTime(160, ac.currentTime); o.frequency.exponentialRampToValueAtTime(35, ac.currentTime + 0.45);
+  g.gain.setValueAtTime(0.25, ac.currentTime); g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.55);
+  o.connect(g); g.connect(master); o.start(); o.stop(ac.currentTime + 0.6);
+}
+function beep(f = 1600, len = 0.15, vol = 0.08) {
+  if (!ac) return;
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.frequency.value = f; g.gain.setValueAtTime(vol, ac.currentTime); g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + len);
+  o.connect(g); g.connect(master); o.start(); o.stop(ac.currentTime + len + 0.01);
+}
+function updateAudio() {
+  if (!ac) return;
+  const t = ac.currentTime, on = S.spindle ? 1 : 0;
+  spOsc.frequency.setTargetAtTime(30 + S.rpm / 18, t, 0.3);
+  spGain.gain.setTargetAtTime(on * 0.05, t, on ? 0.5 : 0.7);
+  cutGain.gain.setTargetAtTime(Math.min(0.22, S.cutting * 0.9), t, 0.05);
+  cutFilter.frequency.setTargetAtTime(900 + S.rpm * 0.9, t, 0.2);
+}
+
+/* ---------------- Three.js sahnesi ---------------- */
+const canvas = $('c'), stage = $('stage');
+let renderer;
+try { renderer = new THREE.WebGLRenderer({ canvas, antialias:true }); }
+catch (e) { stage.innerHTML = '<p style="padding:24px">Bu tarayıcı WebGL desteklemiyor; simülasyon çalışamıyor.</p>'; return; }
+renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputEncoding = THREE.sRGBEncoding;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x151b1d);
+scene.fog = new THREE.Fog(0x151b1d, 1500, 3400);
+const camera = new THREE.PerspectiveCamera(40, 1, 2, 7000);
+const controls = new THREE.OrbitControls(camera, canvas);
+controls.enableDamping = true; controls.dampingFactor = 0.12; controls.maxPolarAngle = Math.PI * 0.95;
+
+scene.add(new THREE.HemisphereLight(0xdfe9ff, 0x2a2622, 0.75));
+const sun = new THREE.DirectionalLight(0xffffff, 0.9);
+sun.position.set(200, 700, 500); sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, { left:-450, right:550, top:400, bottom:-400, near:100, far:1800 });
+sun.shadow.bias = -0.0008;
+scene.add(sun);
+const fill = new THREE.DirectionalLight(0x9fc4ff, 0.35); fill.position.set(-400, 200, -300); scene.add(fill);
+
+const M = {
+  paint: new THREE.MeshStandardMaterial({ color:0x56766f, roughness:0.62, metalness:0.15 }),
+  paintDark: new THREE.MeshStandardMaterial({ color:0x3e5651, roughness:0.7, metalness:0.1 }),
+  steel: new THREE.MeshStandardMaterial({ color:0x9aa3a8, roughness:0.38, metalness:0.75 }),
+  ground: new THREE.MeshStandardMaterial({ color:0x6f777b, roughness:0.32, metalness:0.8 }),
+  dark: new THREE.MeshStandardMaterial({ color:0x24292c, roughness:0.5, metalness:0.6 }),
+  black: new THREE.MeshStandardMaterial({ color:0x111416, roughness:0.6, metalness:0.3 }),
+  yellow: new THREE.MeshStandardMaterial({ color:0xf0b429, roughness:0.5, metalness:0.1 }),
+  insert: new THREE.MeshStandardMaterial({ color:0xc9a54a, roughness:0.35, metalness:0.7 }),
+  hss: new THREE.MeshStandardMaterial({ color:0xd9cfb4, roughness:0.3, metalness:0.8 }),
+  floor: new THREE.MeshStandardMaterial({ color:0x2a2f30, roughness:0.95, metalness:0 }),
+};
+function box(w, h, d, mat, x, y, z, parent, shadow = true) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+  m.position.set(x, y, z); m.castShadow = shadow; m.receiveShadow = true;
+  (parent || scene).add(m); return m;
+}
+function boxR(x0, x1, y0, y1, z0, z1, mat, parent) { return box(x1 - x0, y1 - y0, z1 - z0, mat, (x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2, parent); }
+function cyl(rt, rb, h, mat, seg = 32) {
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, seg), mat);
+  m.castShadow = true; m.receiveShadow = true; return m;
+}
+// X ekseni boyunca silindir (x0..x1)
+function cylX(r0, r1, x0, x1, mat, parent, seg = 32) {
+  const m = cyl(r1, r0, x1 - x0, mat, seg); m.rotation.z = -Math.PI / 2; m.position.x = (x0 + x1) / 2;
+  (parent || scene).add(m); return m;
+}
+
+/* ---- Tezgâh ---- */
+const BED_TOP = -138;
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(7000, 7000), M.floor);
+floor.rotation.x = -Math.PI / 2; floor.position.y = -760; floor.receiveShadow = true; scene.add(floor);
+boxR(-420, 760, -300, -150, -170, 170, M.paint);          // kızak (yatak)
+boxR(-420, -300, -760, -300, -170, 170, M.paint);         // ayak (sol)
+boxR(620, 760, -760, -300, -170, 170, M.paint);           // ayak (sağ)
+for (const z of [-120, 110]) boxR(-420, 760, -150, BED_TOP, z - 18, z + 18, M.ground);   // kızak yolları
+boxR(-420, -80, -150, 170, -170, 170, M.paint);           // fener mili kutusu
+boxR(-410, -90, 60, 150, 172, 176, M.paintDark);          // ön panel
+for (let k = 0; k < 3; k++) {                              // devir kolları (dekor)
+  const l = cyl(5, 5, 60, M.steel, 10); l.position.set(-360 + k * 90, 80, 200); l.rotation.x = Math.PI / 2; scene.add(l);
+  const kn = new THREE.Mesh(new THREE.SphereGeometry(12, 14, 10), M.black); kn.position.set(-360 + k * 90, 80, 232); scene.add(kn);
+}
+cylX(60, 60, -80, -76, M.dark);                            // mil burnu flanşı
+// Vida mili ve ilerleme mili (önde)
+const leadscrew = cylX(10, 10, -80, 740, M.steel, scene, 12); leadscrew.position.set(330, -205, 182);
+const feedrod = cylX(8, 8, -80, 740, M.ground, scene, 12); feedrod.position.set(330, -240, 182);
+
+/* ---- Dönen grup: ayna + çeneler + parça ---- */
+const spinG = new THREE.Group(); scene.add(spinG);
+cylX(CHUCK_R, CHUCK_R, -75, 0, M.dark, spinG, 48);
+cylX(30, 30, -76, 0.5, M.black, spinG, 24);
+for (let k = 0; k < 3; k++) {
+  const g = new THREE.Group(); g.rotation.x = k * TAU / 3; spinG.add(g);
+  boxR(0, JAW_A, STOCK_R, JAW_R, -10, 10, M.steel, g);
+  boxR(0, 6, JAW_R - 8, JAW_R + 6, -12, 12, M.steel, g);
+  boxR(-6, 0, 50, 80, -14, 14, M.ground, g);
+}
+
+/* ---- Parça mesh'i: dış profil + alın + delik tek bir dönel yüzeyde ---- */
+const RS = 0.2, MR = Math.round(AMAX / RS) + 1, ROWS = MR * 2, SEG = 64;
+const COS = new Float32Array(SEG), SIN = new Float32Array(SEG);
+for (let j = 0; j < SEG; j++) { COS[j] = Math.cos(j / SEG * TAU); SIN[j] = Math.sin(j / SEG * TAU); }
+const pPos = new Float32Array(ROWS * SEG * 3), pNor = new Float32Array(ROWS * SEG * 3), pCol = new Float32Array(ROWS * SEG * 3);
+const pIdx = new Uint32Array((ROWS - 1) * SEG * 6);
+{ let p = 0;
+  for (let s = 0; s < ROWS - 1; s++) for (let j = 0; j < SEG; j++) {
+    const a = s * SEG + j, b = s * SEG + (j + 1) % SEG, c = a + SEG, d = b + SEG;
+    pIdx[p++] = a; pIdx[p++] = b; pIdx[p++] = c; pIdx[p++] = b; pIdx[p++] = d; pIdx[p++] = c;
+  } }
+const partGeo = new THREE.BufferGeometry();
+partGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+partGeo.setAttribute('normal', new THREE.BufferAttribute(pNor, 3));
+partGeo.setAttribute('color', new THREE.BufferAttribute(pCol, 3));
+partGeo.setIndex(new THREE.BufferAttribute(pIdx, 1));
+partGeo.boundingSphere = new THREE.Sphere(new THREE.Vector3(50, 0, 0), 80);
+const partMesh = new THREE.Mesh(partGeo, new THREE.MeshStandardMaterial({ vertexColors:true, roughness:0.32, metalness:0.62, side:THREE.DoubleSide }));
+partMesh.castShadow = true; partMesh.receiveShadow = true; spinG.add(partMesh);
+// aynanın içindeki kısım (görünmez ama alın kapağı için)
+cylX(STOCK_R, STOCK_R, -2, 0.2, new THREE.MeshStandardMaterial({ color:0x8d9396, roughness:0.55, metalness:0.55 }), spinG, 48);
+
+function threadR(i, a, j) {        // istasyon i, açı indeksi j için diş dibi yarıçapı
+  const z = S.zone;
+  if (!z || i < z.i0 || i > z.i1) return 1e9;
+  const th = j / SEG * TAU;
+  const u = mod(a - z.p * th / TAU, z.p);
+  const f = u / z.bw, b0 = Math.floor(f) % z.gb, b1 = (b0 + 1) % z.gb, t = f - Math.floor(f);
+  const g0 = Gr[i * GBMAX + b0], g1 = Gr[i * GBMAX + b1];
+  if (g0 > 1e8 && g1 > 1e8) return 1e9;
+  return Math.min(g0, g1) > 1e8 ? Math.min(g0, g1) : g0 + (g1 - g0) * t;
+}
+function fillRow(s) {
+  const outer = s < MR, k = outer ? s : ROWS - 1 - s;
+  let a = k * RS, i = idx(a), coll = false;
+  if (i > endIdx) { coll = true; i = Math.max(0, endIdx); a = A(i); }
+  const base = coll ? Ri[i] : outer ? R[i] : Ri[i];
+  // renk
+  let cr, cg, cb;
+  if (!coll && outer && (INSP[i] & 1) || !coll && !outer && (INSP[i] & 2)) { cr = 0.92; cg = 0.2; cb = 0.16; }
+  else if (coll) { const c = CUTO[i] ? 0.8 : 0.6; cr = c; cg = c + 0.015; cb = c + 0.03; }
+  else if (outer ? CUTO[i] : CUTI[i]) {
+    const ra = outer ? RA[i] : RAI[i];
+    const c = 0.9 - Math.min(0.24, ra * 0.022);
+    cr = c; cg = c + 0.015; cb = c + 0.035;
+  } else { cr = 0.58; cg = 0.6; cb = 0.62; }
+  const thr = outer && !coll && S.zone && i >= S.zone.i0 && i <= S.zone.i1;
+  for (let j = 0; j < SEG; j++) {
+    let r = base;
+    if (thr) r = Math.min(r, threadR(i, a, j));
+    const v = (s * SEG + j) * 3;
+    pPos[v] = a; pPos[v + 1] = r * COS[j]; pPos[v + 2] = r * SIN[j];
+    pCol[v] = cr; pCol[v + 1] = cg; pCol[v + 2] = cb;
+  }
+}
+function normRow(s) {
+  const s0 = Math.max(0, s - 1), s1 = Math.min(ROWS - 1, s + 1), outer = s < MR;
+  for (let j = 0; j < SEG; j++) {
+    const v0 = (s0 * SEG + j) * 3, v1 = (s1 * SEG + j) * 3, v = (s * SEG + j) * 3;
+    const ta = pPos[v1] - pPos[v0];
+    const tr = Math.hypot(pPos[v1 + 1], pPos[v1 + 2]) - Math.hypot(pPos[v0 + 1], pPos[v0 + 2]);
+    let na = -tr, nr = ta;
+    const L = Math.hypot(na, nr);
+    if (L < 1e-6) { na = 0; nr = outer ? 1 : -1; } else { na /= L; nr /= L; }
+    pNor[v] = na; pNor[v + 1] = nr * COS[j]; pNor[v + 2] = nr * SIN[j];
+  }
+}
+let dirty = null;
+function markDirty(i0, i1) {
+  if (!dirty) dirty = [i0, i1];
+  else { dirty[0] = Math.min(dirty[0], i0); dirty[1] = Math.max(dirty[1], i1); }
+}
+function flushPart() {
+  if (!dirty) return;
+  const k0 = clamp(Math.floor(A(dirty[0]) / RS) - 1, 0, MR - 1), k1 = clamp(Math.ceil(A(dirty[1]) / RS) + 1, 0, MR - 1);
+  for (let k = k0; k <= k1; k++) { fillRow(k); fillRow(ROWS - 1 - k); }
+  for (let k = Math.max(0, k0 - 1); k <= Math.min(MR - 1, k1 + 1); k++) { normRow(k); normRow(ROWS - 1 - k); }
+  partGeo.attributes.position.needsUpdate = true;
+  partGeo.attributes.normal.needsUpdate = true;
+  partGeo.attributes.color.needsUpdate = true;
+  dirty = null;
+}
+markDirty(0, NS - 1);
+
+/* ---- Taşıyıcı, enine kızak, kalem ---- */
+const carG = new THREE.Group(); scene.add(carG);
+boxR(-80, 80, BED_TOP, -100, -170, 170, M.paint, carG);          // taşıyıcı kızağı (saddle)
+boxR(-80, 80, -275, -100, 170, 200, M.paint, carG);              // önlük (apron)
+const zWheel3 = new THREE.Group(); zWheel3.position.set(-40, -200, 214); carG.add(zWheel3);
+const crossG = new THREE.Group(); carG.add(crossG);              // z = kalem ucunun yarıçapı
+boxR(-55, 55, -100, -62, 30, 260, M.ground, crossG);              // enine kızak
+const xWheel3 = new THREE.Group(); xWheel3.position.set(0, -82, 280); crossG.add(xWheel3);
+const postG = new THREE.Group(); crossG.add(postG);              // kalem bağlama (taret) ve kalem
+function handwheel(parent, axis) {
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(42, 4.5, 10, 36), M.steel); rim.castShadow = true; parent.add(rim);
+  const hub = cyl(11, 11, 26, M.steel, 16); hub.rotation.x = Math.PI / 2; parent.add(hub);
+  for (let k = 0; k < 3; k++) { const sp = box(4, 42, 5, M.steel, 0, 0, 0, parent); sp.rotation.z = k * TAU / 3; sp.position.set(-Math.sin(k * TAU / 3) * 21, Math.cos(k * TAU / 3) * 21, 0); }
+  const h = cyl(6, 6, 34, M.black, 12); h.rotation.x = Math.PI / 2; h.position.set(0, 36, 20); parent.add(h);
+  if (axis === 'x') parent.rotation.y = Math.PI / 2;
+}
+handwheel(zWheel3); handwheel(xWheel3);
+
+/* ---- Gelincik ---- */
+const tailG = new THREE.Group(); scene.add(tailG);               // orijin: matkap aynasının arkası (kovan ucu)
+boxR(60, 230, BED_TOP, 60, -110, 110, M.paint, tailG);
+boxR(50, 240, BED_TOP, -110, -140, 140, M.paint, tailG);
+cylX(24, 24, 0, 70, M.ground, tailG, 32);
+const wWheel3 = new THREE.Group(); wWheel3.position.set(244, 0, 0); tailG.add(wWheel3);
+handwheel(wWheel3); wWheel3.rotation.y = Math.PI / 2;
+const tailToolG = new THREE.Group(); tailG.add(tailToolG);
+
+/* ---------------- Talaşlar (dünya koordinatları) ---------------- */
+function groundAtW(x, z) {
+  if (x >= -420 && x <= 760 && z >= -170 && z <= 170) return -150;
+  return -760;
+}
+const MAXCHIP = 900;
+const chipMat = new THREE.MeshStandardMaterial({ color:0xd5dbe0, roughness:0.25, metalness:0.85, side:THREE.DoubleSide });
+const chipMeshes = [
+  new THREE.InstancedMesh(new THREE.TorusGeometry(1.4, 0.22, 4, 10, Math.PI * 1.5), chipMat, MAXCHIP),
+  new THREE.InstancedMesh(new THREE.TorusGeometry(2.2, 0.28, 4, 22, Math.PI * 3.6), chipMat, MAXCHIP),
+  new THREE.InstancedMesh(new THREE.BoxGeometry(1.8, 0.3, 0.8), chipMat, MAXCHIP),
+];
+chipMeshes.forEach(m => { m.frustumCulled = false; scene.add(m); });
+const chips = []; let chipHead = 0;
+const dummy = new THREE.Object3D();
+for (let i = 0; i < MAXCHIP; i++) {
+  chips.push({ p:new THREE.Vector3(), v:new THREE.Vector3(), r:new THREE.Euler(), rv:new THREE.Vector3(), alive:false, rest:false, kind:0, s:1 });
+  dummy.scale.set(0, 0, 0); dummy.updateMatrix(); chipMeshes.forEach(m => m.setMatrixAt(i, dummy.matrix));
+}
+function spawnChip(x, y, z, kind, s) {
+  const c = chips[chipHead];
+  if (c.alive) { dummy.scale.set(0, 0, 0); dummy.updateMatrix(); chipMeshes[c.kind].setMatrixAt(chipHead, dummy.matrix); }
+  chipHead = (chipHead + 1) % MAXCHIP;
+  c.kind = kind; c.s = s; c.p.set(x, y, z);
+  // torna talaşı: kalemin önünden yukarı-dışarı akar, sonra tekneye düşer
+  c.v.set((Math.random() - 0.5) * 220, 120 + Math.random() * 260, 80 + Math.random() * 260);
+  c.r.set(Math.random() * 6, Math.random() * 6, Math.random() * 6);
+  c.rv.set((Math.random() - .5) * 26, (Math.random() - .5) * 26, (Math.random() - .5) * 26);
+  c.alive = true; c.rest = false;
+}
+function updateChips(dt) {
+  let changed = false;
+  for (let i = 0; i < MAXCHIP; i++) {
+    const c = chips[i];
+    if (!c.alive || c.rest) continue;
+    c.v.y -= 2600 * dt;
+    c.p.addScaledVector(c.v, dt);
+    c.r.x += c.rv.x * dt; c.r.y += c.rv.y * dt; c.r.z += c.rv.z * dt;
+    const g = groundAtW(c.p.x, c.p.z);
+    if (c.p.y <= g + 0.3) { c.p.y = g + 0.3; c.rest = true; }
+    dummy.position.copy(c.p); dummy.rotation.copy(c.r); dummy.scale.setScalar(c.s);
+    dummy.updateMatrix(); chipMeshes[c.kind].setMatrixAt(i, dummy.matrix); changed = true;
+  }
+  if (changed) chipMeshes.forEach(m => m.instanceMatrix.needsUpdate = true);
+}
+function clearChips() {
+  dummy.scale.set(0, 0, 0); dummy.updateMatrix();
+  for (let i = 0; i < MAXCHIP; i++) { chips[i].alive = false; chipMeshes.forEach(m => m.setMatrixAt(i, dummy.matrix)); }
+  chipMeshes.forEach(m => m.instanceMatrix.needsUpdate = true);
+}
+
+/* ---------------- Parçacıklar (GPU noktaları) ---------------- */
+const PS_VERT = `attribute vec4 rgba; attribute float size; varying vec4 vC; uniform float scale;
+  void main(){ vC = rgba; vec4 mv = modelViewMatrix * vec4(position, 1.0); gl_PointSize = size * scale / max(1.0, -mv.z); gl_Position = projectionMatrix * mv; }`;
+const PS_FRAG = `varying vec4 vC; uniform float soft;
+  void main(){ float d = length(gl_PointCoord - 0.5) * 2.0; if (d > 1.0) discard;
+    float a = soft > 0.5 ? (1.0 - d) * (1.0 - d) : smoothstep(1.0, 0.35, d);
+    gl_FragColor = vec4(vC.rgb, vC.a * a); }`;
+function makePS(max, additive, soft) {
+  const geo = new THREE.BufferGeometry();
+  const pos = new Float32Array(max * 3), col = new Float32Array(max * 4), size = new Float32Array(max);
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute('rgba', new THREE.BufferAttribute(col, 4));
+  geo.setAttribute('size', new THREE.BufferAttribute(size, 1));
+  const mat = new THREE.ShaderMaterial({ uniforms:{ scale:{ value:600 }, soft:{ value:soft ? 1 : 0 } },
+    vertexShader:PS_VERT, fragmentShader:PS_FRAG, transparent:true, depthWrite:false,
+    blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending });
+  const pts = new THREE.Points(geo, mat); pts.frustumCulled = false; pts.renderOrder = 5; scene.add(pts);
+  const P = [];
+  for (let i = 0; i < max; i++) P.push({ alive:false, p:new THREE.Vector3(), v:new THREE.Vector3(), life:0, max:1, k:null });
+  return { geo, pos, col, size, P, head:0, max, mat };
+}
+const PK = {
+  spark:  { c0:[1, 0.85, 0.45, 1],   c1:[1, 0.22, 0.04, 0],   s0:1.7, s1:0.5, g:2600, drag:0.6, bounce:0.35 },
+  gold:   { c0:[1, 0.92, 0.55, 1],   c1:[1, 0.55, 0.1, 0],    s0:2.8, s1:0.8, g:700,  drag:0.9, bounce:0.4 },
+  smoke:  { c0:[0.5, 0.5, 0.5, 0.32], c1:[0.72, 0.72, 0.74, 0], s0:4,   s1:26,  g:-70,  drag:1.6, bounce:0 },
+  mist:   { c0:[0.86, 0.94, 1, 0.26], c1:[0.92, 0.96, 1, 0],    s0:3,   s1:15,  g:-25,  drag:2.6, bounce:0 },
+  debris: { c0:[0.3, 0.32, 0.35, 1],  c1:[0.3, 0.32, 0.35, 0],  s0:2.4, s1:2.0, g:2600, drag:0.3, bounce:0.3 },
+};
+const psAdd = makePS(1500, true, false), psAlpha = makePS(1200, false, true);
+function emit(kind, x, y, z, vx, vy, vz, life) {
+  const sys = kind === 'spark' || kind === 'gold' ? psAdd : psAlpha;
+  const q = sys.P[sys.head]; sys.head = (sys.head + 1) % sys.max;
+  q.alive = true; q.k = PK[kind]; q.p.set(x, y, z); q.v.set(vx, vy, vz); q.life = q.max = life;
+}
+function burst(kind, n, x, y, z, speed, up, life) {
+  for (let i = 0; i < n; i++) {
+    const a = Math.random() * TAU, s = speed * (0.35 + Math.random() * 0.65);
+    emit(kind, x, y, z, Math.cos(a) * s, up * (0.4 + Math.random() * 0.8), Math.sin(a) * s, life * (0.5 + Math.random() * 0.7));
+  }
+}
+function updatePS(sys, dt) {
+  const { pos, col, size, P } = sys;
+  for (let i = 0; i < sys.max; i++) {
+    const q = P[i];
+    if (!q.alive) { if (size[i] !== 0) { size[i] = 0; col[i * 4 + 3] = 0; } continue; }
+    const k = q.k;
+    q.life -= dt;
+    if (q.life <= 0) { q.alive = false; size[i] = 0; col[i * 4 + 3] = 0; continue; }
+    q.v.y -= k.g * dt;
+    q.v.multiplyScalar(Math.max(0, 1 - k.drag * dt));
+    q.p.addScaledVector(q.v, dt);
+    if (k.bounce) { const gh = groundAtW(q.p.x, q.p.z); if (q.p.y < gh) { q.p.y = gh; q.v.y = -q.v.y * k.bounce; q.v.x *= 0.6; q.v.z *= 0.6; } }
+    const t = 1 - q.life / q.max;
+    pos[i * 3] = q.p.x; pos[i * 3 + 1] = q.p.y; pos[i * 3 + 2] = q.p.z;
+    for (let c = 0; c < 4; c++) col[i * 4 + c] = k.c0[c] + (k.c1[c] - k.c0[c]) * t;
+    size[i] = k.s0 + (k.s1 - k.s0) * t;
+  }
+  sys.geo.attributes.position.needsUpdate = true;
+  sys.geo.attributes.rgba.needsUpdate = true;
+  sys.geo.attributes.size.needsUpdate = true;
+}
+let smokeAcc = 0, mistAcc = 0;
+function ambientParticles(dt) {
+  const now = performance.now(), cutting = now - S.lastCut < 250;
+  const rub = now - S.rubT < 600;
+  let heat = (cutting ? Math.max(0, S.lastStress - 1.1) * 30 : 0) + S.damage * 50 + (rub && cutting ? 14 : 0);
+  if (S.coolant) heat *= 0.2;
+  smokeAcc += heat * dt;
+  while (smokeAcc >= 1) {
+    smokeAcc -= 1;
+    emit('smoke', S.at + (Math.random() - .5) * 4, 3 + Math.random() * 3, S.rt + Math.random() * 3, (Math.random() - .5) * 30, 40 + Math.random() * 40, (Math.random() - .5) * 30, 1.6 + Math.random() * 1.2);
+  }
+  if (S.coolant && S.spindle) {
+    mistAcc += (cutting ? 45 : 12) * dt;
+    while (mistAcc >= 1) {
+      mistAcc -= 1;
+      const i = clamp(idx(S.at), I0, Math.max(I0, endIdx)), rr = hasMat(i) ? R[i] : STOCK_R;
+      const a = Math.random() * TAU, sp = 60 + Math.random() * 120;
+      emit('mist', S.at + (Math.random() - .5) * 8, Math.cos(a) * rr, Math.sin(a) * rr, (Math.random() - .5) * 40, -Math.sin(a) * sp, Math.cos(a) * sp, 0.6 + Math.random() * 0.6);
+    }
+  }
+}
+
+/* ---------------- Soğutma: taşıyıcıya bağlı eklemli hortum + damlacıklar ---------------- */
+const UP = new THREE.Vector3(0, 1, 0), hdum = new THREE.Object3D();
+const HOSE_MAX = 80;
+const hoseMesh = new THREE.InstancedMesh(new THREE.SphereGeometry(5.4, 14, 10), new THREE.MeshStandardMaterial({ color:0x2f6c9e, roughness:0.35, metalness:0.1 }), HOSE_MAX);
+hoseMesh.castShadow = true; hoseMesh.frustumCulled = false; scene.add(hoseMesh);
+const nozzle = cyl(2.2, 5, 16, new THREE.MeshStandardMaterial({ color:0xd9822b, roughness:0.4 }), 16); scene.add(nozzle);
+const coolTarget = new THREE.Vector3(), nozzleEnd = new THREE.Vector3(), nozzleDir = new THREE.Vector3(), hoseBase = new THREE.Vector3();
+let hoseKey = '';
+function updateHose() {
+  coolTarget.set(S.at + 1, 2, Math.max(S.rt, 0) + 1);
+  hoseBase.set(S.at + 95, 40, -90);
+  nozzleEnd.set(S.at + 30, 58, Math.max(S.rt, 0) - 18);
+  const key = S.at.toFixed(1) + '/' + S.rt.toFixed(1);
+  if (key === hoseKey) return;
+  hoseKey = key;
+  nozzleDir.subVectors(coolTarget, nozzleEnd).normalize();
+  const nzBase = nozzleEnd.clone().addScaledVector(nozzleDir, -16);
+  const back = nozzleEnd.clone().addScaledVector(nozzleDir, -50);
+  const curve = new THREE.CatmullRomCurve3([hoseBase.clone(), new THREE.Vector3(S.at + 90, 110, -60), back, nzBase]);
+  const n = clamp(Math.round(curve.getLength() / 7.5), 4, HOSE_MAX);
+  for (let i = 0; i < n; i++) {
+    const u = i / (n - 1);
+    hdum.position.copy(curve.getPointAt(u)); hdum.quaternion.setFromUnitVectors(UP, curve.getTangentAt(u));
+    hdum.scale.set(1, 0.85, 1); hdum.updateMatrix(); hoseMesh.setMatrixAt(i, hdum.matrix);
+  }
+  hoseMesh.count = n; hoseMesh.instanceMatrix.needsUpdate = true;
+  nozzle.position.copy(nozzleEnd).addScaledVector(nozzleDir, -8);
+  nozzle.quaternion.setFromUnitVectors(UP, nozzleDir);
+}
+boxR(70, 110, -100, 40, -110, -70, M.paintDark, carG);   // soğutma borusu ayağı
+const MAXDROP = 1100, G_COOL = 3400;
+const dropMesh = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.55, 0.55, 1, 6),
+  new THREE.MeshStandardMaterial({ color:0x8fd0ff, emissive:0x0c3a5a, roughness:0.05, metalness:0.2, transparent:true, opacity:0.62 }), MAXDROP);
+dropMesh.frustumCulled = false; scene.add(dropMesh);
+const drops = [];
+for (let i = 0; i < MAXDROP; i++) {
+  drops.push({ p:new THREE.Vector3(), v:new THREE.Vector3(), life:0, alive:false, splash:false, hit:false, s:1 });
+  hdum.scale.set(0, 0, 0); hdum.updateMatrix(); dropMesh.setMatrixAt(i, hdum.matrix);
+}
+let dropHead = 0, dropAcc = 0, dropsVisible = false;
+function addDrop(p, v, life, splash, s) {
+  const d = drops[dropHead]; dropHead = (dropHead + 1) % MAXDROP;
+  d.p.copy(p); d.v.copy(v); d.life = life; d.alive = true; d.splash = splash; d.hit = false; d.s = s;
+}
+const tmpP = new THREE.Vector3(), tmpV = new THREE.Vector3();
+function updateCoolant(dt) {
+  updateHose();
+  if (S.coolant) {
+    dropAcc += dt * 560;
+    while (dropAcc >= 1) {
+      dropAcc -= 1;
+      const speed = 620 + Math.random() * 140;
+      tmpP.copy(nozzleEnd).addScaledVector(nozzleDir, Math.random() * speed * dt);
+      const tt = tmpP.distanceTo(coolTarget) / speed;
+      tmpV.copy(nozzleDir).multiplyScalar(speed);
+      tmpV.x += (Math.random() - 0.5) * 34; tmpV.z += (Math.random() - 0.5) * 34;
+      tmpV.y += (Math.random() - 0.5) * 34 + 0.5 * G_COOL * tt;
+      addDrop(tmpP, tmpV, 1.6, false, 0.75 + Math.random() * 0.55);
+    }
+  }
+  const surf = Math.min(2400, S.spindle ? S.rpm * TAU * 25 / 60 : 0) * 0.35;
+  let any = false;
+  for (let i = 0; i < MAXDROP; i++) {
+    const d = drops[i];
+    if (!d.alive) continue;
+    d.v.y -= G_COOL * dt; d.p.addScaledVector(d.v, dt); d.life -= dt;
+    // dönen parçaya çarpma: mil dönüyorsa teğet yönde savrulur
+    const ii = idx(d.p.x), rr = Math.hypot(d.p.y, d.p.z);
+    if (!d.hit && ii >= I0 && ii <= endIdx && hasMat(ii) && rr < R[ii] + 0.5) {
+      d.hit = true;
+      const ny = d.p.y / (rr || 1), nz = d.p.z / (rr || 1);
+      d.p.y = ny * (R[ii] + 0.8); d.p.z = nz * (R[ii] + 0.8);
+      if (S.spindle) d.v.set((Math.random() - .5) * 80, -nz * surf + ny * (100 + Math.random() * 200), ny * surf + nz * (100 + Math.random() * 200));
+      else d.v.set((Math.random() - .5) * 30, ny * 40 - 60, nz * 40);
+    }
+    const gh = groundAtW(d.p.x, d.p.z);
+    if (d.p.y <= gh) {
+      if (!d.splash && Math.random() < 0.6) for (let k = 0; k < 2; k++) {
+        const a = Math.random() * TAU, sp = 110 + Math.random() * 260;
+        tmpP.set(d.p.x, gh + 0.4, d.p.z); tmpV.set(Math.cos(a) * sp, 120 + Math.random() * 230, Math.sin(a) * sp);
+        addDrop(tmpP, tmpV, 0.5, true, 0.45 + Math.random() * 0.3);
+      }
+      d.alive = false;
+    }
+    if (d.life <= 0) d.alive = false;
+    if (d.alive) {
+      any = true;
+      const sp = d.v.length();
+      hdum.position.copy(d.p);
+      hdum.quaternion.setFromUnitVectors(UP, tmpV.copy(d.v).divideScalar(sp || 1));
+      hdum.scale.set(d.s, clamp(sp * 0.014, 1.2, 9) * d.s, d.s);
+    } else hdum.scale.set(0, 0, 0);
+    hdum.updateMatrix(); dropMesh.setMatrixAt(i, hdum.matrix);
+  }
+  if (any || dropsVisible) dropMesh.instanceMatrix.needsUpdate = true;
+  dropsVisible = any;
+}
+
+/* ---------------- Kalem ve gelincik takımı görselleri ---------------- */
+// Şekil (x = du, y = dr) → kalem grubu: dünya x = du, z = dr, y kalınlık
+function prism(pts, h, mat, y0 = 0) {
+  const sh = new THREE.Shape(pts.map(([x, y]) => new THREE.Vector2(x, y)));
+  const g = new THREE.ExtrudeGeometry(sh, { depth:h, bevelEnabled:false });
+  const m = new THREE.Mesh(g, mat); m.rotation.x = Math.PI / 2; m.position.y = y0;
+  m.castShadow = true; return m;
+}
+function buildToolVisual() {
+  while (postG.children.length) postG.remove(postG.children[0]);
+  const T = tool();
+  if (T.type !== 'bore') {
+    boxR(-28, 38, -62, 18, 95, 160, M.dark, postG);                     // dört yollu kalem bağlama
+    boxR(-24, 34, 18, 26, 105, 150, M.steel, postG);
+    const bolt = cyl(6, 6, 30, M.black, 10); bolt.position.set(5, 34, 128); postG.add(bolt);
+  }
+  const brk = S.broken;
+  const insMat = brk ? new THREE.MeshStandardMaterial({ color:0x6b2a22, roughness:0.8 }) : M.insert;
+  switch (T.type) {
+    case 'turn':
+      postG.add(prism([[0,0],[10,0.875],[12,10],[0.875,10]].map(([u, r]) => brk ? [u, r + 3] : [u, r]), 4.5, insMat, 0));
+      boxR(1, 20, -20, -4.5, 10, 150, M.steel, postG);
+      break;
+    case 'chamfer':
+      postG.add(prism([[0, brk ? 3 : 0],[6,6],[-6,6]], 4.5, insMat, 0));
+      boxR(-8, 8, -20, -4.5, 6, 150, M.steel, postG);
+      break;
+    case 'groove':
+      postG.add(prism([[0, brk ? 4 : 0],[T.w, brk ? 4 : 0],[T.w, T.reach],[0, T.reach]], 18, T.no === 'T4' ? M.hss : insMat, 0));
+      boxR(-4, T.w + 12, -24, 0, T.reach, 150, M.steel, postG);
+      break;
+    case 'thread':
+      postG.add(prism([[0, brk ? 2.5 : 0],[3,5.2],[-3,5.2]], 4.5, insMat, 0));
+      boxR(-6, 6, -20, -4.5, 5.2, 150, M.steel, postG);
+      break;
+    case 'bore': {
+      const bar = cylX(T.rb, T.rb, 1, 120, M.steel, postG, 24); bar.position.set(60.5, -T.rb * 0.6, -T.rb);
+      postG.add(prism([[0, brk ? -1 : 0],[4,-0.4],[4,-4],[0,-4]], 3, insMat, 0));
+      boxR(100, 145, -40, 20, -2 * T.rb - 6, 160, M.dark, postG);
+      break;
+    }
+  }
+}
+const fluteTex = (() => {
+  const cv = document.createElement('canvas'); cv.width = 64; cv.height = 128;
+  const g = cv.getContext('2d');
+  g.fillStyle = '#d9cfb4'; g.fillRect(0, 0, 64, 128);
+  g.strokeStyle = '#5a5444'; g.lineWidth = 14;
+  for (let k = -3; k < 6; k++) { g.beginPath(); g.moveTo(k * 32 - 64, 128); g.lineTo(k * 32 + 64, 0); g.stroke(); }
+  const t = new THREE.CanvasTexture(cv); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.encoding = THREE.sRGBEncoding; return t;
+})();
+function buildTailVisual() {
+  while (tailToolG.children.length) tailToolG.remove(tailToolG.children[0]);
+  const Tt = tailT(), r = Tt.d / 2, L = Tt.len;
+  cylX(20, 20, -40, 0, M.dark, tailToolG, 24);                 // matkap aynası
+  cylX(14, 20, -48, -40, M.dark, tailToolG, 24);
+  const cone = Tt.type === 'spot' ? r : r / TAN59;
+  const fl = Tt.flute;
+  const t = fluteTex.clone(); t.needsUpdate = true; t.repeat.set(2, Math.max(1, fl / (Tt.d * 1.6)));
+  const fm = new THREE.MeshStandardMaterial({ map:t, roughness:0.3, metalness:0.8 });
+  if (S.tailBroken) { cylX(r, r, -L + fl * 0.7, -48, M.hss, tailToolG, 20); return; }
+  cylX(0.01, r, -L, -L + cone, fm, tailToolG, 20);
+  cylX(r, r, -L + cone, -L + fl, fm, tailToolG, 20);
+  cylX(r, r, -L + fl, -48, M.hss, tailToolG, 20);
+}
+
+/* ---------------- Kesme hesapları ---------------- */
+function curDiaAt(a) {
+  const i = clamp(idx(a), I0, NS - 1);
+  return i <= endIdx && hasMat(i) ? 2 * R[i] : 0;
+}
+function recRpm(T, dia) { return clamp(Math.round(T.vc * 1000 / (Math.PI * Math.max(dia, 4)) / 10) * 10, 50, 2500); }
+
+// Dış takımlar
+function outerScan(at, rt, T, apply) {
+  const [s0, s1] = SPAN[T.type] === SPAN.groove ? [0, T.w] : SPAN[T.type];
+  const res = { any:false, over:0, holder:false, vol:0, rv:0, i0:1e9, i1:-1 };
+  const i0 = Math.max(I0, idx(at + s0)), i1 = Math.min(endIdx, idx(at + s1));
+  for (let i = i0; i <= i1; i++) {
+    if (!hasMat(i)) continue;
+    const f = toolF(T, A(i) - at);
+    if (f === Infinity) continue;
+    const prof = Math.max(0, rt + f);
+    if (R[i] > prof + 0.002) {
+      res.any = true; res.over = Math.max(res.over, R[i] - prof);
+      if (apply) {
+        const nr = Math.max(prof, Ri[i]);
+        const v = Math.PI * (R[i] * R[i] - nr * nr) * DZ;
+        res.vol += v; res.rv += v * (R[i] + nr) / 2;
+        R[i] = prof; CUTO[i] = S.tool + 1; RA[i] = S.raNow;
+        res.i0 = Math.min(res.i0, i); res.i1 = Math.max(res.i1, i);
+      }
+    }
+  }
+  if (!apply) {
+    const h0 = Math.max(I0, idx(at + T.hx[0])), h1 = Math.min(endIdx, idx(at + T.hx[1]));
+    for (let i = h0; i <= h1; i++) if (hasMat(i) && R[i] > rt + T.reach + 0.2) { res.holder = true; break; }
+  }
+  return res;
+}
+// Delik kalemi: uç dışa doğru keser, bara +a yönünde delik içinden geçer
+function boreScan(at, rt, T, apply) {
+  const res = { any:false, over:0, bar:false, solid:false, vol:0, rv:0, i0:1e9, i1:-1 };
+  const i0 = Math.max(I0, idx(at)), i1 = Math.min(endIdx, idx(at + 10));
+  for (let i = i0; i <= i1; i++) {
+    if (!hasMat(i)) continue;
+    const f = toolF(T, A(i) - at);
+    if (f === Infinity) continue;
+    const prof = rt - f;
+    if (prof > Ri[i] + 0.002) {
+      res.any = true; res.over = Math.max(res.over, prof - Ri[i]);
+      if (Ri[i] < T.rb && prof > Ri[i] + 0.5) res.solid = true;
+      if (apply) {
+        const nr = Math.min(prof, R[i]);
+        const v = Math.PI * (nr * nr - Ri[i] * Ri[i]) * DZ;
+        res.vol += v; res.rv += v * (Ri[i] + nr) / 2;
+        Ri[i] = prof; CUTI[i] = S.tool + 1; RAI[i] = S.raNow;
+        res.i0 = Math.min(res.i0, i); res.i1 = Math.max(res.i1, i);
+      }
+    }
+  }
+  if (!apply) {
+    const b0 = Math.max(I0, idx(at + 0.5)), b1 = Math.min(endIdx, idx(at + 110));
+    for (let i = b0; i <= b1; i++) {
+      if (!hasMat(i)) continue;
+      if (Ri[i] < rt - 0.3 || Ri[i] < 2 * T.rb - rt + 0.3) { res.bar = true; break; }
+    }
+  }
+  return res;
+}
+// Diş çekme (somun kolu takılı): kesim helis faz uzayında, istasyon başına diş dibi profili
+function ensureZone(at) {
+  if (S.zone) return S.zone;
+  const p = S.pitch, gb = Math.round(p / 0.05);
+  const uTool = at - p * (Math.PI / 2 - S.spinAng) / TAU;
+  S.zone = { p, gb, bw:p / gb, uref:mod(uTool, p), i0:1e9, i1:-1 };
+  return S.zone;
+}
+function threadScan(at, rt, T, apply) {
+  const z = ensureZone(at);
+  const res = { any:false, over:0, holder:false, vol:0, area:0, i0:1e9, i1:-1 };
+  const i0 = Math.max(I0, idx(at - 3)), i1 = Math.min(endIdx, idx(at + 3));
+  let best = 1e9, tipOld = null, tipCrest = 0;
+  for (let i = i0; i <= i1; i++) {
+    if (!hasMat(i)) continue;
+    const du = A(i) - at, f = toolF(T, du);
+    if (f === Infinity) continue;
+    const prof = rt + f;
+    const b = Math.floor(mod(z.uref + du, z.p) / z.bw) % z.gb, k = i * GBMAX + b;
+    const cur = Math.min(R[i], Gr[k]);
+    if (cur > prof + 0.002) {
+      res.any = true; res.over = Math.max(res.over, cur - prof);
+      if (apply) {
+        if (Math.abs(du) < best) { best = Math.abs(du); tipOld = cur; tipCrest = R[i]; }
+        res.vol += (cur - prof) * DZ * z.bw * TAU * R[i] / z.p;
+        Gr[k] = prof;
+        z.i0 = Math.min(z.i0, i); z.i1 = Math.max(z.i1, i);
+        res.i0 = Math.min(res.i0, i); res.i1 = Math.max(res.i1, i);
+      }
+    }
+  }
+  if (apply && tipOld !== null && best < 0.06) {
+    const dOld = Math.max(0, tipCrest - tipOld), dNew = Math.max(0, tipCrest - rt);
+    res.area = Math.max(0, TAN30 * (dNew * dNew - dOld * dOld));
+  }
+  if (!apply) {
+    const h0 = Math.max(I0, idx(at + T.hx[0])), h1 = Math.min(endIdx, idx(at + T.hx[1]));
+    for (let i = h0; i <= h1; i++) if (hasMat(i) && R[i] > rt + T.reach + 0.2) { res.holder = true; break; }
+  }
+  return res;
+}
+// Gelincik matkabı
+function tailScan(q, Tt, apply) {
+  const res = { any:false, over:0, shank:false, vol:0, i0:1e9, i1:-1 };
+  const i0 = Math.max(I0, idx(q)), i1 = Math.min(endIdx, idx(q + Tt.flute + 30));
+  for (let i = i0; i <= i1; i++) {
+    if (!hasMat(i)) continue;
+    const d = A(i) - q;
+    if (d > Tt.flute + 0.3) { res.shank = true; break; }
+    const rd = drillR(Tt, d);
+    if (rd > Ri[i] + 0.002) {
+      res.any = true; res.over = Math.max(res.over, rd - Ri[i]);
+      if (apply) {
+        const nr = Math.min(rd, R[i]);
+        res.vol += Math.PI * (nr * nr - Ri[i] * Ri[i]) * DZ;
+        Ri[i] = rd; CUTI[i] = 10 + S.tail; RAI[i] = 6.3;
+        res.i0 = Math.min(res.i0, i); res.i1 = Math.max(res.i1, i);
+      }
+    }
+  }
+  return res;
+}
+
+/* ---- Sabit parçalara çarpma ---- */
+function carriageHit(at, rt, T, q) {
+  const Tt = tailT();
+  for (const [du, dr] of T.samples) {
+    const a = at + du, rr = Math.abs(rt + dr);
+    if (a < 0 && rr < CHUCK_R) return 'Kalem aynaya çarptı!';
+    if (a >= 0 && a <= JAW_A + 0.5 && rr < JAW_R + 1) return 'Kalem dönen ayna çenesine çarptı!';
+    if (a >= q && a <= q + Tt.flute + 10 && rr < Tt.d / 2) return 'Kalem gelincikteki matkaba çarptı!';
+    if (a >= q + Tt.len - 48 && rr < 25) return 'Kalem gelincik kovanına çarptı!';
+  }
+  if (at + 80 > q + Tt.len + 50) return 'Taşıyıcı gelincik gövdesine çarptı!';
+  return null;
+}
+function tailHit(q) {
+  const Tt = tailT();
+  if (q < 0 && Tt.d / 2 < CHUCK_R) return 'Matkap aynaya çarptı!';
+  return carriageHit(S.at, S.rt, tool(), q) ? 'Gelincik kaleme çarptı!' : null;
+}
+
+/* ---- Kırılma ---- */
+function crash(msg, isTail) {
+  const x = isTail ? S.q : S.at, z = isTail ? 0 : S.rt;
+  burst('spark', 150, x, 2, z, 750, 650, 0.8);
+  burst('debris', 26, x, 3, z, 260, 420, 2.6);
+  burst('smoke', 10, x, 4, z, 40, 60, 1.8);
+  if (S.job && !S.job.done) S.job.stats.breaks++;
+  S.alarm = true; S.spindle = false;
+  disengageAll();
+  if (isTail) { S.tailBroken = true; buildTailVisual(); } else { S.broken = true; buildToolVisual(); }
+  stopMotion();
+  $('alarmMsg').textContent = msg;
+  $('alarm').hidden = false;
+  crashSound();
+  log(msg, 'bad');
+  updateSpindleUI(); updateToolUI(); updateAutoUI();
+}
+function stopMotion() {
+  S.pend.z = S.pend.x = S.pend.w = 0; S.wheel.z = S.wheel.x = S.wheel.w = 0;
+  pressed.forEach(p => p.t0 = Infinity);
+}
+function disengageAll() { S.autoZ = S.autoX = S.halfNut = false; }
+
+/* ---- Kalem adımı ---- */
+function computeRa(T, fRev, vr) {
+  let ra;
+  if (T.type === 'turn' || T.type === 'bore') ra = fRev * fRev / (8 * T.rn) * 1000;
+  else if (T.type === 'groove') ra = 1.2 + fRev * 20;
+  else ra = 2.5;
+  if (vr < 0.35) ra *= 2.5;
+  if (S.lastStress > 1.3) ra *= 1.5;
+  return Math.max(0.3, ra);
+}
+function tryCarriage(na, nr) {
+  const T = tool();
+  const hit = carriageHit(na, nr, T, S.q);
+  if (hit) { crash(hit); return false; }
+  const thread = S.halfNut && T.type === 'thread';
+  // Diş kalemi helis oluğun içindeyken X'te geri çekilmek hiçbir şey kesmez
+  if (T.type === 'thread' && !S.halfNut && nr >= S.rt && Math.abs(na - S.at) < 1e-9) return true;
+  const scan = thread ? threadScan : T.type === 'bore' ? boreScan : outerScan;
+  const it = scan(na, nr, T, false);
+  if (T.type === 'bore' && it.bar) { crash('Bara delik duvarına çarptı! Bara deliğin içinde merkezden uzak, duvara değmeden durmalı.'); return false; }
+  if (!it.any) {
+    const W = S.win;
+    if (W.vol > 0) { const d = Math.hypot(na - S.at, nr - S.rt); W.path += d; W.idle += d; if (W.idle > 1) S.win = { vol:0, path:0, rv:0, idle:0 }; }
+    return true;
+  }
+  if (it.holder) { crash('Kalem tutucusu parçaya çarptı! Kalemin dalabileceği derinlik aşıldı.'); return false; }
+  if (S.broken) { warnOnce('broken', 'Kalem kırık; kesme yapılamaz. Taretten yeni kalem seçin.', 'bad'); return false; }
+  if (!S.spindle) {
+    if (S.feedC > 1500) { crash('Mil dururken kalem hızlı harekette parçaya çarptı!'); return false; }
+    warnOnce('touch', 'Kalem parçaya değdi. Mil dönmediği için hareket durdu; kesmek için mili çalıştırın.');
+    return false;
+  }
+  if (T.type === 'bore' && it.solid) { crash('Delik kalemi dolu malzemeye girdi! Önce gelincikten matkapla delik açın.'); return false; }
+  const fRev = S.feedC / Math.max(1, S.rpm);
+  const dNow = 2 * Math.max(Math.abs(nr), 0.5);      // kesme hızı kalem ucunun bulunduğu çapta
+  const vc = Math.PI * Math.max(dNow, 1) * S.rpm / 1000;
+  const vr = vc / T.vc;
+  S.raNow = computeRa(T, fRev, vr);
+  const res = scan(na, nr, T, true);
+  if (res.i1 >= 0) markDirty(res.i0, res.i1);
+  const step = Math.hypot(na - S.at, nr - S.rt);
+  const tCut = step / Math.max(1, S.feedC / 60);
+  if (res.vol > 0) {
+    S.removed += res.vol; S.cutTime += tCut; S.cutAcc += res.vol; S.lastCut = performance.now();
+    S.lastVc = vc; S.lastRa = S.raNow;
+    const n = Math.min(3, Math.floor(res.vol / 2.5 + Math.random()));
+    for (let k = 0; k < n; k++) spawnChip(na + (Math.random() - .5) * 2, 3, Math.max(nr, 0) + 2, T.type === 'groove' ? 2 : Math.random() < 0.6 ? 1 : 0, 0.7 + Math.random() * 0.6);
+  }
+  // Yük
+  let L = null;
+  if (thread) {
+    if (res.area > 0) { const c = res.area / T.ap; L = { chip:c, stress:c, t:tCut * 1.6 }; }
+  } else if (res.vol > 0) {
+    const W = S.win;
+    W.vol += res.vol; W.path += step; W.rv += res.rv; W.idle = 0;
+    if (W.path >= 1) {
+      const rc = W.rv / W.vol, b = W.vol / (TAU * Math.max(rc, 0.5) * W.path);
+      const chip = fRev / T.frec;
+      L = { chip, stress:chip * b / T.ap, t:W.path / Math.max(1, S.feedC / 60) };
+      S.win = { vol:0, path:0, rv:0, idle:0 };
+    }
+  }
+  if (L) {
+    S.lastChip = L.chip; S.lastStress = L.stress;
+    if (L.chip > 6 || L.stress > 6) { crash(`Ani aşırı yük: talaş ${L.chip.toFixed(1)}×, kalem yükü ${L.stress.toFixed(1)}×. Kalem kırıldı. İlerlemeyi ya da paso derinliğini azaltın.`); return false; }
+    if (L.stress > 1.5) S.damage += (L.stress - 1.5) * 0.35 * L.t;
+    if (L.chip > 2.5) S.damage += (L.chip - 2.5) * 0.12 * L.t;
+    if (vr > 1.8) { S.damage += (vr - 1.8) * 0.5 * L.t; warnOnce('vc', `Kesme hızı çok yüksek (${Math.round(vc)} m/dk): kalem ısınıyor. Devri düşürün.`); }
+    if (S.damage >= 1) { crash('Kalem uzun süre aşırı yük ve ısı altında kaldı ve kırıldı.'); return false; }
+    if (L.stress > 1.2 || L.chip > 2) warnOnce('load', thread ? `Diş pasosu çok derin (yük ${L.stress.toFixed(1)}×). Pasoyu bölün: her geçişte X'i daha az ilerletin.` : `Kalem zorlanıyor: yük ${L.stress.toFixed(1)}×, talaş ${L.chip.toFixed(1)}×. İlerlemeyi ya da paso derinliğini azaltın.`);
+  }
+  if (!thread && vr < 0.35 && dNow > 12) { S.rubT = performance.now(); warnOnce('rub', `Kesme hızı düşük (${Math.round(vc)} m/dk): talaş kaleme yığılıyor, yüzey kötüleşir. Devri artırın.`); }
+  checkDetach();
+  return true;
+}
+function tryTail(nq) {
+  const Tt = tailT();
+  const hit = tailHit(nq);
+  if (hit) { crash(hit, true); return false; }
+  const it = tailScan(nq, Tt, false);
+  if (S.peck.active && !it.any && nq > A(endIdx) + 0.3) S.peck.active = false;
+  if (it.shank && it.any) { crash(`Matkabın kanal boyu (${Tt.flute} mm) aşıldı, matkap sıkışıp kırıldı.`, true); return false; }
+  if (!it.any) {
+    const W = S.winT;
+    if (W.vol > 0) { const d = Math.abs(nq - S.q); W.path += d; W.idle += d; if (W.idle > 1) S.winT = { vol:0, path:0, idle:0 }; }
+    return true;
+  }
+  if (S.tailBroken) { warnOnce('tbroken', 'Matkap kırık. Gelincikten yeni takım seçin.', 'bad'); return false; }
+  if (!S.spindle) {
+    if (S.feedT > 1500) { crash('Mil dururken matkap hızlı harekette parçaya çarptı!', true); return false; }
+    warnOnce('touch', 'Matkap parçaya değdi. Mil dönmediği için hareket durdu.');
+    return false;
+  }
+  if (nq < S.q) {
+    const vr = (Math.PI * Tt.d * S.rpm / 1000) / Tt.vc;
+    if (vr > (S.coolant ? 2.2 : 1.6) && it.over > 0.3) { crash(`Devir çok yüksek: HSS matkabın ucu yandı. Önerilen ${recRpm(Tt, Tt.d)} dev/dk.`, true); return false; }
+    if (!S.peck.active) {
+      S.peck.active = true; S.peck.top = nq;
+      const fi = endIdx;
+      if (Tt.type === 'drill' && fi >= I0 && Ri[fi] < 1) warnOnce('spot', 'Matkap alında kayabilir; önce G1 punta matkabıyla merkez açın.', 'warn', 8000);
+    }
+    const depth = S.peck.top - nq;
+    if (Tt.type === 'drill') {
+      if (depth > 7 * Tt.d) { crash('Talaş kanallara sıkıştı ve matkap kırıldı. Derin delikte matkabı arada delikten çıkarıp talaşı boşaltın.', true); return false; }
+      if (depth > 4.5 * Tt.d) warnOnce('peck', `Delik derinliği bu dalışta ${depth.toFixed(1)} mm (${(depth / Tt.d).toFixed(1)}×D). Matkabı delikten çıkarıp talaşı boşaltın.`);
+    }
+  }
+  const res = tailScan(nq, Tt, true);
+  if (res.i1 >= 0) markDirty(res.i0, res.i1);
+  if (res.vol > 0) {
+    const step = Math.abs(nq - S.q);
+    S.removed += res.vol; S.cutTime += step / Math.max(1, S.feedT / 60); S.cutAcc += res.vol; S.lastCut = performance.now();
+    if (Math.random() < res.vol / 6) spawnChip(A(endIdx) + 2, (Math.random() - .5) * 6, (Math.random() - .5) * 6, 1, 0.6 + Tt.d * 0.04);
+    const W = S.winT;
+    W.vol += res.vol; W.path += step; W.idle = 0;
+    if (W.path >= 1) {
+      const eng = clamp(W.vol / W.path / (Math.PI * Tt.d * Tt.d / 4), 0, 1);
+      const chip = (S.feedT / Math.max(1, S.rpm)) / Tt.fr, stress = chip * (0.25 + 0.75 * eng);
+      const t = W.path / Math.max(1, S.feedT / 60);
+      S.winT = { vol:0, path:0, idle:0 };
+      S.lastChip = chip; S.lastStress = stress;
+      if (chip > 8 || stress > 6) { crash(`Ani aşırı yük: matkap ilerlemesi ${chip.toFixed(1)}× fazla. Matkap kırıldı.`, true); return false; }
+      if (stress > 1.5) S.damage += (stress - 1.5) * 0.35 * t;
+      if (S.damage >= 1) { crash('Matkap uzun süre aşırı yükte kaldı ve kırıldı.', true); return false; }
+      if (stress > 1.2) warnOnce('load', `Matkap zorlanıyor (yük ${stress.toFixed(1)}×). Kovanı daha yavaş ilerletin.`);
+    }
+  }
+  checkDetach();
+  return true;
+}
+
+/* ---- Parça kopması (kesme kalemi merkeze ulaşınca) ---- */
+const pieces = [];
+function checkDetach() {
+  let s = -1;
+  for (let i = I0; i <= endIdx; i++) if (!hasMat(i)) { s = i; break; }
+  if (s < 0) return;
+  let has = false;
+  for (let i = s + 1; i <= endIdx; i++) if (hasMat(i)) { has = true; break; }
+  let rmax = 0;
+  for (let i = s + 1; i <= endIdx; i++) if (hasMat(i)) rmax = Math.max(rmax, R[i]);
+  if (has && rmax > 1) dropPiece(s + 1, endIdx);      // alın tornalamada merkezde kalan minik çıkıntı sessizce kopar
+  for (let i = s; i < NS; i++) { R[i] = 0; Ri[i] = 0; }
+  markDirty(Math.min(s, endIdx), NS - 1);
+  endIdx = s - 1;
+}
+function dropPiece(i0, i1) {
+  const pts = [], ac = (A(i0) + A(i1)) / 2;
+  let rmax = 0;
+  pts.push(new THREE.Vector2(Math.max(0.01, Ri[i0]), A(i0) - ac));
+  for (let i = i0; i <= i1; i += 2) if (hasMat(i)) { pts.push(new THREE.Vector2(R[i], A(i) - ac)); rmax = Math.max(rmax, R[i]); }
+  pts.push(new THREE.Vector2(Math.max(0.01, Ri[i1]), A(i1) - ac));
+  for (let i = i1; i >= i0; i -= 2) if (hasMat(i)) pts.push(new THREE.Vector2(Math.max(0.01, Ri[i]), A(i) - ac));
+  pts.push(pts[0].clone());
+  const g = new THREE.LatheGeometry(pts, 48);
+  const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color:0xc9cfd4, roughness:0.3, metalness:0.7, side:THREE.DoubleSide }));
+  m.castShadow = true;
+  const holder = new THREE.Group(); holder.add(m); m.rotation.z = -Math.PI / 2;
+  holder.position.set(ac, 0, 0); scene.add(holder);
+  pieces.push({ g:holder, vy:0, vz:60, rmax, rest:false, spin:(Math.random() - .5) * 3 });
+  log(`Parça kesildi ve kızağa düştü (boy ${(A(i1) - A(i0) + DZ).toFixed(1)} mm).`, 'ok');
+  beep(500, 0.25, 0.12);
+}
+function updatePieces(dt) {
+  for (const p of pieces) {
+    if (p.rest) continue;
+    p.vy -= 2600 * dt;
+    p.g.position.y += p.vy * dt; p.g.position.z += p.vz * dt;
+    p.g.rotation.x += p.spin * dt;
+    const floorY = groundAtW(p.g.position.x, p.g.position.z) + p.rmax;
+    if (p.g.position.y < floorY) {
+      p.g.position.y = floorY;
+      if (Math.abs(p.vy) > 300) { p.vy = -p.vy * 0.25; p.vz *= 0.5; beep(300 + Math.random() * 200, 0.1, 0.06); }
+      else p.rest = true;
+    }
+  }
+}
+function clearPieces() { for (const p of pieces) scene.remove(p.g); pieces.length = 0; }
+
+/* ---------------- Hareket ---------------- */
+const pressed = new Map();
+const HOLD_MS = 280;
+function press(id, ax, dir) {
+  initAudio();
+  if (pressed.has(id)) return;
+  pressed.set(id, { ax, dir, t0:performance.now() });
+  if (S.alarm || S.changing) return;
+  S.pend[ax] += dir * (ax === 'x' ? S.step / 2 : S.step);
+}
+function release(id) { pressed.delete(id); }
+function heldDir(ax) {
+  const now = performance.now(); let d = 0;
+  pressed.forEach(p => { if (p.ax === ax && now - p.t0 > HOLD_MS) d += p.dir; });
+  return clamp(d, -1, 1);
+}
+function jogSpeed() { return rapid() ? RAPID : S.spindle ? clamp(S.feedRev * S.rpm, 5, 1500) : 300; }
+function motion(dt) {
+  S.cutAcc = 0;
+  if (S.alarm) return;
+  if (S.changing) { toolChangeStep(dt); return; }
+  const v = jogSpeed(), budget = v / 60 * S.sim * dt, wb = 6000 / 60 * dt;
+  const jm = { z:0, x:0, w:0 }, wm = { z:0, x:0, w:0 };
+  let jogC = false, jogT = false, wdC = 0, wdT = 0;
+  for (const ax of ['z', 'x', 'w']) {
+    const h = heldDir(ax);
+    if (h) { jm[ax] = h * budget; S.pend[ax] = 0; }
+    else if (Math.abs(S.pend[ax]) > 1e-7) jm[ax] = clamp(S.pend[ax], -budget, budget);
+    if (jm[ax]) { if (ax === 'w') jogT = true; else jogC = true; }
+    if (Math.abs(S.wheel[ax]) > 1e-7) {
+      let w = S.wheel[ax] * (1 - Math.exp(-dt * 9));
+      if (Math.abs(S.wheel[ax] - w) < 0.002) w = S.wheel[ax];
+      wm[ax] = clamp(w, -wb, wb);
+      if (ax === 'w') wdT = Math.max(wdT, Math.abs(wm[ax])); else wdC = Math.max(wdC, Math.abs(wm[ax]));
+    }
+  }
+  let az = 0, ax2 = 0, autoV = 0;
+  if (S.spindle) {
+    if (S.halfNut) { az = -S.pitch * S.rpm / 60 * S.sim * dt; autoV = S.pitch * S.rpm; }
+    else {
+      if (S.autoZ) { az = -S.feedRev * S.rpm / 60 * S.sim * dt; autoV = S.feedRev * S.rpm; }
+      if (S.autoX) { ax2 = -S.feedRev * S.rpm / 60 * S.sim * dt; autoV = S.feedRev * S.rpm; }
+    }
+  }
+  S.feedC = Math.max(jogC ? v : 0, wdC / dt * 60, autoV);
+  S.feedT = Math.max(jogT ? v : 0, wdT / dt * 60);
+  // Taşıyıcı + enine kızak
+  let mz = jm.z + wm.z + az, mx = jm.x + wm.x + ax2;
+  if (mz || mx) {
+    const step = S.halfNut ? 0.05 : 0.1;
+    const n = Math.max(1, Math.ceil(Math.max(Math.abs(mz), Math.abs(mx)) / step));
+    let done = 0, blocked = false, stopped = false;
+    for (let k = 0; k < n; k++) {
+      let na = S.at + mz / n, nr = S.rt + mx / n;
+      if (S.zStop !== null && (S.autoZ || S.halfNut) && mz < 0 && na <= S.zStop) { na = Math.max(S.zStop, Math.min(S.at, na)); stopped = true; }
+      const ca = clamp(na, LIM.a0, LIM.a1), cr = clamp(nr, LIM.r0, LIM.r1);
+      if (ca !== na) { mz = 0; S.pend.z = S.wheel.z = 0; S.autoZ = S.halfNut = false; updateAutoUI(); warnOnce('lim', 'Eksen hareket sınırına ulaşıldı.'); }
+      if (cr !== nr) { mx = 0; S.pend.x = S.wheel.x = 0; S.autoX = false; updateAutoUI(); warnOnce('lim', 'Eksen hareket sınırına ulaşıldı.'); }
+      if (ca === S.at && cr === S.rt) break;
+      if (!tryCarriage(ca, cr)) { blocked = true; break; }
+      S.at = ca; S.rt = cr; done++;
+      if (stopped) { S.autoZ = S.halfNut = false; updateAutoUI(); log('Z durdurucuya gelindi; otomatik ilerleme ayrıldı.', 'ok'); beep(1300, 0.12); break; }
+    }
+    if (done) { S.lastMove = performance.now(); S.curFeed += (S.feedC - S.curFeed) * 0.3; }
+    if (blocked) { S.pend.z = S.pend.x = 0; S.wheel.z = S.wheel.x = 0; if (S.autoZ || S.autoX || S.halfNut) { disengageAll(); updateAutoUI(); } }
+    else for (const a of ['z', 'x']) {
+      if (!heldDir(a) && S.pend[a]) { S.pend[a] -= jm[a] * done / n; if (Math.abs(S.pend[a]) < 1e-6) S.pend[a] = 0; }
+      if (S.wheel[a]) { S.wheel[a] -= wm[a] * done / n; if (Math.abs(S.wheel[a]) < 1e-6) S.wheel[a] = 0; }
+    }
+  }
+  // Gelincik kovanı
+  const mw = jm.w + wm.w;
+  if (mw) {
+    const n = Math.max(1, Math.ceil(Math.abs(mw) / 0.1));
+    let done = 0, blocked = false;
+    for (let k = 0; k < n; k++) {
+      const nq = clamp(S.q + mw / n, LIM.q0, LIM.q1);
+      if (nq === S.q) { S.pend.w = S.wheel.w = 0; break; }
+      if (!tryTail(nq)) { blocked = true; break; }
+      S.q = nq; done++;
+    }
+    if (done) S.lastMove = performance.now();
+    if (blocked) { S.pend.w = S.wheel.w = 0; }
+    else {
+      if (!heldDir('w') && S.pend.w) { S.pend.w -= jm.w * done / n; if (Math.abs(S.pend.w) < 1e-6) S.pend.w = 0; }
+      if (S.wheel.w) { S.wheel.w -= wm.w * done / n; if (Math.abs(S.wheel.w) < 1e-6) S.wheel.w = 0; }
+    }
+  }
+}
+function toolChangeStep(dt) {
+  const c = S.changing, sp = RAPID / 60 * 2 * dt, aEnd = A(Math.max(endIdx, I0));
+  if (c.kind === 'tool') {
+    if (tool().type === 'bore' && S.at < aEnd + 5) { S.at = Math.min(aEnd + 5, S.at + sp); return; }
+    if (S.rt < 45) { S.rt = Math.min(45, S.rt + sp); return; }
+  } else if (S.q < aEnd + 40) { S.q = Math.min(aEnd + 40, S.q + sp); return; }
+  c.t += dt;
+  if (c.t < 0.7) return;
+  if (c.kind === 'tool') {
+    S.tool = c.to; S.broken = false; buildToolVisual();
+    log(`${tool().no} takıldı: ${tool().name}. Kalem ofsetleri DRO'da kayıtlı; X ve Z doğrudan uç konumunu gösterir.`, 'ok');
+  } else {
+    S.tail = c.to; S.tailBroken = false; S.peck.active = false; buildTailVisual();
+    log(`Gelinciğe ${tailT().no} takıldı: ${tailT().name}.`, 'ok');
+  }
+  S.damage = 0; S.lastStress = 0; S.lastChip = 0; S.win = { vol:0, path:0, rv:0, idle:0 }; S.winT = { vol:0, path:0, idle:0 };
+  S.changing = null; hoseKey = '';
+  updateToolUI(); updateRec();
+}
+
+/* ---------------- Arayüz ---------------- */
+const fmt = v => (v < -0.0005 ? '−' : '+') + Math.abs(v).toFixed(3);
+const droVals = () => ({ x:2 * S.rt - S.zx, z:S.at - S.zz, w:S.q - S.zw });
+const FEEDS = [0.02, 0.05, 0.1, 0.15, 0.2, 0.3];
+function updateSpindleUI() {
+  $('spinState').textContent = S.spindle ? `DÖNÜYOR · ${S.rpm}` : 'DURUYOR';
+  $('spinState').style.color = S.spindle ? 'var(--ok)' : 'var(--muted)';
+}
+function updateAutoUI() {
+  $('autoZ').classList.toggle('engaged', S.autoZ);
+  $('autoX').classList.toggle('engaged', S.autoX);
+  $('halfNut').classList.toggle('engaged', S.halfNut);
+  $('autoState').textContent = S.halfNut ? `somun kolu · ${S.pitch} mm/dev` : S.autoZ ? 'boyuna' : S.autoX ? 'enine' : 'kapalı';
+  $('autoState').style.color = S.halfNut || S.autoZ || S.autoX ? 'var(--safety)' : 'var(--muted)';
+}
+function updateToolUI() {
+  const T = tool(), Tt = tailT();
+  $('ctNo').textContent = T.no;
+  $('ctName').textContent = `${T.name}${S.broken ? ' · KIRIK' : ''}`;
+  $('ctMeta').textContent = `${T.mat} · gelincikte ${Tt.no} ${Tt.name}${S.tailBroken ? ' (KIRIK)' : ''}`;
+  $('curTool').classList.toggle('broken', S.broken || S.tailBroken);
+  [...$('rack').children].forEach((b, i) => b.classList.toggle('active', i === S.tool));
+  [...$('tailRack').children].forEach((b, i) => b.classList.toggle('active', i === S.tail));
+}
+function recFor() {
+  const T = tool(), Tt = tailT(), aEnd = A(Math.max(endIdx, I0));
+  if (S.q < aEnd + 25) return { n:recRpm(Tt, Tt.d), f:Tt.fr, txt:`${Tt.no}: ${recRpm(Tt, Tt.d)} dev/dk · ${Tt.fr} mm/dev` };
+  const dia = T.type === 'bore' ? Math.max(2 * Ri[clamp(idx(S.at), 0, NS - 1)], 16) : (curDiaAt(S.at) || curDiaAt(aEnd) || 50);
+  const n = recRpm(T, dia);
+  if (T.type === 'thread') return { n:Math.min(n, 400), f:null, txt:`${Math.min(n, 400)} dev/dk · adım ${S.pitch} (diş için düşük devir)` };
+  return { n, f:T.frec, txt:`${n} dev/dk · ${T.frec} mm/dev (Ø${dia.toFixed(0)})` };
+}
+function updateRec() { $('recTxt').textContent = recFor().txt; }
+function setRpm(v) { S.rpm = v; $('rpm').value = v; $('rpmOut').textContent = v + ' dev/dk'; updateSpindleUI(); }
+function setFeed(f) {
+  S.feedRev = f;
+  [...$('feeds').children].forEach(b => b.classList.toggle('on', +b.dataset.f === f));
+}
+
+TOOLS.forEach((T, i) => {
+  const b = document.createElement('button');
+  b.innerHTML = `<span class="n">${T.no}</span><span class="nm">${T.name}</span><span class="d">${T.mat.split(',')[0]}</span>`;
+  b.addEventListener('click', () => requestChange('tool', i));
+  $('rack').append(b);
+});
+TAILS.forEach((T, i) => {
+  const b = document.createElement('button');
+  b.innerHTML = `<span class="n">${T.no}</span><span class="nm">${T.name}</span><span class="d">Ø${T.d} · ${T.mat.split(',')[0]}</span>`;
+  b.addEventListener('click', () => requestChange('tail', i));
+  $('tailRack').append(b);
+});
+function requestChange(kind, i) {
+  initAudio();
+  if (S.alarm) { log('Önce alarmı sıfırlayın.', 'warn'); return; }
+  if (S.spindle) { log('Takım değiştirmek için önce mili durdurun.', 'warn'); return; }
+  if (S.changing) return;
+  const same = kind === 'tool' ? i === S.tool && !S.broken : i === S.tail && !S.tailBroken;
+  if (same) { log(`${(kind === 'tool' ? TOOLS : TAILS)[i].no} zaten takılı.`); return; }
+  stopMotion(); disengageAll(); updateAutoUI();
+  S.changing = { kind, to:i, t:0 };
+  log(kind === 'tool' ? `Taret döndürülüyor: kalem geri çekiliyor, ${TOOLS[i].no} takılacak…` : `Gelincik geri çekiliyor, ${TAILS[i].no} takılacak…`);
+}
+function spindle(on) {
+  initAudio();
+  if (on && S.alarm) { log('Alarm aktifken mil çalıştırılamaz.', 'warn'); return; }
+  if (on && S.changing) return;
+  if (S.spindle === on) return;
+  S.spindle = on; updateSpindleUI();
+  log(on ? `Mil çalıştı: ${S.rpm} dev/dk.` : 'Mil durdu.');
+}
+$('spStart').addEventListener('click', () => spindle(true));
+$('spStop').addEventListener('click', () => spindle(false));
+$('rpm').addEventListener('input', e => setRpm(+e.target.value));
+$('applyRec').addEventListener('click', () => {
+  const r = recFor(); setRpm(r.n);
+  if (r.f) setFeed(FEEDS.reduce((p, c) => Math.abs(c - r.f) < Math.abs(p - r.f) ? c : p));
+  log(`Önerilen değerler uygulandı: ${r.txt}.`);
+});
+$('feeds').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setFeed(+b.dataset.f); });
+$('pitches').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const p = +b.dataset.p;
+  if (S.zone && S.zone.p !== p) { log(`Bu parçada ${S.zone.p} mm adımlı diş başladı; adım değiştirilemez. Yeni parça bağlayın.`, 'warn'); return; }
+  S.pitch = p; [...$('pitches').children].forEach(x => x.classList.toggle('on', x === b)); updateAutoUI(); updateRec();
+});
+function toggleAuto(kind) {
+  initAudio();
+  if (S.alarm || S.changing) return;
+  if (kind === 'z') { const on = !S.autoZ; disengageAll(); S.autoZ = on; }
+  else if (kind === 'x') { const on = !S.autoX; disengageAll(); S.autoX = on; }
+  else {
+    const on = !S.halfNut; disengageAll();
+    if (on) {
+      if (S.zone && S.zone.p !== S.pitch) { log('Diş adımı mevcut dişle uyuşmuyor.', 'warn'); updateAutoUI(); return; }
+      if (S.zone) S.spinAng = mod(Math.PI / 2 - TAU * (S.at - S.zone.uref) / S.zone.p, TAU);   // diş saati: aynı faza kapanır
+      S.halfNut = true;
+      log(S.zone ? 'Somun kolu kapandı; diş saati önceki pasoyla hizalandı.' : `Somun kolu kapandı: taşıyıcı her devirde ${S.pitch} mm ilerler.`, 'ok');
+    }
+  }
+  if (!S.spindle && (S.autoZ || S.autoX || S.halfNut)) log('Otomatik ilerleme mil dönünce başlar.');
+  updateAutoUI();
+}
+$('autoZ').addEventListener('click', () => toggleAuto('z'));
+$('autoX').addEventListener('click', () => toggleAuto('x'));
+$('halfNut').addEventListener('click', () => toggleAuto('h'));
+$('zStopSet').addEventListener('click', () => {
+  const v = parseFloat($('zStopIn').value.replace(',', '.'));
+  if (!isFinite(v)) { log('Durdurucu için bir Z değeri girin.', 'warn'); return; }
+  S.zStop = v + S.zz;
+  $('zStopNote').textContent = `Durdurucu Z ${fmt(v)} konumunda. Otomatik boyuna ilerleme ve somun kolu burada ayrılır.`;
+  log(`Z durdurucu ${fmt(v)} konumuna ayarlandı.`, 'ok');
+});
+$('zStopClr').addEventListener('click', () => { S.zStop = null; $('zStopNote').textContent = 'Durdurucu yok.'; });
+$('coolant').addEventListener('click', toggleCoolant);
+function toggleCoolant() { S.coolant = !S.coolant; $('coolant').textContent = 'Soğutma sıvısı: ' + (S.coolant ? 'AÇIK' : 'KAPALI'); $('coolant').classList.toggle('on', S.coolant); }
+$('mute').addEventListener('click', () => { S.muted = !S.muted; $('mute').textContent = 'Ses: ' + (S.muted ? 'KAPALI' : 'AÇIK'); if (master) master.gain.value = S.muted ? 0 : 0.9; });
+function setStep(v) { S.step = v; [...$('steps').children].forEach(b => b.classList.toggle('on', +b.dataset.step === v)); }
+$('steps').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setStep(+b.dataset.step); });
+$('sims').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; S.sim = +b.dataset.sim; [...$('sims').children].forEach(x => x.classList.toggle('on', x === b)); });
+$('jog').querySelectorAll('button[data-ax]').forEach(b => {
+  const id = 'btn-' + b.dataset.ax + b.dataset.dir;
+  b.addEventListener('pointerdown', e => { e.preventDefault(); b.setPointerCapture(e.pointerId); b.classList.add('hold'); press(id, b.dataset.ax, +b.dataset.dir); });
+  const up = () => { b.classList.remove('hold'); release(id); };
+  b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up); b.addEventListener('lostpointercapture', up);
+});
+function stopAll() { stopMotion(); disengageAll(); updateAutoUI(); }
+$('feedHold').addEventListener('click', () => { stopAll(); log('Tüm hareketler durduruldu.'); });
+$('rapidBtn').addEventListener('click', () => {
+  S.rapidBtn = !S.rapidBtn;
+  $('rapidBtn').style.background = S.rapidBtn ? 'var(--safety)' : 'var(--panel-2)';
+  $('rapidBtn').style.color = S.rapidBtn ? '#1a1405' : 'var(--fg)';
+});
+$('goBtn').addEventListener('click', () => {
+  initAudio();
+  const gx = parseFloat($('gx').value.replace(',', '.')), gz = parseFloat($('gz').value.replace(',', '.'));
+  if (!isFinite(gx) || !isFinite(gz)) { log('Hedef Ø ve Z için sayı girin.', 'warn'); return; }
+  if (S.alarm || S.changing) return;
+  S.pend.x = (gx + S.zx) / 2 - S.rt; S.pend.z = gz + S.zz - S.at;
+  log(`Ø${gx.toFixed(2)} Z${fmt(gz)} konumuna gidiliyor (${rapid() ? 'hızlı' : Math.round(jogSpeed()) + ' mm/dk'}).`);
+});
+document.querySelectorAll('[data-zero]').forEach(b => b.addEventListener('click', () => setAxis(b.dataset.zero, 0)));
+document.querySelectorAll('[data-set]').forEach(b => b.addEventListener('click', () => {
+  const ax = b.dataset.set, inp = $('set' + ax.toUpperCase());
+  const v = parseFloat(inp.value.replace(',', '.'));
+  if (!isFinite(v)) { log(`${ax.toUpperCase()} için bir sayı girin.`, 'warn'); return; }
+  setAxis(ax, v); inp.value = '';
+}));
+['X', 'Z', 'W'].forEach(a => $('set' + a).addEventListener('keydown', e => { if (e.key === 'Enter') document.querySelector(`[data-set="${a.toLowerCase()}"]`).click(); }));
+function setAxis(ax, v) {
+  if (ax === 'x') S.zx = 2 * S.rt - v;
+  if (ax === 'z') S.zz = S.at - v;
+  if (ax === 'w') S.zw = S.q - v;
+  log(`${ax.toUpperCase()} ekseni ${fmt(v)} olarak ayarlandı.`, 'ok');
+}
+$('alarmReset').addEventListener('click', () => { S.alarm = false; $('alarm').hidden = true; log('Alarm sıfırlandı. Kırık takımı değiştirin.'); });
+$('clearChips').addEventListener('click', () => { clearChips(); clearPieces(); log('Talaşlar ve kesilen parçalar temizlendi.'); });
+let newPartArm = 0;
+$('newPart').addEventListener('click', () => {
+  const now = performance.now();
+  if (now - newPartArm > 3000) { newPartArm = now; $('newPart').textContent = 'Onayla: parçayı değiştir'; setTimeout(() => $('newPart').textContent = 'Yeni ham parça', 3000); return; }
+  newPartArm = 0; $('newPart').textContent = 'Yeni ham parça';
+  resetPart();
+  log('Aynaya yeni Ø50 çubuk bağlandı (çıkıntı 100 mm).', 'ok');
+});
+function resetPart() {
+  if (S.spindle) spindle(false);
+  stopAll();
+  R.fill(STOCK_R); Ri.fill(0); CUTO.fill(0); CUTI.fill(0); RA.fill(0); RAI.fill(0); INSP.fill(0); Gr.fill(1e9);
+  S.zone = null; endIdx = NS - 1; markDirty(0, NS - 1);
+  S.removed = 0; S.cutTime = 0; S.peck.active = false; S.lastRa = null;
+  clearChips(); clearPieces();
+  if (S.at < 110 && S.rt < 30) S.rt = 40;
+  if (S.at < 105) S.at = 125;
+  if (S.q < 200) S.q = 300;
+  S.zz = 100; S.zw = 100;
+}
+
+/* ---- El çarkları ---- */
+const rootCss = getComputedStyle(document.documentElement);
+const tok = n => rootCss.getPropertyValue(n).trim();
+const COL = { panel2:tok('--panel-2'), line:tok('--line'), fg:tok('--fg'), muted:tok('--muted'), steel:tok('--steel'), safety:tok('--safety'), knob:tok('--bg') };
+const TICK = TAU / 100;
+const HW = ['z', 'x', 'w'].map(ax => ({ ax, cv:$('hw' + ax), acc:0, last:null }));
+let lastClick = 0;
+function wheelClick() {
+  if (!ac || S.muted) return;
+  const t = ac.currentTime;
+  if (t - lastClick < 0.03) return;
+  lastClick = t;
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.type = 'square'; o.frequency.value = 2600;
+  g.gain.setValueAtTime(0.025, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.018);
+  o.connect(g); g.connect(master); o.start(t); o.stop(t + 0.025);
+}
+function wheelTicks(ax, t) {
+  if (!t) return;
+  initAudio();
+  if (S.alarm || S.changing) return;
+  S.wheel[ax] += t * S.wheelMul * (ax === 'x' ? 0.5 : 1);
+  wheelClick();
+}
+HW.forEach(w => {
+  const ang = e => { const r = w.cv.getBoundingClientRect(); return Math.atan2(e.clientY - r.top - r.height / 2, e.clientX - r.left - r.width / 2); };
+  w.cv.addEventListener('pointerdown', e => { e.preventDefault(); w.cv.setPointerCapture(e.pointerId); w.last = ang(e); w.acc = 0; });
+  w.cv.addEventListener('pointermove', e => {
+    if (w.last === null) return;
+    const a = ang(e);
+    let d = a - w.last;
+    if (d > Math.PI) d -= TAU;
+    if (d < -Math.PI) d += TAU;
+    w.last = a; w.acc += d;
+    const t = Math.trunc(w.acc / TICK);
+    if (t) { w.acc -= t * TICK; wheelTicks(w.ax, t); }
+  });
+  const end = () => { w.last = null; };
+  w.cv.addEventListener('pointerup', end); w.cv.addEventListener('pointercancel', end);
+  w.cv.addEventListener('wheel', e => { e.preventDefault(); wheelTicks(w.ax, e.deltaY < 0 ? 1 : -1); }, { passive:false });
+});
+$('muls').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  S.wheelMul = +b.dataset.mul;
+  [...$('muls').children].forEach(x => x.classList.toggle('on', x === b));
+});
+function drawWheels() {
+  const pos = { z:S.at, x:2 * S.rt, w:S.q };
+  for (const w of HW) {
+    const c = w.cv, s = c.clientWidth;
+    if (!s) continue;
+    const dpr = Math.min(2, window.devicePixelRatio || 1), px = Math.round(s * dpr);
+    if (c.width !== px) { c.width = px; c.height = px; }
+    const g = c.getContext('2d');
+    g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, s, s);
+    const cx = s / 2, Rr = s / 2 - 2;
+    const rot = pos[w.ax] / (100 * S.wheelMul) * TAU;
+    g.fillStyle = COL.panel2; g.beginPath(); g.arc(cx, cx, Rr, 0, TAU); g.fill();
+    g.strokeStyle = COL.line; g.lineWidth = 1; g.stroke();
+    g.save(); g.translate(cx, cx); g.rotate(rot);
+    for (let i = 0; i < 100; i++) {
+      const a = i * TICK, major = i % 10 === 0, L = major ? 8 : i % 5 === 0 ? 5.5 : 3;
+      g.strokeStyle = major ? COL.fg : COL.muted; g.lineWidth = major ? 1.4 : 0.8;
+      g.beginPath(); g.moveTo(Math.sin(a) * (Rr - 2), -Math.cos(a) * (Rr - 2)); g.lineTo(Math.sin(a) * (Rr - 2 - L), -Math.cos(a) * (Rr - 2 - L)); g.stroke();
+    }
+    g.fillStyle = COL.muted; g.font = `${Math.max(8, s * 0.075)}px "Share Tech Mono", monospace`;
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    for (let i = 0; i < 100; i += 10) { const a = i * TICK, rr = Rr - 15 - s * 0.03; g.fillText(String(i), Math.sin(a) * rr, -Math.cos(a) * rr); }
+    const rIn = Rr * 0.52;
+    g.strokeStyle = COL.steel; g.lineCap = 'round'; g.lineWidth = Math.max(3, s * 0.045);
+    for (let k = 0; k < 3; k++) { const a = k * TAU / 3; g.beginPath(); g.moveTo(0, 0); g.lineTo(Math.sin(a) * rIn, -Math.cos(a) * rIn); g.stroke(); }
+    g.lineWidth = Math.max(2, s * 0.03); g.beginPath(); g.arc(0, 0, rIn, 0, TAU); g.stroke();
+    g.fillStyle = COL.steel; g.beginPath(); g.arc(0, 0, s * 0.08, 0, TAU); g.fill();
+    g.fillStyle = COL.knob; g.strokeStyle = COL.safety; g.lineWidth = 2;
+    g.beginPath(); g.arc(0, -rIn, s * 0.075, 0, TAU); g.fill(); g.stroke();
+    g.restore();
+    g.fillStyle = COL.safety;
+    g.beginPath(); g.moveTo(cx - 5, 0); g.lineTo(cx + 5, 0); g.lineTo(cx, 8); g.closePath(); g.fill();
+  }
+}
+
+/* ---- Klavye ---- */
+const KEYMAP = { ArrowLeft:['z',-1], ArrowRight:['z',1], ArrowUp:['x',1], ArrowDown:['x',-1], PageUp:['w',1], PageDown:['w',-1] };
+window.addEventListener('keydown', e => {
+  if (e.target instanceof Element && e.target.matches('input, select, textarea')) return;
+  if (e.key === 'Shift') { S.rapidKey = true; return; }
+  const km = KEYMAP[e.code];
+  if (km) { e.preventDefault(); if (!e.repeat) press('key-' + e.code, km[0], km[1]); return; }
+  if (e.repeat) return;
+  if (e.code === 'Space') { e.preventDefault(); spindle(!S.spindle); }
+  else if (e.code === 'KeyC') toggleCoolant();
+  else if (e.code === 'KeyF') toggleAuto('z');
+  else if (e.code === 'KeyT') toggleAuto('h');
+  else if (e.code === 'Escape') stopAll();
+  else if (/^Digit[1-4]$/.test(e.code)) setStep([0.01, 0.1, 1, 10][+e.code.slice(5) - 1]);
+});
+window.addEventListener('keyup', e => { if (e.key === 'Shift') S.rapidKey = false; if (KEYMAP[e.code]) release('key-' + e.code); });
+window.addEventListener('blur', () => { pressed.clear(); S.rapidKey = false; });
+
+/* ---- Kamera ---- */
+const VIEWS = {
+  vOp:   { p:[250, 230, 430], t:[70, -10, 0] },
+  vNear: { p:[120, 60, 170],  t:[75, 0, 10] },
+  vTop:  { p:[90, 520, 0.1],  t:[90, 0, 0] },
+  vFront:{ p:[90, 15, 420],   t:[90, 0, 0] },
+};
+let camAnim = null;
+function setView(id, instant) {
+  const v = VIEWS[id];
+  if (instant) { camera.position.set(...v.p); controls.target.set(...v.t); controls.update(); return; }
+  camAnim = { t:0, p0:camera.position.clone(), t0:controls.target.clone(), p1:new THREE.Vector3(...v.p), t1:new THREE.Vector3(...v.t) };
+}
+Object.keys(VIEWS).forEach(id => $(id).addEventListener('click', () => setView(id)));
+setView('vOp', true);
+function resize() {
+  const w = stage.clientWidth, h = stage.clientHeight;
+  renderer.setSize(w, h, false); camera.aspect = w / Math.max(1, h); camera.updateProjectionMatrix();
+  const sc = renderer.getDrawingBufferSize(new THREE.Vector2()).y / (2 * Math.tan(camera.fov * Math.PI / 360));
+  psAdd.mat.uniforms.scale.value = psAlpha.mat.uniforms.scale.value = sc;
+}
+new ResizeObserver(resize).observe(stage); resize();
+
+/* ---------------- İş emirleri ---------------- */
+// Z değerleri bitmiş alından ölçülür (Z0 = alın, Z− aynaya doğru). end: alının aynadan uzaklığı.
+const JOBS = [
+  { title:'Alın ve çap', target:360, end:99,
+    brief:'Alından 1.00 mm alın (aynadan çıkıntı 99.00). Kalemi yeni alna değdirip Z0 yapın. Uçtan 50 mm boyunca çapı Ø45.00\'e indirin; son pasoyu düşük ilerlemeyle verin (Ra ≤ 3.2 µm).',
+    od:[{ z0:0, z1:-50, d:45, tol:0.05, ra:3.2 }] },
+  { title:'Kademeli mil', target:540, end:99,
+    brief:'Alın 1.00 mm. Uçtan Ø30 × 20 mm, ardından Ø40 × 25 mm kademe. Omuz konumları ±0.1. Z durdurucuyu omuzlarda kullanın.',
+    od:[{ z0:0, z1:-20, d:30, tol:0.05, ra:3.2 }, { z0:-20, z1:-45, d:40, tol:0.05, ra:3.2 }] },
+  { title:'Kanal ve pah', target:480, end:99,
+    brief:'Uçtan 50 mm boyunca Ø40. Ucuna T2 ile 1×45° pah. Z−25 merkezli, 3 mm genişliğinde Ø36 kanal (T3; kalemin sol köşesi Z−26.5\'te).',
+    od:[{ z0:0, z1:-50, d:40, tol:0.05, ra:3.2 }], chamfer:{ c:1, tol:0.2 }, groove:{ zc:-25, w:3, d:36, tol:0.1 } },
+  { title:'Delik ve bara', target:540, end:99,
+    brief:'Alın 1.00 mm. G1 ile punta, G3 Ø16 matkapla 30 mm (tam çap) derinlik, sonra T6 delik kalemiyle Ø20 × 15 mm. Ø20 delikte Ra ≤ 3.2.',
+    bore:[{ z1:-15, d:20, tol:0.05, ra:3.2 }, { z1:-30, d:16, tol:0.3 }] },
+  { title:'M20 cıvata', target:900, end:99,
+    brief:'Alın 1.00 mm. Uçtan 35 mm Ø20, ucuna 1.5×45° pah. T5 ile 25 mm boyunca M20×2.5 dış diş (derinlik 1.53): somun kolunu kapatın, Z durdurucuyu Z−25\'e koyun, her pasoda X\'i biraz ilerletin.',
+    od:[{ z0:0, z1:-35, d:20, tol:0.1 }], chamfer:{ c:1.5, tol:0.3 }, thread:{ z1:-25, p:2.5, depth:1.53, tol:0.12 } },
+];
+JOBS.forEach(J => { J.od = J.od || []; J.bore = J.bore || []; });
+
+let progress = {};
+try { progress = JSON.parse(localStorage.getItem('torna-progress') || '{}') || {}; } catch (e) { progress = {}; }
+function saveProgress() { try { localStorage.setItem('torna-progress', JSON.stringify(progress)); } catch (e) {} }
+const bestStars = i => (progress['j' + i] && progress['j' + i].stars) || 0;
+const unlocked = i => i === 0 || bestStars(i - 1) >= 1;
+
+function odEndR(J) { const s = J.od.find(s => s.z0 >= 0 && s.z1 < 0); return s ? s.d / 2 : STOCK_R; }
+function targets(J) {
+  const tR = new Float32Array(NS), tRi = new Float32Array(NS), end = J.end;
+  const last = J.bore[J.bore.length - 1];
+  for (let i = 0; i < NS; i++) {
+    const a = A(i);
+    if (a > end + 1e-6) continue;
+    let r = STOCK_R;
+    for (const s of J.od) if (a >= end + s.z1 - 1e-6 && a <= end + s.z0 + 1e-6) r = s.d / 2;
+    if (J.groove) { const g = J.groove; if (Math.abs(a - (end + g.zc)) <= g.w / 2 + 1e-6) r = g.d / 2; }
+    if (J.chamfer && a > end - J.chamfer.c) r = Math.min(r, odEndR(J) - (a - (end - J.chamfer.c)));
+    tR[i] = r;
+    let ri = 0;
+    for (const s of J.bore) if (a >= end + s.z1 - 1e-6) ri = Math.max(ri, s.d / 2);
+    if (last) { const zb = end + last.z1, h = last.d / 2 / TAN59; if (a >= zb - h && a < zb) ri = Math.max(ri, (a - (zb - h)) * TAN59); }
+    tRi[i] = ri;
+  }
+  return { tR, tRi };
+}
+
+/* -- Hedef profil çizgisi (parçanın üstünde, dönmez) -- */
+const guide = new THREE.Group(); scene.add(guide);
+const guideMat = new THREE.LineBasicMaterial({ color:0xf0b429, transparent:true, opacity:0.85, depthTest:false });
+const guideMat2 = new THREE.LineDashedMaterial({ color:0xf0b429, transparent:true, opacity:0.7, depthTest:false, dashSize:2, gapSize:1.5 });
+function buildGuide(J) {
+  while (guide.children.length) { const c = guide.children.pop(); c.geometry.dispose(); }
+  if (!J) return;
+  const { tR, tRi } = targets(J);
+  const top = [], bore = [];
+  for (let i = idx(JAW_A); i <= idx(J.end); i += 2) top.push(new THREE.Vector3(A(i), tR[i] + 0.15, 0));
+  top.push(new THREE.Vector3(J.end, tRi[idx(J.end)], 0));
+  for (let i = idx(JAW_A); i <= idx(J.end); i += 2) if (tRi[i] > 0) bore.push(new THREE.Vector3(A(i), tRi[i], 0));
+  const l1 = new THREE.Line(new THREE.BufferGeometry().setFromPoints(top), guideMat); l1.renderOrder = 4; guide.add(l1);
+  const front = top.map(p => new THREE.Vector3(p.x, 0, p.y));
+  const l2 = new THREE.Line(new THREE.BufferGeometry().setFromPoints(front), guideMat); l2.renderOrder = 4; guide.add(l2);
+  if (bore.length > 1) { const l3 = new THREE.Line(new THREE.BufferGeometry().setFromPoints(bore), guideMat2); l3.computeLineDistances(); l3.renderOrder = 4; guide.add(l3); }
+}
+
+/* -- Teknik resim -- */
+function drawingSVG(J) {
+  const { tR, tRi } = targets(J);
+  const s = 1.55, ox = 22, cy = 62, X = a => ox + a * s, Y = r => cy - r * s;
+  let top = '', bot = '';
+  for (let i = I0; i <= idx(J.end); i += 3) { top += `${X(A(i)).toFixed(1)},${Y(tR[i]).toFixed(1)} `; bot = `${X(A(i)).toFixed(1)},${Y(-tR[i]).toFixed(1)} ` + bot; }
+  const ie = idx(J.end);
+  top += `${X(J.end).toFixed(1)},${Y(tR[ie]).toFixed(1)} `;
+  bot = `${X(J.end).toFixed(1)},${Y(-tR[ie]).toFixed(1)} ` + bot;
+  let g = `<svg viewBox="0 0 200 130" role="img" aria-label="Teknik resim yandan görünüş">
+    <defs><pattern id="hatch" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="4" style="stroke:var(--ink-2);stroke-width:.6"/></pattern></defs>`;
+  g += `<rect x="${X(0)}" y="${Y(STOCK_R + 10)}" width="${JAW_A * s}" height="${10 * s}" style="fill:url(#hatch);stroke:var(--ink-2);stroke-width:.4"/>`;
+  g += `<rect x="${X(0)}" y="${Y(-STOCK_R)}" width="${JAW_A * s}" height="${10 * s}" style="fill:url(#hatch);stroke:var(--ink-2);stroke-width:.4"/>`;
+  g += `<polygon class="dw-part" style="fill:var(--paper)" points="${top}${bot}"/>`;
+  if (J.bore.length) {
+    let b1 = '', b2 = '';
+    for (let i = I0; i <= ie; i += 3) if (tRi[i] > 0) { b1 += `${X(A(i)).toFixed(1)},${Y(tRi[i]).toFixed(1)} `; b2 += `${X(A(i)).toFixed(1)},${Y(-tRi[i]).toFixed(1)} `; }
+    g += `<polyline points="${b1}" style="fill:none;stroke:var(--ink);stroke-width:.6;stroke-dasharray:2 1.2"/><polyline points="${b2}" style="fill:none;stroke:var(--ink);stroke-width:.6;stroke-dasharray:2 1.2"/>`;
+  }
+  if (J.thread) {
+    const th = J.thread, rm = odEndR(J) - th.depth;
+    g += `<line x1="${X(J.end + th.z1)}" y1="${Y(rm)}" x2="${X(J.end)}" y2="${Y(rm)}" style="stroke:var(--ink);stroke-width:.4"/><line x1="${X(J.end + th.z1)}" y1="${Y(-rm)}" x2="${X(J.end)}" y2="${Y(-rm)}" style="stroke:var(--ink);stroke-width:.4"/>`;
+    g += `<text x="${X(J.end + th.z1 / 2) - 12}" y="${Y(odEndR(J)) - 3}" font-size="5">M${odEndR(J) * 2}×${th.p}</text>`;
+  }
+  g += `<line class="dw-cl" x1="${X(-5)}" y1="${cy}" x2="${X(J.end + 8)}" y2="${cy}"/>`;
+  J.od.forEach(sg => { if (!J.thread || sg.z1 < J.thread.z1) g += `<text x="${X(J.end + (sg.z0 + sg.z1) / 2) - 7}" y="${Y(sg.d / 2) - 2.5}" font-size="5">Ø${sg.d}</text>`; });
+  if (J.groove) g += `<text x="${X(J.end + J.groove.zc) - 6}" y="${Y(-J.groove.d / 2) + 7}" font-size="4.5">Ø${J.groove.d}</text>`;
+  J.bore.forEach((sg, k) => g += `<text x="${X(J.end + sg.z1 / 2 + (k ? -6 : 0)) - 6}" y="${cy + (k ? 3.5 : -1.5)}" font-size="4.3">Ø${sg.d}</text>`);
+  g += `<line class="dw-dim" x1="${X(0)}" y1="${Y(-STOCK_R) + 13}" x2="${X(J.end)}" y2="${Y(-STOCK_R) + 13}"/><text x="${X(J.end / 2) - 8}" y="${Y(-STOCK_R) + 19}" font-size="5">${J.end.toFixed(2)}</text>`;
+  g += `<text x="${X(J.end) + 2}" y="${cy - 2}" font-size="4.5">Z0</text><text x="${X(0) - 2}" y="${Y(STOCK_R + 10) - 2}" font-size="4.2">ayna</text>`;
+  return g + '</svg>';
+}
+function drawingTable(J) {
+  let t = '<tr><th>Özellik</th><th>Z</th><th>Ölçü</th><th>Tol.</th><th>Ra</th></tr>';
+  t += `<tr><td>Alın</td><td>0</td><td>çıkıntı ${J.end.toFixed(2)}</td><td>±0.1</td><td>—</td></tr>`;
+  J.od.forEach(s => t += `<tr><td>Çap</td><td>${s.z0}…${s.z1}</td><td>Ø${s.d.toFixed(2)}</td><td>±${s.tol}</td><td>${s.ra || '—'}</td></tr>`);
+  if (J.chamfer) t += `<tr><td>Pah</td><td>0</td><td>${J.chamfer.c}×45°</td><td>±${J.chamfer.tol}</td><td>—</td></tr>`;
+  if (J.groove) t += `<tr><td>Kanal</td><td>${J.groove.zc}</td><td>${J.groove.w} gen. Ø${J.groove.d}</td><td>±${J.groove.tol}</td><td>—</td></tr>`;
+  J.bore.forEach(s => t += `<tr><td>Delik</td><td>0…${s.z1}</td><td>Ø${s.d.toFixed(2)}</td><td>±${s.tol}</td><td>${s.ra || '—'}</td></tr>`);
+  if (J.thread) t += `<tr><td>Diş</td><td>0…${J.thread.z1}</td><td>M${odEndR(J) * 2}×${J.thread.p}, der. ${J.thread.depth}</td><td>±${J.thread.tol}</td><td>—</td></tr>`;
+  return t;
+}
+
+/* -- Muayene -- */
+function inspect(J) {
+  const items = [], end = J.end;
+  const add = (grp, label, nom, meas, ok, sc, w = 1) => items.push({ grp, label, nom, meas, ok:!!ok, sc:clamp(sc, 0, 1), w });
+  const dev = (d, tol) => d <= tol ? 1 : Math.max(0, 1 - (d - tol) / (2 * tol));
+  let fe = endIdx;
+  while (fe > I0 && R[fe] < 2) fe--;                    // merkezdeki çıkıntıyı yok say, alın düzlemini ölç
+  const aEnd = endIdx >= I0 ? A(fe) + DZ / 2 : 0;
+  add('Alın', 'Aynadan çıkıntı', end.toFixed(2) + ' ±0.10', aEnd.toFixed(2), Math.abs(aEnd - end) <= 0.1, dev(Math.abs(aEnd - end), 0.1), 2);
+  const inGroove = a => J.groove && Math.abs(a - (end + J.groove.zc)) < J.groove.w / 2 + 0.6;
+  const inCham = a => J.chamfer && a > end - J.chamfer.c - 0.6;
+  J.od.forEach((sg, k) => {
+    let n = 0, sum = 0, mx = 0, raMax = 0, raw = 0;
+    for (let i = idx(end + sg.z1 + 0.6); i <= idx(end + sg.z0 - 0.6); i++) {
+      const a = A(i); if (inGroove(a) || inCham(a)) continue;
+      const D = hasMat(i) ? 2 * R[i] : 0; n++; sum += D; mx = Math.max(mx, Math.abs(D - sg.d));
+      if (CUTO[i]) raMax = Math.max(raMax, RA[i]); else raw++;
+    }
+    const g = 'Ø' + sg.d;
+    if (!n) return;
+    add(g, `Çap (Z${sg.z0}…${sg.z1})`, `Ø${sg.d.toFixed(2)} ±${sg.tol}`, `Ø${(sum / n).toFixed(3)} (sapma ${mx.toFixed(3)})`, mx <= sg.tol, dev(mx, sg.tol), 2);
+    if (sg.ra) add(g, 'Yüzey pürüzlülüğü', `Ra ≤ ${sg.ra}`, raw ? 'işlenmemiş' : `Ra ${raMax.toFixed(1)}`, !raw && raMax <= sg.ra, raw ? 0 : raMax <= sg.ra ? 1 : Math.max(0, 1 - (raMax - sg.ra) / (2 * sg.ra)));
+    const nxt = J.od[k + 1], dl = nxt && Math.abs(nxt.z0 - sg.z1) < 1e-6 ? nxt.d : 50;
+    if (dl > sg.d) {
+      const aS = end + sg.z1, thr = (sg.d + dl) / 2;
+      let am = null;
+      for (let i = idx(aS + 2); i >= idx(aS - 2); i--) if (hasMat(i) && 2 * R[i] > thr) { am = A(i) + DZ / 2; break; }
+      add(g, `Omuz Z${sg.z1}`, `Z${sg.z1.toFixed(2)} ±0.10`, am === null ? 'yok' : 'Z' + (am - end).toFixed(2), am !== null && Math.abs(am - aS) <= 0.1, am === null ? 0 : dev(Math.abs(am - aS), 0.1));
+    }
+  });
+  if (J.chamfer) {
+    const c = J.chamfer, rod = odEndR(J);
+    const cr = endIdx >= I0 ? rod - R[fe] : 0;
+    let ca = 0;
+    for (let i = endIdx; i >= I0; i--) if (R[i] >= rod - 0.05) { ca = aEnd - (A(i) + DZ / 2); break; }
+    const d = Math.max(Math.abs(ca - c.c), Math.abs(cr - c.c));
+    add('Pah', `Pah ${c.c}×45°`, `${c.c} ±${c.tol}`, `${ca.toFixed(2)} × ${cr.toFixed(2)}`, d <= c.tol, dev(d, c.tol));
+  }
+  if (J.groove) {
+    const gq = J.groove, ac = end + gq.zc, thr = (gq.d + odEndR(J) * 2) / 2;
+    let n = 0, sa = 0;
+    for (let i = idx(ac - gq.w / 2 - 3); i <= idx(ac + gq.w / 2 + 3); i++) if (hasMat(i) && 2 * R[i] < thr) { n++; sa += A(i); }
+    if (!n) ['Kanal genişliği', 'Kanal çapı', 'Kanal konumu'].forEach(l => add('Kanal', l, '', 'yok', false, 0));
+    else {
+      const wM = n * DZ, cM = sa / n;
+      let m = 0, ds = 0;
+      for (let i = idx(cM - gq.w / 2 + 0.4); i <= idx(cM + gq.w / 2 - 0.4); i++) { m++; ds += 2 * R[i]; }
+      const dM = m ? ds / m : 0;
+      add('Kanal', 'Kanal genişliği', `${gq.w.toFixed(2)} ±${gq.tol}`, wM.toFixed(2), Math.abs(wM - gq.w) <= gq.tol, dev(Math.abs(wM - gq.w), gq.tol));
+      add('Kanal', 'Kanal çapı', `Ø${gq.d.toFixed(2)} ±${gq.tol}`, 'Ø' + dM.toFixed(3), Math.abs(dM - gq.d) <= gq.tol, dev(Math.abs(dM - gq.d), gq.tol));
+      add('Kanal', 'Kanal konumu', `Z${gq.zc.toFixed(2)} ±${gq.tol}`, 'Z' + (cM - end).toFixed(2), Math.abs(cM - ac) <= gq.tol, dev(Math.abs(cM - ac), gq.tol));
+    }
+  }
+  J.bore.forEach((sg, k) => {
+    const up = k === 0 ? end - 0.6 : end + J.bore[k - 1].z1 - 0.6, lo = end + sg.z1 + 0.6;
+    let n = 0, sum = 0, mx = 0, raMax = 0, uncut = 0;
+    for (let i = idx(lo); i <= idx(up); i++) {
+      if (!hasMat(i)) continue;
+      const D = 2 * Ri[i]; n++; sum += D; mx = Math.max(mx, Math.abs(D - sg.d));
+      if (CUTI[i] && CUTI[i] < 10) raMax = Math.max(raMax, RAI[i]); else if (CUTI[i]) raMax = Math.max(raMax, RAI[i]); else uncut++;
+    }
+    const g = 'Delik Ø' + sg.d;
+    if (!n) return;
+    add(g, `Delik çapı (Z0…${sg.z1})`, `Ø${sg.d.toFixed(2)} ±${sg.tol}`, `Ø${(sum / n).toFixed(3)} (sapma ${mx.toFixed(3)})`, mx <= sg.tol, dev(mx, sg.tol), 2);
+    if (sg.ra) add(g, 'Delik yüzeyi', `Ra ≤ ${sg.ra}`, uncut ? 'delinmemiş' : `Ra ${raMax.toFixed(1)}`, !uncut && raMax <= sg.ra, uncut ? 0 : raMax <= sg.ra ? 1 : Math.max(0, 1 - (raMax - sg.ra) / (2 * sg.ra)));
+    const nxt = J.bore[k + 1], thr = nxt ? (sg.d + nxt.d) / 2 : sg.d - 0.5;
+    let am = null;
+    for (let i = endIdx; i >= I0; i--) if (2 * Ri[i] < thr) { am = A(i) + DZ / 2; break; }
+    const tol = sg.tol <= 0.1 ? 0.1 : 0.5, depth = am === null ? 0 : aEnd - am;
+    add(g, 'Derinlik', `${(-sg.z1).toFixed(2)} ±${tol}`, depth.toFixed(2), Math.abs(depth + sg.z1) <= tol, dev(Math.abs(depth + sg.z1), tol));
+  });
+  if (J.thread) {
+    const th = J.thread, z = S.zone;
+    if (!z) ['Diş derinliği', 'Diş boyu', 'Diş adımı'].forEach(l => add('Diş', l, '', 'yok', false, 0, l === 'Diş derinliği' ? 2 : 1));
+    else {
+      let n = 0, sum = 0, cov = 0;
+      for (let i = idx(end + th.z1 + 1); i <= idx(end - (J.chamfer ? J.chamfer.c : 0) - 0.5); i++) {
+        if (!hasMat(i)) continue;
+        let mn = 1e9; for (let b = 0; b < z.gb; b++) mn = Math.min(mn, Gr[i * GBMAX + b]);
+        const dep = mn > 1e8 ? 0 : Math.max(0, R[i] - mn);
+        n++; sum += dep; if (dep >= th.depth * 0.85) cov++;
+      }
+      const mean = n ? sum / n : 0, cf = n ? cov / n : 0;
+      add('Diş', 'Diş derinliği', `${th.depth.toFixed(2)} ±${th.tol}`, mean.toFixed(3), Math.abs(mean - th.depth) <= th.tol, dev(Math.abs(mean - th.depth), th.tol), 2);
+      add('Diş', 'Tam diş boyu', `${-th.z1} mm`, '%' + (cf * 100).toFixed(0), cf >= 0.95, cf);
+      add('Diş', 'Diş adımı', `${th.p} mm`, `${z.p} mm`, z.p === th.p, z.p === th.p ? 1 : 0);
+    }
+  }
+  // Resme göre fazla kesilmiş bölgeler
+  const { tR, tRi } = targets(J);
+  let go = 0, gi = 0;
+  INSP.fill(0);
+  for (let i = idx(JAW_A); i <= Math.min(endIdx, idx(end)); i++) {
+    let mnR = 1e9, mxRi = 0;
+    for (let j = Math.max(0, i - 3); j <= Math.min(NS - 1, i + 3); j++) { mnR = Math.min(mnR, A(j) <= end ? tR[j] : 0); mxRi = Math.max(mxRi, tRi[j]); }
+    if (R[i] < mnR - 0.1) { INSP[i] |= 1; go++; }
+    if (Ri[i] > mxRi + 0.1) { INSP[i] |= 2; gi++; }
+  }
+  markDirty(0, NS - 1);
+  const gl = (go + gi) * DZ;
+  add('Genel', 'Fazla kesilmiş bölge', '0 mm', gl.toFixed(1) + ' mm', gl < 0.3, gl < 0.3 ? 1 : Math.max(0, 1 - gl / 15), 2);
+  return items;
+}
+function scoreJob(J, run, items) {
+  const wsum = items.reduce((s, i) => s + i.w, 0);
+  const acc = items.reduce((s, i) => s + i.w * i.sc, 0) / wsum;
+  const accPts = 70 * acc;
+  const timePts = 15 * clamp(1 - (run.time - J.target) / (1.5 * J.target), 0, 1);
+  const st = run.stats;
+  const carePts = clamp(15 - 6 * st.breaks - st.load - 3 * st.spot - 2 * st.peck - st.rub - st.vc, 0, 15);
+  const total = Math.round(accPts + timePts + carePts);
+  const allOk = items.every(i => i.ok);
+  const stars = allOk ? (total >= 90 ? 3 : total >= 75 ? 2 : total >= 55 ? 1 : 0) : (total >= 60 ? 1 : 0);
+  return { accPts, timePts, carePts, total, stars, allOk };
+}
+
+/* -- İş arayüzü -- */
+const mmss = t => { t = Math.max(0, Math.floor(t)); return String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0'); };
+let selJob = -1;
+const FREE_TXT = 'İş emri seçmeden tezgâhı serbestçe kullanın. Bir iş seçerseniz teknik resim açılır, teslimde parça ölçülür ve puanlanır.';
+function renderJobs() {
+  const L = $('jobList'); L.innerHTML = '';
+  JOBS.forEach((J, i) => {
+    const b = document.createElement('button');
+    const st = bestStars(i), lock = !unlocked(i);
+    b.disabled = lock; b.classList.toggle('active', i === selJob);
+    b.innerHTML = `<span class="jn">${i + 1}</span><span class="jt">${J.title}</span><span class="js">${lock ? '<i>kilitli</i>' : '★'.repeat(st) + '<i>' + '★'.repeat(3 - st) + '</i>'}</span>`;
+    b.addEventListener('click', () => selectJob(i));
+    L.append(b);
+  });
+  const f = document.createElement('button');
+  f.className = 'free' + (selJob < 0 ? ' active' : '');
+  f.innerHTML = '<span class="jn">∞</span><span class="jt">Serbest çalışma</span><span class="js"><i>puan yok</i></span>';
+  f.addEventListener('click', () => selectJob(-1));
+  L.append(f);
+  const tot = JOBS.reduce((s, J, i) => s + bestStars(i), 0);
+  $('starTotal').textContent = `${tot} / ${JOBS.length * 3} yıldız`;
+}
+function selectJob(i) {
+  selJob = i;
+  const J = JOBS[i];
+  if (S.job && S.job.idx !== i) S.job = null;
+  renderJobs();
+  $('jcBtns').hidden = !J; $('vDraw').hidden = !J;
+  if (!J) {
+    $('jcNo').textContent = 'SERBEST'; $('jcTitle').textContent = 'Serbest çalışma'; $('jcBrief').textContent = FREE_TXT;
+    $('jcMeta').innerHTML = ''; $('drawing').hidden = true; buildGuide(null); S.job = null;
+    return;
+  }
+  $('jcNo').textContent = 'İŞ ' + (i + 1); $('jcTitle').textContent = J.title; $('jcBrief').textContent = J.brief;
+  const best = progress['j' + i];
+  $('jcMeta').innerHTML = `<span>Hedef süre <b>${mmss(J.target)}</b></span><span>En iyi <b>${best ? best.score : '—'}</b></span>`;
+  $('dwTitle').textContent = `TEKNİK RESİM · İŞ ${i + 1} · ${J.title.toLocaleUpperCase('tr')}`;
+  $('dwSvg').innerHTML = drawingSVG(J);
+  $('dwTable').innerHTML = drawingTable(J);
+  $('drawing').hidden = window.innerWidth < 900;
+  buildGuide(J);
+  $('jobStart').textContent = S.job && !S.job.done ? 'Yeniden başla' : 'İşe başla';
+}
+function startJob() {
+  initAudio();
+  if (selJob < 0) return;
+  resetPart();
+  INSP.fill(0);
+  S.job = { idx:selJob, J:JOBS[selJob], time:0, done:false, stats:{ breaks:0, load:0, spot:0, peck:0, rub:0, vc:0 } };
+  $('report').hidden = true;
+  $('jobStart').textContent = 'Yeniden başla';
+  log(`İş ${selJob + 1} başladı: ${JOBS[selJob].title}. Yeni çubuk bağlandı, makine süresi işliyor.`, 'ok');
+}
+function submitJob() {
+  if (!S.job || S.job.done) { log('Önce "İşe başla" ile işi başlatın.', 'warn'); return; }
+  if (S.spindle) { log('Parçayı teslim etmeden önce mili durdurun.', 'warn'); return; }
+  const run = S.job, J = run.J;
+  const items = inspect(J);
+  const r = scoreJob(J, run, items);
+  run.done = true;
+  const key = 'j' + run.idx, prev = progress[key];
+  const record = !prev || r.total > prev.score;
+  if (record) progress[key] = { score:r.total, stars:Math.max(r.stars, prev ? prev.stars : 0) };
+  else if (r.stars > prev.stars) progress[key].stars = r.stars;
+  saveProgress();
+  showReport(run, items, r, record && !!prev);
+  renderJobs(); selectJob(run.idx);
+  const cx = J.end - 30, cy = 30;
+  if (r.stars) for (let s = 0; s < r.stars; s++) setTimeout(() => { burst('gold', 110, cx, cy, 0, 260, 900, 1.8); beep(1200 + s * 300); }, 250 + s * 250);
+  else burst('smoke', 30, cx, cy, 0, 60, 80, 2.2);
+}
+const STAR = '<svg viewBox="0 0 24 24"><path d="M12 2.6l2.9 6 6.5.8-4.8 4.5 1.2 6.5L12 17.3l-5.8 3.1 1.2-6.5L2.6 9.4l6.5-.8z" stroke-width="1.4" stroke-linejoin="round"/></svg>';
+function showReport(run, items, r, newBest) {
+  $('rpJob').textContent = `İŞ ${run.idx + 1} · ${run.J.title.toLocaleUpperCase('tr')} · MAKİNE SÜRESİ ${mmss(run.time)}`;
+  $('rpTitle').textContent = r.stars === 3 ? 'Kusursuz parça' : r.allOk ? 'Parça kabul edildi' : r.stars ? 'Şartlı kabul: tolerans dışı ölçü var' : 'Parça hurdaya ayrıldı';
+  $('rpStars').innerHTML = [0, 1, 2].map(i => STAR.replace('<svg', `<svg class="${i < r.stars ? 'on' : 'off'}"`)).join('');
+  $('rpTotal').textContent = r.total;
+  $('rpVerdict').textContent = newBest ? 'YENİ REKOR' : '';
+  $('rpVerdict').style.color = 'var(--safety)';
+  const bar = (name, v, max) => `<div class="rp-bar"><span>${name}</span><div class="meter"><i style="width:${v / max * 100}%;background:${v / max > 0.8 ? 'var(--ok)' : v / max > 0.5 ? 'var(--warn)' : 'var(--bad)'}"></i></div><span>${Math.round(v)} / ${max}</span></div>`;
+  const st = run.stats;
+  $('rpBars').innerHTML = bar('Ölçü doğruluğu', r.accPts, 70) + bar('Süre', r.timePts, 15) + bar('Takım bakımı', r.carePts, 15) +
+    `<div class="dro-note">Süre: ${mmss(run.time)} (hedef ${mmss(run.J.target)}) · kırılan takım ${st.breaks} · aşırı yük ${st.load} · puntasız delme ${st.spot} · gagalama ${st.peck} · düşük kesme hızı ${st.rub} · aşırı kesme hızı ${st.vc}</div>`;
+  $('rpTable').innerHTML = '<tr><th></th><th>Ölçü</th><th>İstenen</th><th>Ölçülen</th><th></th></tr>' +
+    items.map(i => `<tr><td>${i.grp}</td><td>${i.label}</td><td class="num">${i.nom}</td><td class="num">${i.meas}</td><td class="${i.ok ? 'ok-t' : 'bad-t'}">${i.ok ? '✓' : '✗'}</td></tr>`).join('');
+  $('rpNext').hidden = !(run.idx + 1 < JOBS.length && unlocked(run.idx + 1));
+  $('report').hidden = false;
+}
+$('jobStart').addEventListener('click', startJob);
+$('jobSubmit').addEventListener('click', submitJob);
+$('rpInspect').addEventListener('click', () => { $('report').hidden = true; log('Kırmızı bölgeler resme göre fazla kesilmiş yerleri gösterir.'); });
+$('rpRetry').addEventListener('click', () => { $('report').hidden = true; startJob(); });
+$('rpNext').addEventListener('click', () => { $('report').hidden = true; selectJob(S.job.idx + 1); $('drawing').hidden = false; });
+$('vDraw').addEventListener('click', () => { $('drawing').hidden = !$('drawing').hidden; });
+$('dwClose').addEventListener('click', () => { $('drawing').hidden = true; });
+
+/* ---------------- Ana döngü ---------------- */
+let last = performance.now(), uiT = 0;
+function frame(now) {
+  const dt = Math.min(0.05, Math.max(0.001, (now - last) / 1000)); last = now;
+  motion(dt);
+  if (now - S.lastCut > 500) S.damage = Math.max(0, S.damage - 0.06 * dt);
+  S.cutting += ((S.cutAcc > 0 ? Math.min(0.3, 0.05 + S.cutAcc / (dt * 6000)) : 0) - S.cutting) * Math.min(1, dt * 12);
+  flushPart();
+  updateChips(dt); updatePieces(dt);
+  const spinRate = S.spindle ? (S.halfNut ? S.rpm / 60 * S.sim : Math.min(S.rpm / 60, 6)) : 0;
+  S.spinAng = mod(S.spinAng + spinRate * TAU * dt, TAU);
+  spinG.rotation.x = S.spinAng;
+  carG.position.x = S.at; crossG.position.z = S.rt;
+  tailG.position.x = S.q + tailT().len;
+  zWheel3.rotation.z = -S.at / 4 * TAU; xWheel3.rotation.z = -S.rt / 2 * TAU; wWheel3.rotation.z = -S.q / 4 * TAU;
+  if (S.spindle && (S.halfNut || S.autoZ || S.autoX)) { leadscrew.rotation.x += (S.halfNut ? 4 : 1.5) * dt * S.sim; feedrod.rotation.x += 2 * dt * S.sim; }
+  updateCoolant(dt);
+  ambientParticles(dt);
+  updatePS(psAdd, dt); updatePS(psAlpha, dt);
+  if (S.job && !S.job.done && (S.spindle || now - S.lastMove < 120)) S.job.time += dt * S.sim;
+  drawWheels();
+  if (camAnim) {
+    camAnim.t = Math.min(1, camAnim.t + dt * 2.2);
+    const e = camAnim.t < .5 ? 2 * camAnim.t * camAnim.t : 1 - Math.pow(-2 * camAnim.t + 2, 2) / 2;
+    camera.position.lerpVectors(camAnim.p0, camAnim.p1, e);
+    controls.target.lerpVectors(camAnim.t0, camAnim.t1, e);
+    if (camAnim.t >= 1) camAnim = null;
+  }
+  controls.update();
+  renderer.render(scene, camera);
+  updateAudio();
+  uiT += dt;
+  if (uiT > 0.066) { uiT = 0; updateHud(); }
+  requestAnimationFrame(frame);
+}
+function updateHud() {
+  const T = tool(), d = droVals();
+  $('droX').textContent = fmt(d.x); $('droZ').textContent = fmt(d.z); $('droW').textContent = fmt(d.w);
+  $('hwzv').textContent = fmt(d.z); $('hwxv').textContent = fmt(d.x); $('hwwv').textContent = fmt(d.w);
+  $('hTool').textContent = `${T.no} ${T.name.toLocaleLowerCase('tr')}${S.broken ? ' (kırık)' : ''}`;
+  $('hSpin').textContent = S.spindle ? `${S.rpm} dev/dk` : 'DURUYOR';
+  $('hSpin').style.color = S.spindle ? 'var(--ok)' : 'var(--muted)';
+  $('rapidState').textContent = rapid() ? 'hızlı hareket' : 'ilerleme';
+  const now = performance.now(), moving = now - S.lastMove < 200;
+  $('hFeed').textContent = S.changing ? 'takım değişimi' : S.halfNut ? `diş ${S.pitch} mm/dev` :
+    moving && S.feedC > 0 ? `${Math.round(S.curFeed)} mm/dk (${(S.curFeed / Math.max(1, S.rpm)).toFixed(3)} mm/dev)` : `${S.feedRev} mm/dev · ${Math.round(S.feedRev * S.rpm)} mm/dk`;
+  const cutting = now - S.lastCut < 400;
+  const dia = T.type === 'bore' ? 2 * Ri[clamp(idx(S.at), 0, NS - 1)] : curDiaAt(S.at);
+  const vc = cutting ? S.lastVc : Math.PI * Math.max(dia || 2 * Math.abs(S.rt), 1) * S.rpm / 1000;
+  const vcRec = T.vc;
+  $('hVc').textContent = `${Math.round(vc)} m/dk (öneri ${vcRec})`;
+  $('hVc').style.color = vc > vcRec * 1.8 ? 'var(--bad)' : vc < vcRec * 0.35 ? 'var(--warn)' : 'var(--fg)';
+  $('hDia').textContent = dia ? 'Ø' + dia.toFixed(3) : '—';
+  let gap = null;
+  if (T.type !== 'bore' && dia) gap = S.rt - dia / 2;
+  else if (T.type === 'bore' && dia) gap = dia / 2 - S.rt;
+  $('hGap').textContent = gap === null ? '—' : gap.toFixed(3) + ' mm';
+  $('hPaper').hidden = !(gap !== null && gap >= -0.001 && gap < 0.03 && !S.spindle);
+  $('hRa').textContent = S.lastRa === null ? '—' : `${S.lastRa.toFixed(1)} µm`;
+  $('hRa').style.color = S.lastRa !== null && S.lastRa > 3.2 ? 'var(--warn)' : 'var(--fg)';
+  const chip = cutting ? S.lastChip : T.type === 'thread' ? 0 : S.feedRev / T.frec;
+  const stress = cutting ? S.lastStress : 0;
+  $('hLoadK').textContent = cutting ? 'Talaş kalınlığı' : 'Talaş kalınlığı (plan)';
+  $('hLoad').textContent = T.type === 'thread' && !cutting ? '—' : chip.toFixed(2) + '×';
+  $('hStress').textContent = cutting ? stress.toFixed(2) + '×' : 'kesmiyor';
+  const m = $('hMeter');
+  m.style.width = Math.min(100, stress / 6 * 100) + '%';
+  m.style.background = stress > 1.5 ? 'var(--bad)' : stress > 1.1 ? 'var(--warn)' : 'var(--ok)';
+  $('hDmg').textContent = Math.round(S.damage * 100) + '%';
+  const db = $('hDmgBar');
+  db.style.width = Math.min(100, S.damage * 100) + '%';
+  db.style.background = S.damage > 0.6 ? 'var(--bad)' : 'var(--warn)';
+  $('hJobRow').hidden = $('hTimeRow').hidden = !S.job;
+  if (S.job) {
+    $('hJob').textContent = `${S.job.idx + 1} · ${S.job.J.title}${S.job.done ? ' (teslim edildi)' : ''}`;
+    $('hTime').textContent = `${mmss(S.job.time)} / ${mmss(S.job.J.target)}`;
+    $('hTime').style.color = S.job.time > S.job.J.target ? 'var(--warn)' : 'var(--fg)';
+  }
+  $('stVol').textContent = (S.removed / 1000).toFixed(2) + ' cm³';
+  const s = Math.floor(S.cutTime);
+  $('stTime').textContent = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+  updateRec();
+}
+
+// Başlangıç
+buildToolVisual(); buildTailVisual(); updateToolUI(); updateSpindleUI(); updateAutoUI();
+setRpm(800); setFeed(0.1);
+renderJobs(); selectJob(-1);
+log('Torna hazır. T1 sağ torna kalemi takılı, gelincikte punta matkabı. Z sıfırı ham çubuğun alnında.', 'ok');
+requestAnimationFrame(frame);
+})();
+</script>
