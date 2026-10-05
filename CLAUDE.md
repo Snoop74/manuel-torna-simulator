@@ -11,7 +11,7 @@
 ## Mimari (torna.html)
 
 - three.js r128 (cdnjs) + OrbitControls (jsDelivr), derleme adımı yok.
-- **Parça modeli:** eksen boyunca 0.1 mm aralıklı istasyonlar (`a` = ayna alnından uzaklık, -40…100). `R[i]` dış yarıçap, `Ri[i]` delik yarıçapı; malzeme `R > Ri`. Aynadan itibaren ilk boş istasyondan sonrası koparsa parça düşer (`checkDetach` / `dropPiece`).
+- **Parça modeli:** eksen boyunca 0.1 mm aralıklı istasyonlar (`a` = ayna alnından uzaklık, -40…200). `R[i]` dış yarıçap, `Ri[i]` delik yarıçapı; malzeme `R > Ri`. Aynadan itibaren ilk boş istasyondan sonrası koparsa parça düşer (`checkDetach` / `dropPiece`).
 - **Kalem profili:** `toolF(T, du)` kalem ucunun alt zarfı. 95° sağ kalemde referans burnun en sol/en alt teğetleri (du ≥ 0), ana ağız gelinciğe doğru yatık. Kanal/kesme kaleminde referans sol köşe.
 - **Diş:** somun kolu takılıyken `threadScan`, istasyon başına helis faz kutularında (`Gr`, 0.05 mm) diş dibini tutar; mesh köşe başına `min(R, Gr(u))` ile helis çizer. Somun kolu yeniden kapanınca mil açısı `uref`'e hizalanır (diş saati).
 - **Yük modeli:** freze'deki gibi ~1 mm yol penceresinde ortalanır; talaş = f/f_önerilen, yük = talaş × (kavrama genişliği / ap). Vc kalem ucunun çapında hesaplanır. Ra = f²/(8rε) (düşük Vc'de ×2.5). Diş pasosunda yük = V kesit artışı / 0.45 mm².
@@ -28,6 +28,6 @@ Preview'de `file://` sayfaları çalışmıyor; `python -m http.server` ile serv
 
 ## Sıradaki fikirler
 
-- Kumpas / mikrometre ile ölçme, komparatör
+- Komparatörle salgı ölçme (ters bağlamada eksen kaçıklığı)
 - Tırtıl çekme, iç diş, yumuşak çene (işlenmiş yüzeyde iz bırakmadan bağlama)
 - Takım aşınması ve el çarkı boşluğu (usta modu)
