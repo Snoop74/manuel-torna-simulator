@@ -4,7 +4,7 @@
 
 ## Kardeş proje: freze
 
-- Kaynak: `C:\Users\Onat\Desktop\freze\freze.html`
+- Kaynak: `../freze/freze.html` (yan klasör)
 - GitHub: https://github.com/Snoop74/manuel-freze-simulator — canlı: https://snoop74.github.io/manuel-freze-simulator/
 - CSS (tasarım dili) freze'den birebir alındı; ikisini tutarlı tut.
 
