@@ -12,6 +12,9 @@ Tarayıcıda çalışan, 3B bir manuel torna tezgâhı simülasyonu ve oyunu. Te
 - **Diş çekme:** somun kolu ve diş adımı seçimi (1.0–2.5 mm); diş gerçek helis olarak oluşur, pasolar diş saatiyle hizalanır.
 - **Kontrol:** taşıyıcı (Z), enine kızak (X, çap okur) ve gelincik kovanı (W) için el çarkları, klavye, otomatik boyuna/enine ilerleme (mm/dev), Z durdurucu, dijital okuma (DRO).
 - **Kesme fiziği:** talaş kalınlığı, kalem yükü, birikerek dolan zorlanma göstergesi; çapa göre değişen kesme hızı (Vc); ilerlemeye bağlı yüzey pürüzlülüğü (Ra); ayna, çene, gelincik ve tutucu çarpışmaları; matkapta gagalama ve punta kontrolü.
+- **Malzemeler:** Al 6061, C45 çelik, 304 paslanmaz, pirinç, GG25 döküm ve Delrin. Her birinin kesme kuvveti, önerilen hızı ve ilerlemesi, talaş tipi (kıvrık, uzun tel, kırık pul, toz, şerit) ve rengi farklı. Paslanmaz sürtülünce işlem sertleşir, Delrin yüksek hızda erir, döküm kuru işlenir.
+- **Gerçekçi kesme davranışı:** Taylor modeline göre uç aşınması (yüzey bozulur, çap büyür; uç çevrilir), parçanın ısınması ve soğuyunca küçülmesi, kırılmayan talaşın parçaya sarılması, devire bağlı tırlama kararlılık lobları, el çarkı boşluğu (0.05 mm) ve 4 kW mil gücü sınırı (ağır pasoda devir düşer, mil boğulur).
+- **Görsel:** metallerde ortam yansıması, ilerlemeye göre görünen helis tornalama izleri, tırlama dalgaları, çelikte ısı rengi (saman → mavi), atölye lambası ve devir tablosu.
 - **Soğutma ve partiküller:** eklemli hortum, dönen parçadan savrulan sıvı, buğu, spiral talaşlar, kırılma kıvılcımları, ısınma dumanı.
 - **Parça masası:** kesilen ya da aynadan sökülen parçalar ayrı bir masada döndürülerek incelenir; yarım kesit, dış/iç çap için kumpas (0.02 mm), boy ölçümü ve mikrometre (0.01 mm). Parça buradan aynaya düz ya da ters bağlanır.
 - **Ters bağlama:** parçanın profili, deliği ve diş helisi çevrilerek seçilen çıkıntıyla aynaya bağlanır; çeneler çapa göre kapanır.

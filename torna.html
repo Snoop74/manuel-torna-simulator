@@ -278,6 +278,10 @@ table{color:inherit;font-size:inherit}
       <div class="row" id="hTimeRow" hidden><span class="k">Makine süresi</span><span class="v" id="hTime">—</span></div>
       <div class="row"><span class="k">Kalem</span><span class="v" id="hTool">—</span></div>
       <div class="row"><span class="k">Mil</span><span class="v" id="hSpin">DURUYOR</span></div>
+      <div class="row"><span class="k">Malzeme</span><span class="v" id="hMat">—</span></div>
+      <div class="row"><span class="k">Mil gücü</span><span class="v" id="hPow">—</span></div>
+      <div class="row"><span class="k">Parça sıcaklığı</span><span class="v" id="hTemp">—</span></div>
+      <div class="row"><span class="k">Uç aşınması</span><span class="v" id="hWear">—</span></div>
       <div class="row"><span class="k">İlerleme</span><span class="v" id="hFeed">—</span></div>
       <div class="row"><span class="k">Kesme hızı Vc</span><span class="v" id="hVc">—</span></div>
       <div class="row"><span class="k">Kalem hizasında parça</span><span class="v" id="hDia">—</span></div>
@@ -330,7 +334,7 @@ table{color:inherit;font-size:inherit}
   </section>
 
   <aside class="pendant">
-    <div class="brand"><h1>Manuel Torna</h1><span>Al 6061 · Ø50 çubuk</span></div>
+    <div class="brand"><h1>Manuel Torna</h1><span id="brandMat">Al 6061 · Ø50 çubuk</span></div>
 
     <div class="sec">
       <h2><span>İş emirleri</span><span id="starTotal">0 / 15 yıldız</span></h2>
@@ -432,6 +436,7 @@ table{color:inherit;font-size:inherit}
     <div class="sec">
       <h2><span>Kalemler</span><span>taret</span></h2>
       <div class="cur-tool" id="curTool"><span class="tno" id="ctNo">T1</span><span class="tname" id="ctName">—</span><span class="tmeta" id="ctMeta">—</span></div>
+      <div class="stopline" style="grid-template-columns:1fr auto"><span class="dro-note" id="ctWear">VB 0.00 mm</span><button class="btn" id="flipInsert">Ucu çevir</button></div>
       <div class="rack" id="rack"></div>
       <div class="sub">Gelincik</div>
       <div class="rack" id="tailRack"></div>
@@ -448,6 +453,7 @@ table{color:inherit;font-size:inherit}
         <div class="stat"><span>Kaldırılan talaş</span><b id="stVol">0.00 cm³</b></div>
         <div class="stat"><span>Kesme süresi</span><b id="stTime">0:00</b></div>
       </div>
+      <select id="matSel" aria-label="Malzeme"><option value="al">Al 6061 alüminyum</option><option value="c45">C45 ıslah çeliği</option><option value="ss304">304 paslanmaz çelik</option><option value="brass">Pirinç (CuZn39Pb3)</option><option value="gg25">GG25 gri döküm</option><option value="pom">Delrin (POM) plastik</option></select>
       <select id="stockSel" aria-label="Ham parça"><option value="short">Ham çubuk Ø50 × 100 çıkıntı</option><option value="long">Uzun çubuk Ø30 × 180 çıkıntı</option></select>
       <div class="row2">
         <button class="btn" id="clearChips">Talaşları süpür</button>
@@ -503,6 +509,7 @@ table{color:inherit;font-size:inherit}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/environments/RoomEnvironment.js"></script>
 <script>
 (() => {
 'use strict';
@@ -530,6 +537,42 @@ const Gr = new Float32Array(NS * GBMAX).fill(1e9);
 const STOCKS = { short:{ D:50, stick:100, label:'Ø50 × 100' }, long:{ D:30, stick:180, label:'Ø30 × 180 (uzun)' } };
 let stockR = STOCK_R;
 let startIdx = 0, endIdx = idx(100);      // malzemenin ilk ve son istasyonu
+
+/* ---- Malzemeler ---- */
+// kc: özgül kesme kuvveti (N/mm²) · vcf: karbür kesme hızı katsayısı (Al = 1) · ff: önerilen ilerleme katsayısı
+// rho g/cm³ · c J/gK · alpha 1/K · E N/mm² · breakF: talaşın kırılmaya başladığı ilerleme (mm/dev)
+const MATS = {
+  al:    { name:'Al 6061 alüminyum', short:'Al 6061', kc:700, vcf:1.00, ff:1.0, rho:2.70, c:0.90, alpha:23e-6, E:69000, chip:'curl', breakF:0.12, wrapK:1.0, bue:true, wearK:0.6,
+           raw:[0.62,0.64,0.66], cut:[0.90,0.92,0.94], chipCol:[0.85,0.87,0.90] },
+  c45:   { name:'C45 ıslah çeliği', short:'C45 çelik', kc:1900, vcf:0.60, ff:0.8, rho:7.85, c:0.47, alpha:12e-6, E:210000, chip:'curl', breakF:0.15, wrapK:1.2, bue:true, wearK:1.6, tint:true,
+           raw:[0.30,0.31,0.33], cut:[0.80,0.82,0.85], chipCol:[0.55,0.56,0.60] },
+  ss304: { name:'304 paslanmaz çelik', short:'304 paslanmaz', kc:2400, vcf:0.45, ff:0.7, rho:8.0, c:0.50, alpha:17e-6, E:193000, chip:'string', breakF:0.22, wrapK:1.6, bue:true, wearK:2.4, harden:true, tint:true,
+           raw:[0.55,0.56,0.57], cut:[0.84,0.85,0.87], chipCol:[0.76,0.77,0.79] },
+  brass: { name:'CuZn39Pb3 pirinç', short:'Pirinç', kc:780, vcf:0.90, ff:1.1, rho:8.5, c:0.38, alpha:20e-6, E:100000, chip:'flake', breakF:0, wrapK:0, bue:false, wearK:0.5,
+           raw:[0.62,0.48,0.24], cut:[0.95,0.80,0.46], chipCol:[0.92,0.76,0.40] },
+  gg25:  { name:'GG25 gri döküm', short:'GG25 döküm', kc:1100, vcf:0.55, ff:1.0, rho:7.2, c:0.46, alpha:10e-6, E:110000, chip:'dust', breakF:0, wrapK:0, bue:false, wearK:1.4, dry:true,
+           raw:[0.26,0.26,0.27], cut:[0.56,0.57,0.58], chipCol:[0.35,0.35,0.36] },
+  pom:   { name:'Delrin (POM) plastik', short:'Delrin', kc:150, vcf:1.00, ff:1.2, rho:1.41, c:1.47, alpha:110e-6, E:2900, chip:'ribbon', breakF:1, wrapK:1.4, bue:false, wearK:0.2, melt:true, nonMetal:true,
+           raw:[0.90,0.89,0.85], cut:[0.97,0.96,0.93], chipCol:[0.97,0.96,0.93] },
+};
+let mat = MATS.al, matKey = 'al';
+const vcOf = T => T.vc * mat.vcf;
+// İstasyon başına işleme izleri: son kesmenin ilerlemesi (mm/dev), tırlama, ısı rengi, işlem sertleşmesi
+const FRO = new Float32Array(NS), FRI = new Float32Array(NS), CHO = new Float32Array(NS), TINT = new Float32Array(NS), HARD = new Uint8Array(NS);
+const BL = { z:0.05, x:0.025 };       // el çarkı boşluğu (x yarıçapta; çapta 0.05)
+const P_MAX = 4;                       // mil motoru (kW), 500 dev/dk altında sabit tork
+// Yüzey rengi: ham / işlenmiş (Ra'ya göre hafif matlaşır) ve çelikte ısı rengi (saman → mavi)
+function surfColor(Mt, cut, ra, tint, out) {
+  const b = cut ? Mt.cut : Mt.raw, f = cut ? 1 - Math.min(0.22, ra * 0.02) : 1;
+  let r = b[0] * f, g = b[1] * f, bl = b[2] * f;
+  if (tint > 0.02) {
+    const tc = tint < 0.5 ? [0.86, 0.70, 0.38] : [0.30, 0.42, 0.78], k = Math.min(0.65, tint);
+    r += (tc[0] - r) * k; g += (tc[1] - g) * k; bl += (tc[2] - bl) * k;
+  }
+  out[0] = r; out[1] = g; out[2] = bl; return out;
+}
+const _sc = [0, 0, 0];
+
 const hasMat = i => R[i] > Ri[i] + 0.01;
 const TAN59 = Math.tan(59 * Math.PI / 180), TAN30 = Math.tan(Math.PI / 6);
 
@@ -558,7 +601,7 @@ function toolF(T, du) {
       if (du <= T.rn) return T.rn - Math.sqrt(Math.max(0, T.rn * T.rn - (T.rn - du) * (T.rn - du)));
       return (du - T.rn) * 0.0875;
     case 'chamfer': return Math.abs(du) > 6 ? Infinity : Math.abs(du);
-    case 'groove': return du < 0 || du > T.w ? Infinity : 0;
+    case 'groove': return du < -1e-6 || du > T.w + 1e-6 ? Infinity : 0;
     case 'thread': return Math.abs(du) > 3 ? Infinity : Math.max(0, Math.abs(du) - 0.15) * 1.732;
   }
   return Infinity;
@@ -600,7 +643,9 @@ const S = {
   feedC:0, feedT:0, curFeed:0, win:{ vol:0, path:0, rv:0, idle:0 }, winT:{ vol:0, path:0, idle:0 },
   raNow:0, tailBroken:false, lastChip:0, lastStress:0, lastCut:0, lastMove:0, damage:0, lastRa:null, lastVc:0, rubT:0,
   muted:false, job:null, zone:null, cutAcc:0, cutting:0, spinAng:0,
-  stock:'short', u:0, tsAng:0, lastB:0, defl:0, deflNow:0, supported:false, lastPiece:null
+  stock:'short', u:0, tsAng:0, lastB:0, defl:0, deflNow:0, supported:false, lastPiece:null,
+  mat:'al', temp:0, heatCap:500, thermF:1, wear:TOOLS.map(() => 0), wearT:TAILS.map(() => 0), wearOff:0, frNow:0, chatNow:0, tintNow:0, hardNow:false,
+  power:0, rpmEff:800, wrap:0, wrapA:100, cs:{ z:125, x:40 }
 };
 const tool = () => TOOLS[S.tool];
 const tailT = () => TAILS[S.tail];
@@ -689,14 +734,14 @@ const camera = new THREE.PerspectiveCamera(40, 1, 2, 7000);
 const controls = new THREE.OrbitControls(camera, canvas);
 controls.enableDamping = true; controls.dampingFactor = 0.12; controls.maxPolarAngle = Math.PI * 0.95;
 
-scene.add(new THREE.HemisphereLight(0xdfe9ff, 0x2a2622, 0.75));
-const sun = new THREE.DirectionalLight(0xffffff, 0.9);
+scene.add(new THREE.HemisphereLight(0xdfe9ff, 0x2a2622, 0.25));
+const sun = new THREE.DirectionalLight(0xffffff, 0.75);
 sun.position.set(200, 700, 500); sun.castShadow = true;
 sun.shadow.mapSize.set(2048, 2048);
 Object.assign(sun.shadow.camera, { left:-450, right:550, top:400, bottom:-400, near:100, far:1800 });
 sun.shadow.bias = -0.0008;
 scene.add(sun);
-const fill = new THREE.DirectionalLight(0x9fc4ff, 0.35); fill.position.set(-400, 200, -300); scene.add(fill);
+const fill = new THREE.DirectionalLight(0x9fc4ff, 0.18); fill.position.set(-400, 200, -300); scene.add(fill);
 
 const M = {
   paint: new THREE.MeshStandardMaterial({ color:0x56766f, roughness:0.62, metalness:0.15 }),
@@ -724,6 +769,63 @@ function cyl(rt, rb, h, mat, seg = 32) {
 function cylX(r0, r1, x0, x1, mat, parent, seg = 32) {
   const m = cyl(r1, r0, x1 - x0, mat, seg); m.rotation.z = -Math.PI / 2; m.position.x = (x0 + x1) / 2;
   (parent || scene).add(m); return m;
+}
+
+/* ---- Ortam yansıması, ton eşleme ve işleme izleri ---- */
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 0.9;
+if (THREE.RoomEnvironment) {
+  const pm = new THREE.PMREMGenerator(renderer);
+  scene.environment = pm.fromScene(new THREE.RoomEnvironment(), 0.04).texture;
+  pm.dispose();
+  for (const k of ['paint', 'paintDark', 'dark', 'black', 'yellow', 'floor']) M[k].envMapIntensity = 0.35;
+}
+// İşlenmiş yüzeye ilerlemeye göre helis tornalama izleri, tırlamada dalgalanma çizer.
+// mark özniteliği: x = ilerleme (mm/dev), y = Ra (µm), z = tırlama şiddeti
+function addMarks(m) {
+  m.extensions = { derivatives:true };
+  m.onBeforeCompile = sh => {
+    sh.vertexShader = 'attribute vec3 mark;\nvarying vec3 vMark;\nvarying vec3 vLoc;\n' +
+      sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n  vMark = mark; vLoc = position;');
+    sh.fragmentShader = 'varying vec3 vMark;\nvarying vec3 vLoc;\n' + sh.fragmentShader
+      .replace('#include <color_fragment>', `#include <color_fragment>
+        float mkAmp = 0.0, mkG = 0.0, rip = 0.0;
+        float thN = atan(vLoc.z, vLoc.y) / 6.2831853;
+        if (vMark.x > 0.001) {
+          float ph = vLoc.x / vMark.x - thN;
+          float aa = clamp(1.0 - fwidth(ph) * 1.2, 0.0, 1.0);
+          mkG = 0.5 + 0.5 * cos(6.2831853 * ph);
+          mkAmp = clamp(vMark.y / 5.0, 0.06, 0.9) * aa;
+        }
+        if (vMark.z > 0.01) rip = vMark.z * (0.5 + 0.5 * sin(thN * 6.2831853 * 27.0 + vLoc.x * 1.7));
+        diffuseColor.rgb *= 1.0 - 0.14 * mkAmp * mkG - 0.12 * rip;`)
+      .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
+        roughnessFactor = clamp(roughnessFactor + mkAmp * (mkG - 0.35) * 0.5 + rip * 0.35, 0.04, 1.0);`);
+  };
+}
+/* ---- Atölye lambası ve devir tablosu ---- */
+{
+  const lampG = new THREE.Group(); lampG.position.set(-170, 170, -110); scene.add(lampG);
+  const arm1 = cyl(4, 4, 160, M.black, 10); arm1.position.set(0, 80, 0); lampG.add(arm1);
+  const arm2 = cyl(4, 4, 170, M.black, 10); arm2.rotation.z = -1.1; arm2.position.set(75, 190, 30); arm2.rotation.x = 0.35; lampG.add(arm2);
+  const shade = new THREE.Mesh(new THREE.ConeGeometry(28, 40, 24, 1, true), new THREE.MeshStandardMaterial({ color:0x2e5a52, roughness:0.5, metalness:0.3, side:THREE.DoubleSide }));
+  shade.position.set(150, 230, 60); shade.rotation.z = 0.7; shade.rotation.x = -0.4; lampG.add(shade);
+  const bulb = new THREE.Mesh(new THREE.SphereGeometry(9, 12, 8), new THREE.MeshBasicMaterial({ color:0xfff1d0 })); bulb.position.copy(shade.position); lampG.add(bulb);
+  const spot = new THREE.SpotLight(0xffe6c0, 0.9, 1200, 0.5, 0.6, 1.2);
+  spot.position.set(-170 + 150, 170 + 230, -110 + 60); spot.target.position.set(70, 0, 20);
+  scene.add(spot); scene.add(spot.target);
+  // fener mili kutusundaki devir ve ilerleme plakası
+  const cv = document.createElement('canvas'); cv.width = 512; cv.height = 256;
+  const g = cv.getContext('2d');
+  g.fillStyle = '#c9ccc4'; g.fillRect(0, 0, 512, 256);
+  g.strokeStyle = '#2a2f30'; g.lineWidth = 6; g.strokeRect(6, 6, 500, 244);
+  g.fillStyle = '#1c2a2e'; g.font = 'bold 26px sans-serif'; g.fillText('DEVİR  dev/dk', 24, 44);
+  g.font = '22px monospace';
+  [[50, 80, 125, 200, 315], [500, 800, 1250, 2000, 2500]].forEach((row, r) => row.forEach((v, c) => { g.strokeRect(24 + c * 94, 62 + r * 54, 86, 44); g.fillText(String(v), 36 + c * 94, 92 + r * 54); }));
+  g.font = 'bold 20px sans-serif'; g.fillText('İLERLEME mm/dev  0.02 · 0.05 · 0.1 · 0.15 · 0.2 · 0.3', 24, 200);
+  g.font = '16px sans-serif'; g.fillText('DİŞ ADIMI mm  1.0 · 1.5 · 2.0 · 2.5', 24, 232);
+  const tex = new THREE.CanvasTexture(cv); tex.encoding = THREE.sRGBEncoding;
+  const plate = new THREE.Mesh(new THREE.PlaneGeometry(150, 75), new THREE.MeshStandardMaterial({ map:tex, roughness:0.5, metalness:0.3 }));
+  plate.position.set(-210, 15, 170.6); scene.add(plate);
 }
 
 /* ---- Tezgâh ---- */
@@ -767,7 +869,7 @@ buildJaws(STOCK_R);
 const RS = 0.2, RMIN = -2, MR = Math.round((AMAX - RMIN) / RS) + 1, ROWS = MR * 2, SEG = 64;
 const COS = new Float32Array(SEG), SIN = new Float32Array(SEG);
 for (let j = 0; j < SEG; j++) { COS[j] = Math.cos(j / SEG * TAU); SIN[j] = Math.sin(j / SEG * TAU); }
-const pPos = new Float32Array(ROWS * SEG * 3), pNor = new Float32Array(ROWS * SEG * 3), pCol = new Float32Array(ROWS * SEG * 3);
+const pPos = new Float32Array(ROWS * SEG * 3), pNor = new Float32Array(ROWS * SEG * 3), pCol = new Float32Array(ROWS * SEG * 3), pMark = new Float32Array(ROWS * SEG * 3);
 const pIdx = new Uint32Array((ROWS - 1) * SEG * 6);
 { let p = 0;
   for (let s = 0; s < ROWS - 1; s++) for (let j = 0; j < SEG; j++) {
@@ -778,9 +880,12 @@ const partGeo = new THREE.BufferGeometry();
 partGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
 partGeo.setAttribute('normal', new THREE.BufferAttribute(pNor, 3));
 partGeo.setAttribute('color', new THREE.BufferAttribute(pCol, 3));
+partGeo.setAttribute('mark', new THREE.BufferAttribute(pMark, 3));
 partGeo.setIndex(new THREE.BufferAttribute(pIdx, 1));
 partGeo.boundingSphere = new THREE.Sphere(new THREE.Vector3(100, 0, 0), 140);
-const partMesh = new THREE.Mesh(partGeo, new THREE.MeshStandardMaterial({ vertexColors:true, roughness:0.32, metalness:0.62, side:THREE.DoubleSide }));
+const partMat = new THREE.MeshStandardMaterial({ vertexColors:true, roughness:0.24, metalness:0.8, side:THREE.DoubleSide });
+addMarks(partMat);
+const partMesh = new THREE.Mesh(partGeo, partMat);
 partMesh.castShadow = true; partMesh.receiveShadow = true; spinG.add(partMesh);
 
 function threadR(i, a, j) {        // istasyon i, açı indeksi j için diş dibi yarıçapı
@@ -801,14 +906,14 @@ function fillRow(s) {
   else if (i < startIdx) { coll = true; i = startIdx; a = A(i); }
   const base = coll ? Ri[i] : outer ? R[i] : Ri[i];
   // renk
-  let cr, cg, cb;
+  let cr, cg, cb, mk = 0, mr = 0, mc = 0;
   if (!coll && outer && (INSP[i] & 1) || !coll && !outer && (INSP[i] & 2)) { cr = 0.92; cg = 0.2; cb = 0.16; }
-  else if (coll) { const c = CUTO[i] ? 0.8 : 0.6; cr = c; cg = c + 0.015; cb = c + 0.03; }
+  else if (coll) { surfColor(mat, CUTO[i], 0.8, 0, _sc); cr = _sc[0] * 0.92; cg = _sc[1] * 0.92; cb = _sc[2] * 0.92; }
   else if (outer ? CUTO[i] : CUTI[i]) {
     const ra = outer ? RA[i] : RAI[i];
-    const c = 0.9 - Math.min(0.24, ra * 0.022);
-    cr = c; cg = c + 0.015; cb = c + 0.035;
-  } else { cr = 0.58; cg = 0.6; cb = 0.62; }
+    surfColor(mat, true, ra, outer ? TINT[i] : 0, _sc); cr = _sc[0]; cg = _sc[1]; cb = _sc[2];
+    mk = outer ? FRO[i] : FRI[i]; mr = ra; mc = outer ? CHO[i] : 0;
+  } else { surfColor(mat, false, 0, 0, _sc); cr = _sc[0]; cg = _sc[1]; cb = _sc[2]; }
   const thr = outer && !coll && S.zone && i >= S.zone.i0 && i <= S.zone.i1;
   for (let j = 0; j < SEG; j++) {
     let r = base;
@@ -816,6 +921,7 @@ function fillRow(s) {
     const v = (s * SEG + j) * 3;
     pPos[v] = a; pPos[v + 1] = r * COS[j]; pPos[v + 2] = r * SIN[j];
     pCol[v] = cr; pCol[v + 1] = cg; pCol[v + 2] = cb;
+    pMark[v] = mk; pMark[v + 1] = mr; pMark[v + 2] = mc;
   }
 }
 function normRow(s) {
@@ -843,6 +949,7 @@ function flushPart() {
   partGeo.attributes.position.needsUpdate = true;
   partGeo.attributes.normal.needsUpdate = true;
   partGeo.attributes.color.needsUpdate = true;
+  partGeo.attributes.mark.needsUpdate = true;
   dirty = null;
 }
 markDirty(0, NS - 1);
@@ -882,8 +989,8 @@ function groundAtW(x, z) {
   if (x >= -420 && x <= 760 && z >= -170 && z <= 170) return -150;
   return -760;
 }
-const MAXCHIP = 900;
-const chipMat = new THREE.MeshStandardMaterial({ color:0xd5dbe0, roughness:0.25, metalness:0.85, side:THREE.DoubleSide });
+const MAXCHIP = 2400;            // talaşlar kızakta birikir; süpürülene kadar kalır
+const chipMat = new THREE.MeshStandardMaterial({ color:0xffffff, roughness:0.28, metalness:0.8, side:THREE.DoubleSide });
 const chipMeshes = [
   new THREE.InstancedMesh(new THREE.TorusGeometry(1.4, 0.22, 4, 10, Math.PI * 1.5), chipMat, MAXCHIP),
   new THREE.InstancedMesh(new THREE.TorusGeometry(2.2, 0.28, 4, 22, Math.PI * 3.6), chipMat, MAXCHIP),
@@ -894,10 +1001,12 @@ const chips = []; let chipHead = 0;
 const dummy = new THREE.Object3D();
 for (let i = 0; i < MAXCHIP; i++) {
   chips.push({ p:new THREE.Vector3(), v:new THREE.Vector3(), r:new THREE.Euler(), rv:new THREE.Vector3(), alive:false, rest:false, kind:0, s:1 });
-  dummy.scale.set(0, 0, 0); dummy.updateMatrix(); chipMeshes.forEach(m => m.setMatrixAt(i, dummy.matrix));
+  dummy.scale.set(0, 0, 0); dummy.updateMatrix(); chipMeshes.forEach(m => { m.setMatrixAt(i, dummy.matrix); m.setColorAt(i, new THREE.Color(0xd5dbe0)); });
 }
-function spawnChip(x, y, z, kind, s) {
+const _cc = new THREE.Color();
+function spawnChip(x, y, z, kind, s, col) {
   const c = chips[chipHead];
+  if (col) { _cc.setRGB(col[0], col[1], col[2]); chipMeshes[kind].setColorAt(chipHead, _cc); chipMeshes[kind].instanceColor.needsUpdate = true; }
   if (c.alive) { dummy.scale.set(0, 0, 0); dummy.updateMatrix(); chipMeshes[c.kind].setMatrixAt(chipHead, dummy.matrix); }
   chipHead = (chipHead + 1) % MAXCHIP;
   c.kind = kind; c.s = s; c.p.set(x, y, z);
@@ -955,6 +1064,7 @@ const PK = {
   smoke:  { c0:[0.5, 0.5, 0.5, 0.32], c1:[0.72, 0.72, 0.74, 0], s0:4,   s1:26,  g:-70,  drag:1.6, bounce:0 },
   mist:   { c0:[0.86, 0.94, 1, 0.26], c1:[0.92, 0.96, 1, 0],    s0:3,   s1:15,  g:-25,  drag:2.6, bounce:0 },
   debris: { c0:[0.3, 0.32, 0.35, 1],  c1:[0.3, 0.32, 0.35, 0],  s0:2.4, s1:2.0, g:2600, drag:0.3, bounce:0.3 },
+  dust:   { c0:[0.22, 0.22, 0.23, 0.95], c1:[0.3, 0.3, 0.3, 0.4], s0:1.3, s1:1.1, g:2200, drag:1.0, bounce:0.05 },
 };
 const psAdd = makePS(1500, true, false), psAlpha = makePS(1200, false, true);
 function emit(kind, x, y, z, vx, vy, vz, life) {
@@ -1186,7 +1296,7 @@ function curDiaAt(a) {
   const i = clamp(idx(a), I0, NS - 1);
   return i <= endIdx && hasMat(i) ? 2 * R[i] : 0;
 }
-function recRpm(T, dia) { return clamp(Math.round(T.vc * 1000 / (Math.PI * Math.max(dia, 4)) / 10) * 10, 50, 2500); }
+function recRpm(T, dia) { return clamp(Math.round(vcOf(T) * 1000 / (Math.PI * Math.max(dia, 4)) / 10) * 10, 50, 2500); }
 
 // Dış takımlar
 function outerScan(at, rt, T, apply) {
@@ -1197,14 +1307,15 @@ function outerScan(at, rt, T, apply) {
     if (!hasMat(i)) continue;
     const f = toolF(T, A(i) - at);
     if (f === Infinity) continue;
-    const prof = Math.max(0, rt + f + (apply ? S.deflNow : 0));
+    // sıcak parça büyük: soğuk geometride kalem konumu thermF'e bölünür; körelmiş uç ve esneme daha az keser
+    const prof = Math.max(0, (rt + f + (apply ? S.deflNow + S.wearOff : 0)) / S.thermF);
     if (R[i] > prof + 0.002) {
       res.any = true; res.over = Math.max(res.over, R[i] - prof);
       if (apply) {
         const nr = Math.max(prof, Ri[i]);
         const v = Math.PI * (R[i] * R[i] - nr * nr) * DZ;
         res.vol += v; res.rv += v * (R[i] + nr) / 2;
-        R[i] = prof; CUTO[i] = S.tool + 1; RA[i] = S.raNow;
+        R[i] = prof; CUTO[i] = S.tool + 1; RA[i] = S.raNow; FRO[i] = S.frNow; CHO[i] = S.chatNow; TINT[i] = S.tintNow;
         res.i0 = Math.min(res.i0, i); res.i1 = Math.max(res.i1, i);
       }
     }
@@ -1223,7 +1334,7 @@ function boreScan(at, rt, T, apply) {
     if (!hasMat(i)) continue;
     const f = toolF(T, A(i) - at);
     if (f === Infinity) continue;
-    const prof = rt - f;
+    const prof = (rt - f - (apply ? S.wearOff : 0)) / S.thermF;
     if (prof > Ri[i] + 0.002) {
       res.any = true; res.over = Math.max(res.over, prof - Ri[i]);
       if (Ri[i] < T.rb && prof > Ri[i] + 0.5) res.solid = true;
@@ -1231,7 +1342,7 @@ function boreScan(at, rt, T, apply) {
         const nr = Math.min(prof, R[i]);
         const v = Math.PI * (nr * nr - Ri[i] * Ri[i]) * DZ;
         res.vol += v; res.rv += v * (Ri[i] + nr) / 2;
-        Ri[i] = prof; CUTI[i] = S.tool + 1; RAI[i] = S.raNow;
+        Ri[i] = prof; CUTI[i] = S.tool + 1; RAI[i] = S.raNow; FRI[i] = S.frNow;
         res.i0 = Math.min(res.i0, i); res.i1 = Math.max(res.i1, i);
       }
     }
@@ -1351,12 +1462,74 @@ function stopMotion() {
 function disengageAll() { S.autoZ = S.autoX = S.halfNut = false; }
 
 /* ---- Kalem adımı ---- */
+// Tırlama kararlılık sınırı (mm): çıkıntı/çap oranı büyüdükçe düşer, devirle loblar halinde inip çıkar
+function chatterLimit(na) {
+  const over = Math.max(1, (na - JAW_A) / Math.max(5, stockR * 2));
+  const base = 5.5 / over * Math.pow(700 / mat.kc, 0.35);
+  const ph = (Math.max(1, S.rpmEff || S.rpm) / 410) % 1;
+  const lobe = 0.45 + 0.55 * Math.pow(Math.abs(Math.sin(Math.PI * ph)), 0.6);
+  return base * lobe * (S.supported ? 2.2 : 1);
+}
+const chipCol = new THREE.Color();
+function chipsFor(vol, na, nr, vr, T, fRev) {
+  if (mat.chip === 'dust') {      // dökümde talaş toz ve kırıntı halinde
+    const n = Math.min(6, vol / 1.5);
+    for (let k = 0; k < n; k++) emit('dust', na + (Math.random() - .5) * 3, 2, Math.max(nr, 0) + 1, (Math.random() - .5) * 120, 40 + Math.random() * 120, 60 + Math.random() * 160, 1.6);
+    return;
+  }
+  const n = Math.min(3, Math.floor(vol / 2.5 + Math.random()));
+  const hot = mat.tint && !S.coolant && vr > 0.8;
+  for (let k = 0; k < n; k++) {
+    let kind, s;
+    if (T.type === 'groove') { kind = 2; s = 0.6; }
+    else if (mat.chip === 'flake') { kind = Math.random() < 0.5 ? 2 : 0; s = 0.4 + Math.random() * 0.3; }
+    else if (mat.chip === 'string' || mat.chip === 'ribbon' || fRev < mat.breakF) { kind = 1; s = 0.7 + Math.random() * 0.5; }
+    else { kind = Math.random() < 0.65 ? 0 : 1; s = 0.5 + Math.random() * 0.45; }
+    const c = hot ? (Math.random() < 0.5 ? [0.30, 0.40, 0.80] : [0.80, 0.60, 0.30]) : mat.chipCol;   // çelikte sıcak talaş mavi-saman
+    spawnChip(na + (Math.random() - .5) * 2, 3, Math.max(nr, 0) + 2, kind, s, c);
+  }
+}
+// Parçanın ısı kapasitesi (J/K): kalan hacim · yoğunluk · özgül ısı
+function computeHeatCap() {
+  let v = 0;
+  for (let i = startIdx; i <= endIdx; i++) if (hasMat(i)) v += Math.PI * (R[i] * R[i] - Ri[i] * Ri[i]) * DZ;
+  S.heatCap = v * mat.rho * 1e-3 * mat.c;
+}
+/* -- Parçaya sarılan talaş ("kuş yuvası") -- */
+const wrapG = new THREE.Group(); spinG.add(wrapG);
+const wrapMat = new THREE.MeshStandardMaterial({ color:0xd5dbe0, roughness:0.3, metalness:0.85 });
+let wrapLvl = -1;
+function buildWrap() {
+  const lvl = Math.min(10, Math.floor(S.wrap / 0.15));
+  if (lvl === wrapLvl) return;
+  wrapLvl = lvl;
+  while (wrapG.children.length) { const c = wrapG.children.pop(); c.geometry.dispose(); }
+  if (lvl <= 0 || endIdx < startIdx) return;
+  const i = clamp(idx(S.wrapA), Math.max(I0, startIdx), endIdx), r0 = hasMat(i) ? R[i] : stockR;
+  let seed = 7 + Math.round(S.wrapA);
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let k = 0; k < lvl * 2; k++) {
+    const pts = [], ax = S.wrapA + (rnd() - 0.5) * 14, turns = 1 + rnd() * 1.5, rr = r0 + 2 + rnd() * 6 + lvl * 0.8;
+    for (let q = 0; q <= 24; q++) {
+      const th = q / 24 * TAU * turns + rnd() * 0.3, r = rr + Math.sin(q * 1.7 + k) * 2.2;
+      pts.push(new THREE.Vector3(ax + Math.sin(q * 0.9 + k) * 4, Math.cos(th) * r, Math.sin(th) * r));
+    }
+    wrapG.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 60, 0.35, 5, false), wrapMat));
+  }
+}
+function setMaterial(k) {
+  matKey = MATS[k] ? k : 'al'; mat = MATS[matKey]; S.mat = matKey;
+  wrapMat.color.setRGB(...mat.chipCol); wrapMat.metalness = mat.nonMetal ? 0 : 0.85;
+  partMat.metalness = mat.nonMetal ? 0.0 : 0.8; partMat.roughness = mat.nonMetal ? 0.45 : 0.24;
+  markDirty(0, NS - 1);
+}
 function computeRa(T, fRev, vr) {
   let ra;
   if (T.type === 'turn' || T.type === 'bore') ra = fRev * fRev / (8 * T.rn) * 1000;
   else if (T.type === 'groove') ra = 1.2 + fRev * 20;
   else ra = 2.5;
-  if (vr < 0.35) ra *= 2.5;
+  if (vr < 0.35 && mat.bue) ra *= 2.5;
+  if (matKey === 'brass') ra *= 0.8;
   if (S.lastStress > 1.3) ra *= 1.5;
   return Math.max(0.3, ra);
 }
@@ -1374,8 +1547,8 @@ function deflection(na) {
   for (let i = Math.max(idx(JAW_A), startIdx); i <= Math.min(endIdx, idx(na - 1.5)); i += 5) if (hasMat(i)) dmin = Math.min(dmin, 2 * R[i]);
   if (dmin > 1e8) return 0;
   const I = Math.PI * Math.pow(dmin, 4) / 64;
-  const F = 700 * S.lastB * Math.max(0.01, S.feedC / Math.max(1, S.rpm));
-  let d = F * x * x * x / (3 * 69000 * I);
+  const F = mat.kc * S.lastB * Math.max(0.01, S.feedC / Math.max(1, S.rpm));
+  let d = F * x * x * x / (3 * mat.E * I);
   if (!S.supported) d += Math.max(0, x / dmin - 4.5) * 0.02;     // narin parça: hafif pasoda bile tırlama
   if (S.supported) { const L = Math.max(x, A(endIdx) - JAW_A); d *= Math.pow(Math.max(0, 1 - x / L), 2) * 0.25 + 0.002; }
   return d;
@@ -1403,11 +1576,29 @@ function tryCarriage(na, nr) {
     return false;
   }
   if (T.type === 'bore' && it.solid) { crash('Delik kalemi dolu malzemeye girdi! Önce gelincikten matkapla delik açın.'); return false; }
-  const fRev = S.feedC / Math.max(1, S.rpm);
+  const W0 = S.wear[S.tool];
+  if (S.power <= 1 || performance.now() - S.lastCut > 400) S.rpmEff = S.rpm;   // motor zorlanmıyorsa tam devir
+  const rpmE = Math.max(1, Math.min(S.rpm, S.rpmEff || S.rpm));
+  const fRev = S.feedC / rpmE;
   const dNow = 2 * Math.max(Math.abs(nr), 0.5);      // kesme hızı kalem ucunun bulunduğu çapta
-  const vc = Math.PI * Math.max(dNow, 1) * S.rpm / 1000;
-  const vr = vc / T.vc;
-  S.raNow = computeRa(T, fRev, vr);
+  const vc = Math.PI * Math.max(dNow, 1) * rpmE / 1000;
+  const vr = vc / vcOf(T);
+  // işlem sertleşmesi: kalemin önündeki yüzey daha önce sürtülerek sertleşmiş mi
+  let hardHit = false;
+  if (mat.harden && !thread) for (let i = Math.max(I0, idx(na)); i <= Math.min(endIdx, idx(na + 2)); i++) if (HARD[i]) { hardHit = true; break; }
+  S.raNow = computeRa(T, fRev, vr) * (1 + W0 * 5) * (hardHit ? 1.3 : 1) * (S.wrap > 0.6 ? 2 : 1);
+  S.frNow = T.type === 'turn' || T.type === 'bore' ? fRev : 0;
+  S.wearOff = W0 * 0.25;
+  // tırlama: devire bağlı kararlılık lobları; sınırın üstündeki kavrama genişliği tırlatır
+  const blim = chatterLimit(na);
+  S.chatNow = !thread && S.lastB > blim ? Math.min(1, S.lastB / blim - 1) : 0;
+  if (S.chatNow > 0.05) {
+    S.raNow *= 1 + 3 * S.chatNow;
+    warnOnce('chat', `Tırlama: ${rpmE.toFixed(0)} dev/dk'da ${S.lastB.toFixed(1)} mm paso kararsız (sınır ${blim.toFixed(1)} mm). Devri biraz değiştirin ya da pasoyu azaltın.`);
+  }
+  if (mat.melt && !S.coolant && vr > 1.2) { S.raNow *= 3; S.rubT = performance.now(); warnOnce('melt', 'Delrin eriyor: kesme hızı bu plastik için fazla. Devri düşürün ya da soğutma sıvısı açın.'); }
+  S.tintNow = mat.tint && !S.coolant && vr > 0.9 ? clamp((vr - 0.9) * 0.9 + S.temp / 150, 0, 1) : 0;
+  S.hardNow = !!mat.harden && !thread && fRev / (T.frec || 0.1) < 0.3;
   S.deflNow = T.type === 'bore' || thread ? 0 : deflection(na);
   S.defl = S.deflNow;
   if (S.deflNow > 0.35) { crash('Uzun parça kesme kuvvetiyle esnedi ve kalemin altına girdi. Gelincikten döner puntayla destekleyin ya da pasoyu küçültün.'); return false; }
@@ -1415,6 +1606,7 @@ function tryCarriage(na, nr) {
     S.raNow *= 1 + S.deflNow * 25;
     warnOnce('chat', `Titreşim (tırlama): parça ${S.deflNow.toFixed(2)} mm esniyor. Çap konik çıkar, yüzey bozulur; G4 döner puntayla destekleyin.`);
   }
+  if (hardHit) warnOnce('harden', 'İşlem sertleşmiş yüzey: paslanmaz sürtülünce sertleşir. Pasoyu sertleşmiş katmanın altına indirin, ilerlemeyi çok düşürmeyin.', 'warn', 6000);
   const res = scan(na, nr, T, true);
   if (res.i1 >= 0) markDirty(res.i0, res.i1);
   const step = Math.hypot(na - S.at, nr - S.rt);
@@ -1422,22 +1614,45 @@ function tryCarriage(na, nr) {
   if (res.vol > 0) {
     S.removed += res.vol; S.cutTime += tCut; S.cutAcc += res.vol; S.lastCut = performance.now();
     S.lastVc = vc; S.lastRa = S.raNow;
-    const n = Math.min(3, Math.floor(res.vol / 2.5 + Math.random()));
-    for (let k = 0; k < n; k++) spawnChip(na + (Math.random() - .5) * 2, 3, Math.max(nr, 0) + 2, T.type === 'groove' ? 2 : Math.random() < 0.6 ? 1 : 0, 0.7 + Math.random() * 0.6);
+    // ısı: kesme enerjisinin bir kısmı parçaya geçer (kc · hacim = mJ)
+    S.temp += res.vol * mat.kc * 1e-3 * 0.45 / Math.max(50, S.heatCap);
+    // takım aşınması (Taylor): kesme hızının ~2.5. kuvvetiyle hızlanır
+    S.wear[S.tool] += 0.3 / 900 * mat.wearK * Math.pow(Math.max(vr, 0.2), 2.5) * tCut * (hardHit ? 2 : 1) * (S.coolant && !mat.dry ? 0.8 : 1);
+    if (S.wear[S.tool] > 0.3) warnOnce('wear', `Uç köreldi (VB ${S.wear[S.tool].toFixed(2)} mm): yüzey bozuluyor, çap büyük çıkıyor. Kalem kartından ucu çevirin.`, 'warn', 8000);
+    if (mat.harden && res.i1 >= 0) for (let i = res.i0; i <= res.i1; i++) { if (S.hardNow) HARD[i] = 1; else if (res.over > 0.25) HARD[i] = 0; }
+    // talaş sarılması: kırılmayan sürekli talaş parçaya dolanır
+    if (mat.wrapK > 0 && fRev < mat.breakF && !thread && T.type !== 'groove') {
+      S.wrap += res.vol * 5e-5 * mat.wrapK; S.wrapA = na;
+      if (S.wrap > 0.6) warnOnce('wrap', 'Talaş kırılmıyor ve parçaya sarılıyor; yüzeyi çiziyor. Mili durdurup talaşları süpürün, ilerlemeyi artırarak talaşı kırın.', 'warn', 6000);
+      if (S.wrap > 1.5) S.damage += 0.01;
+    }
+    chipsFor(res.vol, na, nr, vr, T, fRev);
   }
   // Yük
+  // önerilen ilerleme (ff) zaten malzemeye göre ayarlı; kc burada yalnızca hafif bir ek yük olarak girer
+  const kcR = Math.pow(mat.kc / 700, 0.25) * (1 + W0 * 1.2) * (hardHit ? 1.6 : 1);
   let L = null;
   if (thread) {
-    if (res.area > 0) { const c = res.area / T.ap; L = { chip:c, stress:c, t:tCut * 1.6 }; }
+    if (res.area > 0) { const c = res.area / T.ap * kcR; L = { chip:c, stress:c, t:tCut * 1.6 }; }
   } else if (res.vol > 0) {
     const W = S.win;
     W.vol += res.vol; W.path += step; W.rv += res.rv; W.idle = 0;
     if (W.path >= 1) {
       const rc = W.rv / W.vol, b = W.vol / (TAU * Math.max(rc, 0.5) * W.path);
-      const chip = fRev / T.frec;
+      const chip = fRev / (T.frec * mat.ff);
       S.lastB = b;
-      L = { chip, stress:chip * b / T.ap, t:W.path / Math.max(1, S.feedC / 60) };
+      L = { chip, stress:chip * b / T.ap * kcR, t:W.path / Math.max(1, S.feedC / 60) };
       S.win = { vol:0, path:0, rv:0, idle:0 };
+      // mil gücü: Pc = kc · b · f · Vc / 60000 (kW); 500 dev/dk altında motor sabit torkla sınırlı
+      const Pc = mat.kc * b * fRev * vc / 60000 * (1 + W0), Pav = P_MAX * Math.min(1, S.rpm / 500);
+      S.power = Pc / Pav;
+      if (S.power > 1.5) {
+        S.spindle = false; disengageAll(); stopMotion(); updateSpindleUI(); updateAutoUI();
+        if (S.job && !S.job.done) S.job.stats.stall++;
+        log(`Mil boğuldu: kesme ${Pc.toFixed(1)} kW istiyor, motor bu devirde ${Pav.toFixed(1)} kW veriyor. Pasoyu ya da ilerlemeyi azaltın; düşük devirde ağır paso vermeyin.`, 'bad');
+        crashSound(); return false;
+      }
+      if (S.power > 1) { S.rpmEff = S.rpm * clamp(1.4 - 0.4 * S.power, 0.5, 1); warnOnce('power', `Motor zorlanıyor (%${Math.round(S.power * 100)}): devir ${Math.round(S.rpmEff)} dev/dk'ya düştü.`); }
     }
   }
   if (L) {
@@ -1446,10 +1661,11 @@ function tryCarriage(na, nr) {
     if (L.stress > 1.5) S.damage += (L.stress - 1.5) * 0.35 * L.t;
     if (L.chip > 2.5) S.damage += (L.chip - 2.5) * 0.12 * L.t;
     if (vr > 1.8) { S.damage += (vr - 1.8) * 0.5 * L.t; warnOnce('vc', `Kesme hızı çok yüksek (${Math.round(vc)} m/dk): kalem ısınıyor. Devri düşürün.`); }
-    if (S.damage >= 1) { crash('Kalem uzun süre aşırı yük ve ısı altında kaldı ve kırıldı.'); return false; }
+    if (S.wear[S.tool] > 0.6) S.damage += (S.wear[S.tool] - 0.6) * 3 * L.t;
+    if (S.damage >= 1) { crash(S.wear[S.tool] > 0.6 ? 'Körelmiş uç aşırı yük altında kırıldı. Uçları zamanında çevirin.' : 'Kalem uzun süre aşırı yük ve ısı altında kaldı ve kırıldı.'); return false; }
     if (L.stress > 1.2 || L.chip > 2) warnOnce('load', thread ? `Diş pasosu çok derin (yük ${L.stress.toFixed(1)}×). Pasoyu bölün: her geçişte X'i daha az ilerletin.` : `Kalem zorlanıyor: yük ${L.stress.toFixed(1)}×, talaş ${L.chip.toFixed(1)}×. İlerlemeyi ya da paso derinliğini azaltın.`);
   }
-  if (!thread && vr < 0.35 && dNow > 12) { S.rubT = performance.now(); warnOnce('rub', `Kesme hızı düşük (${Math.round(vc)} m/dk): talaş kaleme yığılıyor, yüzey kötüleşir. Devri artırın.`); }
+  if (!thread && mat.bue && vr < 0.35 && dNow > 12) { S.rubT = performance.now(); warnOnce('rub', `Kesme hızı düşük (${Math.round(vc)} m/dk): talaş kaleme yığılıyor, yüzey kötüleşir. Devri artırın.`); }
   checkDetach();
   return true;
 }
@@ -1480,7 +1696,7 @@ function tryTail(nq) {
     return false;
   }
   if (nq < S.q) {
-    const vr = (Math.PI * Tt.d * S.rpm / 1000) / Tt.vc;
+    const vr = (Math.PI * Tt.d * S.rpm / 1000) / vcOf(Tt);
     if (vr > (S.coolant ? 2.2 : 1.6) && it.over > 0.3) { crash(`Devir çok yüksek: HSS matkabın ucu yandı. Önerilen ${recRpm(Tt, Tt.d)} dev/dk.`, true); return false; }
     if (!S.peck.active) {
       S.peck.active = true; S.peck.top = nq;
@@ -1503,8 +1719,10 @@ function tryTail(nq) {
     W.vol += res.vol; W.path += step; W.idle = 0;
     if (W.path >= 1) {
       const eng = clamp(W.vol / W.path / (Math.PI * Tt.d * Tt.d / 4), 0, 1);
-      const chip = (S.feedT / Math.max(1, S.rpm)) / Tt.fr, stress = chip * (0.25 + 0.75 * eng);
+      const chip = (S.feedT / Math.max(1, S.rpm)) / (Tt.fr * mat.ff), stress = chip * (0.25 + 0.75 * eng) * Math.pow(mat.kc / 700, 0.25) * (1 + S.wearT[S.tail] * 1.2);
       const t = W.path / Math.max(1, S.feedT / 60);
+      S.wearT[S.tail] += 0.3 / 900 * mat.wearK * Math.pow(Math.max((Math.PI * Tt.d * S.rpm / 1000) / vcOf(Tt), 0.2), 2.5) * t;
+      S.temp += W.vol * mat.kc * 1e-3 * 0.3 / Math.max(50, S.heatCap);
       S.winT = { vol:0, path:0, idle:0 };
       S.lastChip = chip; S.lastStress = stress;
       if (chip > 8 || stress > 6) { crash(`Ani aşırı yük: matkap ilerlemesi ${chip.toFixed(1)}× fazla. Matkap kırıldı.`, true); return false; }
@@ -1539,7 +1757,8 @@ function extractPiece(i0, i1) {
   while (i1 > i0 && !hasMat(i1)) i1--;
   const n = i1 - i0 + 1;
   const d = { id:++pieceSeq, n, a0:A(i0), R:R.slice(i0, i1 + 1), Ri:Ri.slice(i0, i1 + 1), CUTO:CUTO.slice(i0, i1 + 1), CUTI:CUTI.slice(i0, i1 + 1),
-    RA:RA.slice(i0, i1 + 1), RAI:RAI.slice(i0, i1 + 1), gr:null, zone:null };
+    RA:RA.slice(i0, i1 + 1), RAI:RAI.slice(i0, i1 + 1), gr:null, zone:null, mat:matKey,
+    FRO:FRO.slice(i0, i1 + 1), FRI:FRI.slice(i0, i1 + 1), CHO:CHO.slice(i0, i1 + 1), TINT:TINT.slice(i0, i1 + 1), HARD:HARD.slice(i0, i1 + 1) };
   const z = S.zone;
   if (z && z.i1 >= i0 && z.i0 <= i1) {
     d.gr = Gr.slice(i0 * GBMAX, (i1 + 1) * GBMAX);
@@ -1564,18 +1783,20 @@ function pieceGeometry(d, seg = 72) {
   if (has(d.n - 1) && rows[rows.length - 1].k !== d.n - 1) rows.push({ k:d.n - 1, x:(d.n - 1) * DZ - half, outer:true });
   const nOut = rows.length;
   for (let q = nOut - 1; q >= 0; q--) rows.push({ k:rows[q].k, x:rows[q].x, outer:false });
-  const nr = rows.length, pos = new Float32Array(nr * seg * 3), col = new Float32Array(nr * seg * 3);
+  const nr = rows.length, pos = new Float32Array(nr * seg * 3), col = new Float32Array(nr * seg * 3), mk = new Float32Array(nr * seg * 3);
+  const Mt = MATS[d.mat] || MATS.al, sc = [0, 0, 0];
   rows.forEach((rw, q) => {
     const k = rw.k;
-    let c;
-    if (rw.outer) c = d.CUTO[k] ? 0.9 - Math.min(0.24, d.RA[k] * 0.022) : 0.6;
-    else c = d.CUTI[k] ? 0.84 - Math.min(0.2, d.RAI[k] * 0.02) : 0.6;
+    const cut = rw.outer ? d.CUTO[k] : d.CUTI[k], ra = rw.outer ? d.RA[k] : d.RAI[k];
+    surfColor(Mt, !!cut, ra, rw.outer && d.TINT ? d.TINT[k] : 0, sc);
+    const m0 = cut && d.FRO ? (rw.outer ? d.FRO[k] : d.FRI[k]) : 0, m2 = rw.outer && d.CHO ? d.CHO[k] : 0;
     for (let j = 0; j < seg; j++) {
       let r = rw.outer ? d.R[k] : d.Ri[k];
       if (rw.outer) r = Math.min(r, pieceThreadR(d, k, j, seg));
       const th = j / seg * TAU, v = (q * seg + j) * 3;
       pos[v] = rw.x; pos[v + 1] = r * Math.cos(th); pos[v + 2] = r * Math.sin(th);
-      col[v] = c; col[v + 1] = c + 0.015; col[v + 2] = c + 0.035;
+      col[v] = sc[0]; col[v + 1] = sc[1]; col[v + 2] = sc[2];
+      mk[v] = m0; mk[v + 1] = cut ? ra : 0; mk[v + 2] = m2;
     }
   });
   const ix = [];
@@ -1589,10 +1810,12 @@ function pieceGeometry(d, seg = 72) {
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
   g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  g.setAttribute('mark', new THREE.BufferAttribute(mk, 3));
   g.setIndex(ix); g.computeVertexNormals();
   return g;
 }
-const pieceMat = new THREE.MeshStandardMaterial({ vertexColors:true, roughness:0.32, metalness:0.62, side:THREE.DoubleSide });
+const pieceMat = new THREE.MeshStandardMaterial({ vertexColors:true, roughness:0.26, metalness:0.75, side:THREE.DoubleSide });
+addMarks(pieceMat);
 function addPieceToScene(d, x, y, z, falling) {
   const m = new THREE.Mesh(pieceGeometry(d, 56), pieceMat); m.castShadow = true;
   const holder = new THREE.Group(); holder.add(m); holder.position.set(x, y, z); scene.add(holder);
@@ -1621,6 +1844,7 @@ function unclampPart() {
 }
 function clearChuck() {
   R.fill(0); Ri.fill(0); CUTO.fill(0); CUTI.fill(0); RA.fill(0); RAI.fill(0); INSP.fill(0); Gr.fill(1e9);
+  FRO.fill(0); FRI.fill(0); CHO.fill(0); TINT.fill(0); HARD.fill(0); S.wrap = 0;
   S.zone = null; startIdx = 1; endIdx = 0; markDirty(0, NS - 1);
 }
 // Parçayı aynaya bağlar; flip = ters çevir; stick = aynadan çıkıntı (mm)
@@ -1633,10 +1857,12 @@ function mountPiece(d, flip, stick) {
   const grip = Math.min(stick, JAW_A) - Math.max(a0, 0);
   if (grip < 8) return `Çeneler parçayı yalnızca ${Math.max(0, grip).toFixed(1)} mm tutuyor; en az 8 mm gerekli.`;
   if (endIdx >= startIdx) unclampPart();
+  setMaterial(d.mat || 'al'); S.temp = 0;
   const b = idx(a0);
   for (let k = 0; k < n; k++) {
     const i = b + k, q = src(k);
     R[i] = d.R[q]; Ri[i] = d.Ri[q]; CUTO[i] = d.CUTO[q]; CUTI[i] = d.CUTI[q]; RA[i] = d.RA[q]; RAI[i] = d.RAI[q];
+    if (d.FRO) { FRO[i] = d.FRO[q]; FRI[i] = d.FRI[q]; CHO[i] = d.CHO[q]; TINT[i] = d.TINT[q]; HARD[i] = d.HARD[q]; }
   }
   if (d.zone) {
     const z = d.zone, sign = flip ? -1 : 1;
@@ -1652,6 +1878,7 @@ function mountPiece(d, flip, stick) {
       i0:b + (flip ? n - 1 - z.i1 : z.i0), i1:b + (flip ? n - 1 - z.i0 : z.i1) };
   }
   startIdx = b; endIdx = b + n - 1;
+  computeHeatCap();
   let gr = 0;
   for (let i = Math.max(startIdx, I0); i <= Math.min(endIdx, idx(JAW_A)); i++) gr = Math.max(gr, R[i]);
   buildJaws(gr);
@@ -1726,10 +1953,18 @@ function motion(dt) {
   // Üst kızak: U ekseni kalemi açılı yönde götürür (konik tornalama)
   const tsa = S.tsAng * Math.PI / 180, um = jm.u + wm.u;
   let mz = jm.z + wm.z + az + um * Math.cos(tsa), mx = jm.x + wm.x + ax2 - um * Math.sin(tsa);
+  // El çarkı boşluğu: vida komut kadar döner, kızak ancak boşluk kapandıktan sonra takip eder.
+  // Yön değiştirince ilk 0.05 mm boşa gider; DRO kızağın gerçek konumunu gösterir.
+  const bz = BL.z / 2, bx = BL.x / 2, commanded = !!(mz || mx);
+  S.cs.z = clamp(S.cs.z, S.at - bz, S.at + bz) + mz;
+  S.cs.x = clamp(S.cs.x, S.rt - bx, S.rt + bx) + mx;
+  mz = (S.cs.z > S.at + bz ? S.cs.z - bz : S.cs.z < S.at - bz ? S.cs.z + bz : S.at) - S.at;
+  mx = (S.cs.x > S.rt + bx ? S.cs.x - bx : S.cs.x < S.rt - bx ? S.cs.x + bx : S.rt) - S.rt;
+  let blocked = false;
   if (mz || mx) {
     const step = S.halfNut ? 0.05 : 0.1;
     const n = Math.max(1, Math.ceil(Math.max(Math.abs(mz), Math.abs(mx)) / step));
-    let done = 0, blocked = false, stopped = false;
+    let done = 0, stopped = false;
     for (let k = 0; k < n; k++) {
       let na = S.at + mz / n, nr = S.rt + mx / n;
       if (S.zStop !== null && (S.autoZ || S.halfNut) && mz < 0 && na <= S.zStop) { na = Math.max(S.zStop, Math.min(S.at, na)); stopped = true; }
@@ -1739,13 +1974,18 @@ function motion(dt) {
       if (ca === S.at && cr === S.rt) break;
       if (!tryCarriage(ca, cr)) { blocked = true; break; }
       S.at = ca; S.rt = cr; done++;
-      if (stopped) { S.autoZ = S.halfNut = false; updateAutoUI(); log('Z durdurucuya gelindi; otomatik ilerleme ayrıldı.', 'ok'); beep(1300, 0.12); break; }
+      if (stopped) { S.autoZ = S.halfNut = false; S.pend.z = 0; updateAutoUI(); log('Z durdurucuya gelindi; otomatik ilerleme ayrıldı.', 'ok'); beep(1300, 0.12); break; }
     }
-    if (done) { S.lastMove = performance.now(); S.curFeed += (S.feedC - S.curFeed) * 0.3; S.u += um * done / n; }
+    if (done) { S.lastMove = performance.now(); S.curFeed += (S.feedC - S.curFeed) * 0.3; }
+  }
+  if (commanded) {
     if (blocked) { S.pend.z = S.pend.x = S.pend.u = 0; S.wheel.z = S.wheel.x = S.wheel.u = 0; if (S.autoZ || S.autoX || S.halfNut) { disengageAll(); updateAutoUI(); } }
-    else for (const a of ['z', 'x', 'u']) {
-      if (!heldDir(a) && S.pend[a]) { S.pend[a] -= jm[a] * done / n; if (Math.abs(S.pend[a]) < 1e-6) S.pend[a] = 0; }
-      if (S.wheel[a]) { S.wheel[a] -= wm[a] * done / n; if (Math.abs(S.wheel[a]) < 1e-6) S.wheel[a] = 0; }
+    else {
+      S.u += um;
+      for (const a of ['z', 'x', 'u']) {
+        if (!heldDir(a) && S.pend[a]) { S.pend[a] -= jm[a]; if (Math.abs(S.pend[a]) < 1e-6) S.pend[a] = 0; }
+        if (S.wheel[a]) { S.wheel[a] -= wm[a]; if (Math.abs(S.wheel[a]) < 1e-6) S.wheel[a] = 0; }
+      }
     }
   }
   // Gelincik kovanı
@@ -1813,11 +2053,12 @@ function updateToolUI() {
 }
 function recFor() {
   const T = tool(), Tt = tailT(), aEnd = A(Math.max(endIdx, I0));
-  if (S.q < aEnd + 25) return { n:recRpm(Tt, Tt.d), f:Tt.fr, txt:`${Tt.no}: ${recRpm(Tt, Tt.d)} dev/dk · ${Tt.fr} mm/dev` };
+  if (S.q < aEnd + 25) { const f = +(Tt.fr * mat.ff).toFixed(3); return { n:recRpm(Tt, Tt.d), f, txt:`${Tt.no}: ${recRpm(Tt, Tt.d)} dev/dk · ${f} mm/dev (${mat.short})` }; }
   const dia = T.type === 'bore' ? Math.max(2 * Ri[clamp(idx(S.at), 0, NS - 1)], 16) : (curDiaAt(S.at) || curDiaAt(aEnd) || 50);
   const n = recRpm(T, dia);
   if (T.type === 'thread') return { n:Math.min(n, 400), f:null, txt:`${Math.min(n, 400)} dev/dk · adım ${S.pitch} (diş için düşük devir)` };
-  return { n, f:T.frec, txt:`${n} dev/dk · ${T.frec} mm/dev (Ø${dia.toFixed(0)})` };
+  const f = +(T.frec * mat.ff).toFixed(3);
+  return { n, f, txt:`${n} dev/dk · ${f} mm/dev (Ø${dia.toFixed(0)}, ${mat.short})` };
 }
 function updateRec() { $('recTxt').textContent = recFor().txt; }
 function setRpm(v) { S.rpm = v; $('rpm').value = v; $('rpmOut').textContent = v + ' dev/dk'; updateSpindleUI(); }
@@ -1837,6 +2078,13 @@ TAILS.forEach((T, i) => {
   b.innerHTML = `<span class="n">${T.no}</span><span class="nm">${T.name}</span><span class="d">Ø${T.d} · ${T.mat.split(',')[0]}</span>`;
   b.addEventListener('click', () => requestChange('tail', i));
   $('tailRack').append(b);
+});
+$('flipInsert').addEventListener('click', () => {
+  if (S.spindle) { log('Uç çevirmek için önce mili durdurun.', 'warn'); return; }
+  S.wear[S.tool] = 0; S.wearT[S.tail] = 0;
+  if (S.broken) { S.broken = false; buildToolVisual(); updateToolUI(); }
+  if (S.job && !S.job.done) S.job.time += 20;
+  log(`${tool().no} kalemine yeni kesme kenarı, ${tailT().no} takımına yeni uç verildi (+20 sn makine süresi).`, 'ok');
 });
 function requestChange(kind, i) {
   initAudio();
@@ -1912,7 +2160,10 @@ $('tsCalcBtn').addEventListener('click', () => {
 });
 $('zStopClr').addEventListener('click', () => { S.zStop = null; $('zStopNote').textContent = 'Durdurucu yok.'; });
 $('coolant').addEventListener('click', toggleCoolant);
-function toggleCoolant() { S.coolant = !S.coolant; $('coolant').textContent = 'Soğutma sıvısı: ' + (S.coolant ? 'AÇIK' : 'KAPALI'); $('coolant').classList.toggle('on', S.coolant); }
+function toggleCoolant() {
+  S.coolant = !S.coolant; $('coolant').textContent = 'Soğutma sıvısı: ' + (S.coolant ? 'AÇIK' : 'KAPALI'); $('coolant').classList.toggle('on', S.coolant);
+  if (S.coolant && mat.dry) log('Döküm genellikle kuru işlenir: soğutma sıvısı toz talaşla çamur yapar.', 'warn');
+}
 $('mute').addEventListener('click', () => { S.muted = !S.muted; $('mute').textContent = 'Ses: ' + (S.muted ? 'KAPALI' : 'AÇIK'); if (master) master.gain.value = S.muted ? 0 : 0.9; });
 function setStep(v) { S.step = v; [...$('steps').children].forEach(b => b.classList.toggle('on', +b.dataset.step === v)); }
 $('steps').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setStep(+b.dataset.step); });
@@ -1954,24 +2205,30 @@ function setAxis(ax, v) {
   log(`${ax.toUpperCase()} ekseni ${fmt(v)} olarak ayarlandı.`, 'ok');
 }
 $('alarmReset').addEventListener('click', () => { S.alarm = false; $('alarm').hidden = true; log('Alarm sıfırlandı. Kırık takımı değiştirin.'); });
-$('clearChips').addEventListener('click', () => { clearChips(); clearPieces(); log('Talaşlar ve kesilen parçalar temizlendi.'); });
+$('clearChips').addEventListener('click', () => {
+  if (S.spindle && S.wrap > 0.15) { log('Mil dönerken sarılan talaşa elle dokunulmaz! Önce mili durdurun.', 'bad'); return; }
+  clearChips(); clearPieces(); S.wrap = 0; buildWrap(); log('Talaşlar, sarılan talaş ve kesilen parçalar temizlendi.');
+});
 let newPartArm = 0;
 $('newPart').addEventListener('click', () => {
   const now = performance.now();
   if (now - newPartArm > 3000) { newPartArm = now; $('newPart').textContent = 'Onayla: parçayı değiştir'; setTimeout(() => $('newPart').textContent = 'Yeni ham parça', 3000); return; }
   newPartArm = 0; $('newPart').textContent = 'Yeni ham parça';
-  resetPart($('stockSel').value);
-  log(`Aynaya yeni ${STOCKS[S.stock].label} çubuk bağlandı.`, 'ok');
+  resetPart($('stockSel').value, $('matSel').value);
+  log(`Aynaya yeni ${STOCKS[S.stock].label} ${mat.name} çubuk bağlandı.`, 'ok');
 });
-function resetPart(key) {
+function resetPart(key, mkey) {
   if (S.spindle) spindle(false);
   stopAll();
   S.stock = key || S.stock;
+  setMaterial(mkey || matKey);
   const st = STOCKS[S.stock];
   stockR = st.D / 2;
   R.fill(0); Ri.fill(0); CUTO.fill(0); CUTI.fill(0); RA.fill(0); RAI.fill(0); INSP.fill(0); Gr.fill(1e9);
   startIdx = 0; endIdx = idx(st.stick);
   for (let i = 0; i <= endIdx; i++) R[i] = stockR;
+  FRO.fill(0); FRI.fill(0); CHO.fill(0); TINT.fill(0); HARD.fill(0);
+  S.temp = 0; S.wrap = 0; S.power = 0; S.rpmEff = S.rpm; buildWrap(); computeHeatCap();
   buildJaws(stockR);
   S.zone = null; markDirty(0, NS - 1);
   S.removed = 0; S.cutTime = 0; S.peck.active = false; S.lastRa = null; S.lastPiece = null;
@@ -2074,15 +2331,19 @@ function initBench() {
   bench.r.outputEncoding = THREE.sRGBEncoding; bench.r.localClippingEnabled = true;
   const sc = bench.scene = new THREE.Scene();
   sc.background = new THREE.Color(0x1d2427);
-  sc.add(new THREE.HemisphereLight(0xe8eef5, 0x2a2622, 0.85));
-  const l1 = new THREE.DirectionalLight(0xffffff, 0.95); l1.position.set(80, 160, 140); sc.add(l1);
-  const l2 = new THREE.DirectionalLight(0x9fc4ff, 0.45); l2.position.set(-140, 40, -100); sc.add(l2);
+  sc.add(new THREE.HemisphereLight(0xe8eef5, 0x2a2622, 0.3));
+  const l1 = new THREE.DirectionalLight(0xffffff, 0.7); l1.position.set(80, 160, 140); sc.add(l1);
+  const l2 = new THREE.DirectionalLight(0x9fc4ff, 0.25); l2.position.set(-140, 40, -100); sc.add(l2);
   bench.plate = new THREE.Mesh(new THREE.BoxGeometry(420, 16, 260), new THREE.MeshStandardMaterial({ color:0x2c3235, roughness:0.85 }));   // granit ölçü pleyti
   sc.add(bench.plate);
   bench.cam = new THREE.PerspectiveCamera(35, 1, 1, 5000);
   bench.ctl = new THREE.OrbitControls(bench.cam, $('bc')); bench.ctl.enableDamping = true;
   bench.clip = new THREE.Plane(new THREE.Vector3(0, 0, -1), 0);
-  bench.mat = new THREE.MeshStandardMaterial({ vertexColors:true, roughness:0.3, metalness:0.6, side:THREE.DoubleSide });
+  bench.mat = new THREE.MeshStandardMaterial({ vertexColors:true, roughness:0.24, metalness:0.8, side:THREE.DoubleSide });
+  addMarks(bench.mat);
+  if (THREE.RoomEnvironment) { const pm = new THREE.PMREMGenerator(bench.r); sc.environment = pm.fromScene(new THREE.RoomEnvironment(), 0.04).texture; pm.dispose(); }
+  bench.r.toneMapping = THREE.ACESFilmicToneMapping; bench.r.toneMappingExposure = 0.85;
+  bench.plate.material.envMapIntensity = 0.25;
   bench.capMat = new THREE.MeshStandardMaterial({ color:0xa8b0b6, roughness:0.55, metalness:0.35, side:THREE.DoubleSide });
   // Kumpas: kiriş + iki çene + sürgü (birim kutular, her karede ölçeklenir)
   const steel = new THREE.MeshStandardMaterial({ color:0xc9d0d4, roughness:0.25, metalness:0.85 });
@@ -2148,6 +2409,7 @@ function benchSelect(d) {
   if (bench.mesh) { bench.scene.remove(bench.mesh); bench.mesh.geometry.dispose(); }
   bench.caps.forEach(c => { bench.scene.remove(c); c.geometry.dispose(); }); bench.caps = [];
   bench.mesh = new THREE.Mesh(pieceGeometry(p, 96), bench.mat); bench.scene.add(bench.mesh);
+  bench.mat.metalness = (MATS[p.mat] || MATS.al).nonMetal ? 0 : 0.8; bench.mat.roughness = (MATS[p.mat] || MATS.al).nonMetal ? 0.45 : 0.24;
   buildCaps(p);
   bench.plate.position.y = -p.rmax - 8;
   const L = Math.max(p.len, p.rmax * 2);
@@ -2410,17 +2672,17 @@ const JOBS = [
   { title:'M20 cıvata', target:900, end:99, stock:'short',
     brief:'Alın 1.00 mm. Uçtan 35 mm Ø20, ucuna 1.5×45° pah. T5 ile 25 mm boyunca M20×2.5 dış diş (derinlik 1.53): somun kolunu kapatın, Z durdurucuyu Z−25\'e koyun, her pasoda X\'i biraz ilerletin.',
     od:[{ z0:0, z1:-35, d:20, tol:0.1 }], chamfer:{ c:1.5, tol:0.3 }, thread:{ z1:-25, p:2.5, depth:1.53, tol:0.12 } },
-  { title:'Konik pim', target:660, end:99, stock:'short',
+  { title:'Konik pim', target:660, end:99, stock:'short', mat:'c45',
     brief:'Alın 1.00 mm, uçtan 40 mm Ø40. Üst kızağı 9.46° döndürün (Hesapla: 40 30 30) ve U çarkıyla pasolar verin: koni Z0\'da Ø30, Z−30\'da Ø40 olmalı. Kalem burnunun yarıçapı koniyi yaklaşık 0.13 mm büyük çıkarır; parça masasında ölçüp son pasoyu düzeltin.',
     od:[{ z0:-30, z1:-40, d:40, tol:0.05 }], taper:{ z0:0, z1:-30, d0:30, d1:40, tol:0.15, angTol:0.15 } },
-  { title:'Pul', target:660, end:99, stock:'short', inspect:'cut',
+  { title:'Pul', target:660, end:99, stock:'short', mat:'pom', inspect:'cut',
     brief:'Alın 1.00 mm, uçtan 20 mm Ø40 (Ra ≤ 3.2). G1 punta, G3 Ø16 matkapla 20 mm delin. T4 kesme kalemiyle 8 mm kalınlıkta kesin (3 mm genişlikteki kalemin sol köşesi Z−11\'de). Muayene kesilen pulda yapılır.',
     pre:{ od:[{ z0:0, z1:-20, d:40 }], bore:[{ z1:-20, d:16 }] },
     piece:{ len:8, lenTol:0.1, od:40, odTol:0.05, ra:3.2, id:16, idTol:0.3 } },
-  { title:'Burç: ters bağlama', target:1260, stock:'short', len:30,
+  { title:'Burç: ters bağlama', target:1260, stock:'short', mat:'brass', len:30,
     brief:'Uçtan 40 mm Ø40, ucuna 1×45° pah, Ø16 matkapla 40 mm delin, T4 ile kesin (sol köşe Z−35 → 32 mm parça). Parça masasında burcu TERS bağlayın (çıkıntı ~31: çeneler aynadan 20 mm dışarı uzanır, pah kalemine de yer kalmalı), kesilen yüzü alın tornalayıp boyu 30.00 yapın, o uca da 1×45° pah kırın.',
     od:[{ z0:0, z1:-30, d:40, tol:0.05 }], bore:[{ z1:-31, d:16, tol:0.3 }], chamfer:{ c:1, tol:0.2 }, chamferStart:{ c:1, tol:0.25 } },
-  { title:'Uzun mil', target:960, end:179, stock:'long', centerHole:true,
+  { title:'Uzun mil', target:960, end:179, stock:'long', mat:'c45', centerHole:true,
     brief:'Ø30 × 180 uzun çubuk. Alın 1.00 mm, G1 ile punta deliği açın, G4 döner puntayı yerine oturtun. Uçtan 150 mm boyunca Ø25.00 ±0.05 (Ra ≤ 3.2). Puntasız tornalarsanız parça esner: konik çıkar ve tırlama yapar.',
     od:[{ z0:0, z1:-150, d:25, tol:0.05, ra:3.2 }] },
 ];
@@ -2726,7 +2988,7 @@ function scoreJob(J, run, items) {
   const accPts = 70 * acc;
   const timePts = 15 * clamp(1 - (run.time - J.target) / (1.5 * J.target), 0, 1);
   const st = run.stats;
-  const carePts = clamp(15 - 6 * st.breaks - st.load - 3 * st.spot - 2 * st.peck - st.rub - st.vc - st.chat, 0, 15);
+  const carePts = clamp(15 - 6 * st.breaks - st.load - 3 * st.spot - 2 * st.peck - st.rub - st.vc - st.chat - 2 * (st.stall || 0) - (st.wrap || 0) - (st.wear || 0) - (st.melt || 0) - (st.harden || 0), 0, 15);
   const total = Math.round(accPts + timePts + carePts);
   const allOk = items.every(i => i.ok);
   const stars = allOk ? (total >= 90 ? 3 : total >= 75 ? 2 : total >= 55 ? 1 : 0) : (total >= 60 ? 1 : 0);
@@ -2768,7 +3030,7 @@ function selectJob(i) {
   }
   $('jcNo').textContent = 'İŞ ' + (i + 1); $('jcTitle').textContent = J.title; $('jcBrief').textContent = J.brief;
   const best = progress['j' + i];
-  $('jcMeta').innerHTML = `<span>Hedef süre <b>${mmss(J.target)}</b></span><span>En iyi <b>${best ? best.score : '—'}</b></span>`;
+  $('jcMeta').innerHTML = `<span>Malzeme <b>${MATS[J.mat || 'al'].short}</b></span><span>Hedef süre <b>${mmss(J.target)}</b></span><span>En iyi <b>${best ? best.score : '—'}</b></span>`;
   $('dwTitle').textContent = `TEKNİK RESİM · İŞ ${i + 1} · ${J.title.toLocaleUpperCase('tr')}`;
   $('dwSvg').innerHTML = drawingSVG(J);
   $('dwTable').innerHTML = drawingTable(J);
@@ -2779,10 +3041,11 @@ function selectJob(i) {
 function startJob() {
   initAudio();
   if (selJob < 0) return;
-  resetPart(JOBS[selJob].stock || 'short');
+  resetPart(JOBS[selJob].stock || 'short', JOBS[selJob].mat || 'al');
+  $('matSel').value = matKey;
   $('stockSel').value = S.stock;
   INSP.fill(0);
-  S.job = { idx:selJob, J:JOBS[selJob], time:0, done:false, stats:{ breaks:0, load:0, spot:0, peck:0, rub:0, vc:0, chat:0 } };
+  S.job = { idx:selJob, J:JOBS[selJob], time:0, done:false, stats:{ breaks:0, load:0, spot:0, peck:0, rub:0, vc:0, chat:0, stall:0, wrap:0, wear:0, melt:0, harden:0 } };
   buildGuide(JOBS[selJob]);
   $('report').hidden = true;
   $('jobStart').textContent = 'Yeniden başla';
@@ -2817,7 +3080,7 @@ function showReport(run, items, r, newBest) {
   const bar = (name, v, max) => `<div class="rp-bar"><span>${name}</span><div class="meter"><i style="width:${v / max * 100}%;background:${v / max > 0.8 ? 'var(--ok)' : v / max > 0.5 ? 'var(--warn)' : 'var(--bad)'}"></i></div><span>${Math.round(v)} / ${max}</span></div>`;
   const st = run.stats;
   $('rpBars').innerHTML = bar('Ölçü doğruluğu', r.accPts, 70) + bar('Süre', r.timePts, 15) + bar('Takım bakımı', r.carePts, 15) +
-    `<div class="dro-note">Süre: ${mmss(run.time)} (hedef ${mmss(run.J.target)}) · kırılan takım ${st.breaks} · aşırı yük ${st.load} · puntasız delme ${st.spot} · gagalama ${st.peck} · düşük kesme hızı ${st.rub} · aşırı kesme hızı ${st.vc} · tırlama ${st.chat}</div>`;
+    `<div class="dro-note">Süre: ${mmss(run.time)} (hedef ${mmss(run.J.target)}) · kırılan takım ${st.breaks} · aşırı yük ${st.load} · puntasız delme ${st.spot} · gagalama ${st.peck} · düşük kesme hızı ${st.rub} · aşırı kesme hızı ${st.vc} · tırlama ${st.chat} · mil boğulması ${st.stall || 0} · talaş sarılması ${st.wrap || 0} · körelmiş uç ${st.wear || 0}</div>`;
   $('rpTable').innerHTML = '<tr><th></th><th>Ölçü</th><th>İstenen</th><th>Ölçülen</th><th></th></tr>' +
     items.map(i => `<tr><td>${i.grp}</td><td>${i.label}</td><td class="num">${i.nom}</td><td class="num">${i.meas}</td><td class="${i.ok ? 'ok-t' : 'bad-t'}">${i.ok ? '✓' : '✗'}</td></tr>`).join('');
   $('rpNext').hidden = !(run.idx + 1 < JOBS.length && unlocked(run.idx + 1));
@@ -2855,6 +3118,12 @@ function frame(now) {
   if (now - S.lastCut > 300) { S.lastB = 0; S.defl = 0; }
   spinG.position.y = now - S.lastCut < 200 && S.defl > 0.02 ? (Math.random() - 0.5) * Math.min(1.5, S.defl * 6) : 0;
   compG.rotation.y = S.tsAng * Math.PI / 180;
+  // parça soğur (soğutma sıvısı hızlandırır), motor yükü boşalınca devir toparlanır
+  S.temp = Math.max(0, S.temp - S.temp * dt * S.sim * (S.coolant && !mat.dry ? 1 / 25 : 1 / 400));
+  S.thermF = 1 + mat.alpha * S.temp;
+  if (!S.spindle || now - S.lastCut > 400) { S.power = 0; S.rpmEff += (S.rpm - S.rpmEff) * Math.min(1, dt * 3); }
+  if ((S.hcT = (S.hcT || 0) + dt) > 0.5) { S.hcT = 0; computeHeatCap(); }
+  buildWrap();
   updateBench(dt);
   drawWheels();
   if (camAnim) {
@@ -2889,10 +3158,10 @@ function updateHud() {
   const cutting = now - S.lastCut < 400;
   const dia = T.type === 'bore' ? 2 * Ri[clamp(idx(S.at), 0, NS - 1)] : curDiaAt(S.at);
   const vc = cutting ? S.lastVc : Math.PI * Math.max(dia || 2 * Math.abs(S.rt), 1) * S.rpm / 1000;
-  const vcRec = T.vc;
+  const vcRec = Math.round(vcOf(T));
   $('hVc').textContent = `${Math.round(vc)} m/dk (öneri ${vcRec})`;
   $('hVc').style.color = vc > vcRec * 1.8 ? 'var(--bad)' : vc < vcRec * 0.35 ? 'var(--warn)' : 'var(--fg)';
-  $('hDia').textContent = dia ? 'Ø' + dia.toFixed(3) : '—';
+  $('hDia').textContent = dia ? 'Ø' + (dia * S.thermF).toFixed(3) : '—';     // makinede sıcak ölçülür
   let gap = null;
   if (T.type !== 'bore' && dia) gap = S.rt - dia / 2;
   else if (T.type === 'bore' && dia) gap = dia / 2 - S.rt;
@@ -2921,6 +3190,16 @@ function updateHud() {
   $('stVol').textContent = (S.removed / 1000).toFixed(2) + ' cm³';
   const s = Math.floor(S.cutTime);
   $('stTime').textContent = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+  $('hMat').textContent = mat.short;
+  $('brandMat').textContent = `${mat.short} · Ø${(stockR * 2).toFixed(0)} çubuk`;
+  $('hPow').textContent = S.spindle ? `%${Math.round(Math.min(9.99, S.power) * 100)} · ${Math.round(S.rpmEff)} dev/dk` : '—';
+  $('hPow').style.color = S.power > 1 ? 'var(--bad)' : S.power > 0.8 ? 'var(--warn)' : 'var(--fg)';
+  $('hTemp').textContent = `${(20 + S.temp).toFixed(1)} °C` + (S.temp > 2 && dia ? ` · soğuyunca Ø −${(dia * mat.alpha * S.temp).toFixed(3)}` : '');
+  $('hTemp').style.color = S.temp > 15 ? 'var(--warn)' : 'var(--fg)';
+  const wv = S.wear[S.tool];
+  $('hWear').textContent = `VB ${wv.toFixed(2)} mm` + (S.wrap > 0.15 ? ` · sarılan talaş %${Math.round(Math.min(2, S.wrap) * 50)}` : '');
+  $('hWear').style.color = wv > 0.3 || S.wrap > 0.6 ? 'var(--warn)' : 'var(--fg)';
+  $('ctWear').textContent = `${T.no} VB ${wv.toFixed(2)} mm · ${tailT().no} VB ${S.wearT[S.tail].toFixed(2)} mm`;
   updateRec();
 }
 
