@@ -34,4 +34,5 @@ Preview'de `file://` sayfaları çalışmıyor; `python -m http.server` ile serv
 
 - Komparatörle salgı ölçme (ters bağlamada eksen kaçıklığı)
 - Tırtıl çekme, iç diş, yumuşak çene (işlenmiş yüzeyde iz bırakmadan bağlama)
-- Takım aşınması ve el çarkı boşluğu (usta modu)
+- Gerçek atölye sesleri; takım ofseti ve güvenlik alışkanlıkları (ayna anahtarı, koruma kapağı)
+- Aynı gerçekçilik paketini freze simülatörüne taşımak
