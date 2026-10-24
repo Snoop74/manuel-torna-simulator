@@ -831,7 +831,7 @@ function initAudio() {
     SN.buzz.connect(SN.buzzD); SN.buzzD.connect(SN.chatMod.gain); SN.buzz.start();
     const wc = src(white, 1.1); wc.connect(SN.chatF); wc.connect(SN.chatF2); SN.chatF.connect(SN.chatMod); SN.chatF2.connect(SN.chatMod); chain(SN.chatMod, SN.chatG, bus);
     // soğutma sıvısı: yumuşak şırıltı
-    SN.coolG = gain(); chain(src(white, 0.6), filt('bandpass', 3800, 0.6), filt('lowpass', 6500), SN.coolG, bus);
+    SN.coolG = gain(); chain(src(brown, 2.5), filt('bandpass', 1300, 0.5), filt('lowpass', 2400), SN.coolG, bus);   // tiz tıslama yerine boğuk akış
     SN.spd = 0;
   } catch (e) { ac = null; }
 }
@@ -910,7 +910,7 @@ function updateAudio() {
   SN.chatF.frequency.setTargetAtTime(650 + n * 900, t, 0.2); SN.chatF2.frequency.setTargetAtTime((650 + n * 900) * 2.03, t, 0.2);
   SN.buzzD.gain.setTargetAtTime(ch * 0.5, t, 0.1); SN.buzz.frequency.setTargetAtTime(18 + fr * 0.6, t, 0.2);
   SN.chatG.gain.setTargetAtTime(ch * 0.9, t, 0.06);
-  SN.coolG.gain.setTargetAtTime(S.coolant ? 0.035 : 0, t, 0.3);
+  SN.coolG.gain.setTargetAtTime(S.coolant ? 0.03 : 0, t, 0.3);
 }
 
 /* ---------------- Three.js sahnesi ---------------- */
