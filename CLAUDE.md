@@ -20,7 +20,6 @@
 - **Parça verisi:** `extractPiece(i0,i1)` profil, iz ve helis kutularını kopyalar; `mountPiece(d, flip, stick)` geri yazar (ters çevirmede helis fazı u' = −u + c ile yeniden eşlenir). `startIdx/endIdx` malzemenin sınırları; parça a=0'dan başlamak zorunda değil. Çeneler `buildJaws(r)` ile tutulan çapa kapanır.
 - **Parça masası:** ayrı WebGLRenderer (`bench`), yarım kesit için clipping plane + ShapeGeometry kesit kapağı, kumpas/mikrometre raycast ile istasyon okur.
 - **Üst kızak:** U ekseni hareketi `um·cos(α)` Z'ye, `−um·sin(α)` X'e dağıtılır.
-- **Esneme:** `deflection()` ankastre kiriş δ = F·x³/(3EI) + narinlik terimi; döner punta (G4, punta deliği gerekir) oturunca çok azalır. Kesimde profil δ kadar az kesilir, Ra büyür, δ > 0.35 kırar.
 
 - **Malzemeler:** `MATS` (kc, vcf, ff, rho, c, alpha, E, talaş tipi, renkler). `vcOf(T)` önerilen hızı malzemeye göre ölçekler; yük `kcR = (kc/700)^0.25` ile hafifçe artar (zorluk asıl olarak ff, vcf, aşınma ve güçte). `setMaterial(k)` parçayı yeniden renklendirir.
 - **Gerçekçilik:** uç aşınması `S.wear[]` (Taylor, vr^2.5) → Ra, çap ofseti `wearOff`, yük; ısı `S.temp` + `thermF` (taramalarda kalem konumu thermF'e bölünür, R soğuk geometridir); talaş sarılması `S.wrap` (+ `buildWrap` kuş yuvası); tırlama `chatterLimit()` lobları; el çarkı boşluğu `S.cs` vida konumu modeli; mil gücü `P_MAX`, `S.rpmEff`, boğulma.
