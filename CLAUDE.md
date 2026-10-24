@@ -26,6 +26,9 @@
 - **Gerçekçilik:** uç aşınması `S.wear[]` (Taylor, vr^2.5) → Ra, çap ofseti `wearOff`, yük; ısı `S.temp` + `thermF` (taramalarda kalem konumu thermF'e bölünür, R soğuk geometridir); talaş sarılması `S.wrap` (+ `buildWrap` kuş yuvası); tırlama `chatterLimit()` lobları; el çarkı boşluğu `S.cs` vida konumu modeli; mil gücü `P_MAX`, `S.rpmEff`, boğulma.
 - **Görsel:** RoomEnvironment + ACES; `addMarks(material)` shader'ı `mark` özniteliğinden (ilerleme, Ra, tırlama) helis izi ve dalga çizer; `surfColor()` malzeme ve ısı rengi.
 
+- **Kılavuz/pafta:** `METRIC`, `applyTailSize()` (G5 matkap Ø, G6 kılavuz, G7 pafta). `tryTapDie()` temas kontrolleri ve `S.tap` (kovanı mil sürer: −dir·p·rpm), `tapCut()` dişi helis faz uzayında açar: pafta `Gr`/`S.zone`, kılavuz `GrI`/`S.zoneI` (iç diş, `threadRI`). Mil yönü `S.dir` (geri yönde kalemler kesmez, otomatik ilerleme ters döner).
+- **Esneme:** değişken kesitli kiriş integrali δ = F/E·∫(L−s)²/I(s) ds + en narin bölümün L/d oranı.
+
 ## Test etme
 
 Preview'de `file://` sayfaları çalışmıyor; `python -m http.server` ile servis edip açın. Test yardımcıları `.claude/testlib.js` içinde (git dışı). Fizik testleri için geçici olarak `window.__T = { S, motion, ... }` açığa çıkarıp `motion(1/60)`'ı döngüde çağırmak en güvenilir yol (preview sekmesi kare hızını düşürüyor). Yayınlamadan önce kancayı silin.

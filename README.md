@@ -10,6 +10,7 @@ Tarayıcıda çalışan, 3B bir manuel torna tezgâhı simülasyonu ve oyunu. Te
 
 - **Tornalama:** Ø50 alüminyum çubuk, üç ayaklı aynada. Dış çap, alın, kademe, pah, kanal, kesme (parça kopup kızağa düşer), gelincikten punta ve delme, delik kalemiyle bara.
 - **Diş çekme:** somun kolu ve diş adımı seçimi (1.0–2.5 mm); diş gerçek helis olarak oluşur, pasolar diş saatiyle hizalanır.
+- **Kılavuz ve pafta:** M6–M20 ISO metrik kaba diş. Kılavuz matkabı ölçüsü seçilebilen matkapla delinir; kılavuz ve pafta mil İLERİ dönerken kendini adım kadar çeker, GERİ yönde çıkar. Küçük delik, yüksek devir, kör delik dibi, kalın çubuk ve çelikte yağsız çekme takımı kırar. İç diş parça masasında kesitte görünür.
 - **Kontrol:** taşıyıcı (Z), enine kızak (X, çap okur) ve gelincik kovanı (W) için el çarkları, klavye, otomatik boyuna/enine ilerleme (mm/dev), Z durdurucu, dijital okuma (DRO).
 - **Kesme fiziği:** talaş kalınlığı, kalem yükü, birikerek dolan zorlanma göstergesi; çapa göre değişen kesme hızı (Vc); ilerlemeye bağlı yüzey pürüzlülüğü (Ra); ayna, çene, gelincik ve tutucu çarpışmaları; matkapta gagalama ve punta kontrolü.
 - **Malzemeler:** Al 6061, C45 çelik, 304 paslanmaz, pirinç, GG25 döküm ve Delrin. Her birinin kesme kuvveti, önerilen hızı ve ilerlemesi, talaş tipi (kıvrık, uzun tel, kırık pul, toz, şerit) ve rengi farklı. Paslanmaz sürtülünce işlem sertleşir, Delrin yüksek hızda erir, döküm kuru işlenir.
@@ -20,7 +21,7 @@ Tarayıcıda çalışan, 3B bir manuel torna tezgâhı simülasyonu ve oyunu. Te
 - **Ters bağlama:** parçanın profili, deliği ve diş helisi çevrilerek seçilen çıkıntıyla aynaya bağlanır; çeneler çapa göre kapanır.
 - **Konik tornalama:** açısı ayarlanan üst kızak (U ekseni) ve kendi el çarkı; D-d-L'den açı hesabı.
 - **Uzun parça:** Ø30 × 180 çubuk ve döner punta. Kesme kuvveti narin parçayı esnetir; puntasız tornalanan uzun parça konik çıkar ve tırlama yapar.
-- **İş emirleri:** teknik resim ve tablo, parça üstünde hedef profil çizgisi, teslimde muayene (çap, boy, omuz, pah, kanal, delik, diş, koni, Ra) ve 1–3 yıldızla puanlama. Dokuz görev: alın ve çap, kademeli mil, kanal ve pah, delik ve bara, M20 cıvata, konik pim, pul (kesilen parça muayene edilir), burç (ters bağlama), uzun mil (punta desteği).
+- **İş emirleri:** teknik resim ve tablo, parça üstünde hedef profil çizgisi, teslimde muayene (çap, boy, omuz, pah, kanal, delik, diş, koni, Ra) ve 1–3 yıldızla puanlama. On bir görev: alın ve çap, kademeli mil, kanal ve pah, delik ve bara, M20 cıvata, konik pim, pul (kesilen parça muayene edilir), burç (ters bağlama), uzun mil (punta desteği), M12 kılavuz, M10 pafta.
 
 ## Kısayollar
 
