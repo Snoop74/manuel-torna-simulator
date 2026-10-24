@@ -268,12 +268,97 @@ table{color:inherit;font-size:inherit}
 #benchTools button{font-family:var(--f-display);font-size:12px;padding:6px 4px;min-width:30%}
 @media (max-width:900px){.bench-body{grid-template-columns:1fr;grid-template-rows:55% auto}.bench-side{border-left:0;border-top:1px solid var(--line)}}
 .sub{font-family:var(--f-display);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+/* ---- Panel düzeni: tam ekran sahne, üst çubuk, taşınabilir ve ölçeklenebilir kumanda pencereleri ---- */
+.app{display:block}
+.pendant{display:none}
+.stage{position:fixed;inset:46px 0 0 0}
+.topbar{position:fixed;top:0;left:0;right:0;height:46px;z-index:60;display:flex;align-items:center;gap:8px;padding:0 10px;background:linear-gradient(#262f33,#1b2124);border-bottom:1px solid var(--line);overflow-x:auto;overflow-y:hidden;scrollbar-width:thin}
+.tb-brand{font-family:var(--f-display);font-weight:700;letter-spacing:.08em;white-space:nowrap;text-transform:uppercase;font-size:15px}
+.tb-brand small{display:block;color:var(--muted);font-family:var(--f-dro);font-weight:400;letter-spacing:0;font-size:11px;text-transform:none}
+.tb-group{display:flex;gap:4px;align-items:center;flex:none}
+.tb-label{font-family:var(--f-display);font-size:10.5px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin-right:2px}
+.chip{background:var(--panel-2);border:1px solid var(--line);border-radius:14px;padding:4px 10px;font-size:12px;font-family:var(--f-display);white-space:nowrap;color:var(--muted)}
+.chip:hover{color:var(--fg)}
+.chip.on{color:var(--fg);border-color:var(--safety);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--safety) 35%,transparent)}
+.tb-sep{width:1px;height:26px;background:var(--line);flex:none}
+.topbar .views{position:static;display:flex;flex-wrap:nowrap;gap:4px}
+.topbar .views button{padding:4px 9px}
+.estop{margin-left:auto;flex:none;height:38px;padding:0 16px;border-radius:19px;border:3px solid var(--safety);background:radial-gradient(circle at 50% 30%,#ff6a5e,#b3221c 72%);color:#fff;font-family:var(--f-display);font-weight:700;letter-spacing:.08em;font-size:12.5px;box-shadow:0 0 0 2px #3a2a10,0 3px 10px rgba(0,0,0,.5);white-space:nowrap}
+.estop{position:sticky;right:0}
+.estop:active{transform:translateY(1px);box-shadow:0 0 0 2px #3a2a10}
+.panel-layer{position:fixed;inset:46px 0 0 0;pointer-events:none;z-index:20}
+.panel{position:absolute;pointer-events:auto;display:flex;flex-direction:column;min-width:210px;min-height:40px;background:var(--panel);border:1px solid var(--line);border-radius:8px;box-shadow:0 12px 32px rgba(0,0,0,.45);overflow:hidden}
+.panel.flash{animation:pflash .45s ease-in-out 6}
+@keyframes pflash{50%{border-color:var(--bad);box-shadow:0 0 0 3px var(--bad),0 12px 32px rgba(0,0,0,.45)}}
+.ph{display:flex;align-items:center;gap:8px;padding:6px 6px 6px 10px;background:linear-gradient(#2d373b,#222a2e);border-bottom:1px solid var(--line);cursor:grab;user-select:none;-webkit-user-select:none;touch-action:none;flex:none}
+.ph:active{cursor:grabbing}
+.lamp{width:10px;height:10px;border-radius:50%;background:#3a4446;box-shadow:inset 0 1px 2px rgba(0,0,0,.7);flex:none;transition:background .2s,box-shadow .2s}
+.lamp.on{background:var(--ok);box-shadow:0 0 8px var(--ok)}
+.lamp.warn{background:var(--warn);box-shadow:0 0 8px var(--warn)}
+.lamp.bad{background:var(--bad);box-shadow:0 0 9px var(--bad)}
+.ph b{font-family:var(--f-display);font-size:12px;letter-spacing:.12em;text-transform:uppercase;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ph .pstat{font-family:var(--f-dro);font-size:11.5px;color:var(--muted);white-space:nowrap}
+.ph button{background:none;border:1px solid transparent;color:var(--muted);border-radius:4px;width:24px;height:22px;line-height:1;font-size:14px;padding:0;flex:none}
+.ph button:hover{border-color:var(--line);color:var(--fg)}
+.pb{flex:1;overflow:auto;padding:10px 12px 14px;container-type:inline-size;min-height:0}
+.panel.collapsed .pb,.panel.collapsed .grip{display:none}
+.grip{position:absolute;right:0;bottom:0;width:18px;height:18px;cursor:nwse-resize;touch-action:none;background:linear-gradient(135deg,transparent 55%,var(--muted) 55%,var(--muted) 62%,transparent 62%,transparent 72%,var(--muted) 72%,var(--muted) 79%,transparent 79%);opacity:.6}
+.grip:hover{opacity:1}
+.pb .sec{padding-top:0;border-top:0}
+.pb .sec > h2{display:none}
+/* Pencereyle ölçeklenen içerik */
+.pb .dro{padding:clamp(8px,3cqw,18px)}
+.pb .axis{grid-template-columns:clamp(18px,7cqw,44px) minmax(0,1fr) clamp(52px,17cqw,96px) 38px 36px}
+.pb .axis output{font-size:clamp(22px,10.5cqw,72px)}
+.pb .axis .ax{font-size:clamp(15px,6cqw,34px)}
+.pb .wheels canvas{max-width:none}
+.pb .wheels figcaption{font-size:clamp(11px,3cqw,16px)}
+.pb .jog-l{grid-template-rows:repeat(3,clamp(40px,13cqw,96px))}
+.pb .jog-l button{font-size:clamp(13px,4.2cqw,24px);border-radius:8px}
+.pb .big{font-size:clamp(13px,4.6cqw,22px);padding:clamp(9px,3.2cqw,18px) 8px}
+.pb .hud{position:static;pointer-events:auto;min-width:0;max-width:none;border:0;background:none;padding:0;backdrop-filter:none;font-size:clamp(12px,3.6cqw,15px)}
+.pb .hud .v{font-size:clamp(13px,3.9cqw,17px)}
+.pb .drawing{position:static;width:auto;max-height:none;min-height:0;box-shadow:none;border-radius:6px}
+.gauge{width:100%;aspect-ratio:2;display:block;max-width:100%}
+/* Takım kartları: simgeli */
+.rack button{grid-template-columns:40px minmax(0,1fr)}
+.rack .ico{grid-row:span 2;width:36px;height:36px;color:var(--steel);display:grid;place-items:center}
+.rack .ico svg{width:100%;height:100%}
+.rack .active .ico{color:var(--safety)}
+.rack .nm b{color:var(--safety);font-family:var(--f-display);margin-right:5px}
+.alarm{z-index:80}
+.report{z-index:80}
+.toast{z-index:90}
+@media (max-width:900px){
+  body{overflow:auto}
+  .stage{position:relative;inset:auto;height:56vh;margin-top:46px}
+  .panel-layer{position:static;display:flex;flex-direction:column;gap:10px;padding:10px}
+  .panel{position:relative;left:auto !important;top:auto !important;width:auto !important;height:auto !important;max-height:none !important}
+  .grip{display:none}
+  .ph{cursor:default}
+}
+@media (prefers-reduced-motion:reduce){.panel.flash{animation:none;border-color:var(--bad)}}
+.pb .rack{grid-template-columns:repeat(auto-fill,minmax(132px,1fr))}
+.pb details{border:0}
+.alarm,.report{position:fixed;inset:46px 0 0 0}
+.toast{position:fixed;top:58px;bottom:auto}
+.bench{z-index:85}
 </style>
 
 <div class="app">
+  <header class="topbar" id="topbar">
+    <div class="tb-brand" id="tbBrand">Manuel Torna<small id="tbMat"></small></div>
+    <span class="tb-sep"></span>
+    <div class="tb-group"><span class="tb-label">Paneller</span><div class="tb-group tb-panels"></div></div>
+    <span class="tb-sep"></span>
+    <div class="tb-group tb-layouts"><span class="tb-label">Düzen</span><button class="chip" data-l="temel">Temel</button><button class="chip" data-l="tam">Tam</button><button class="chip" data-l="dis">Diş çekme</button></div>
+    <span class="tb-sep"></span>
+    <div class="tb-group tb-views"></div>
+    <button class="estop" id="estopBtn" title="Mili ve tüm hareketleri durdur (Esc)">ACİL STOP</button>
+  </header>
   <section class="stage" id="stage">
     <canvas id="c" aria-label="Torna tezgâhının 3B görünümü"></canvas>
-    <div class="hud" aria-live="polite">
+    <div class="hud" aria-live="polite" data-panel="hud">
       <div class="row" id="hJobRow" hidden><span class="k">İş</span><span class="v" id="hJob">—</span></div>
       <div class="row" id="hTimeRow" hidden><span class="k">Makine süresi</span><span class="v" id="hTime">—</span></div>
       <div class="row"><span class="k">Kalem</span><span class="v" id="hTool">—</span></div>
@@ -302,7 +387,7 @@ table{color:inherit;font-size:inherit}
       <button id="vFront">Önden</button>
       <button id="vDraw" hidden>Resim</button>
     </div>
-    <div class="drawing" id="drawing" hidden>
+    <div class="drawing" id="drawing" data-panel="drawing" hidden>
       <div class="dw-head"><span id="dwTitle">TEKNİK RESİM</span><button id="dwClose" aria-label="Resmi gizle">gizle</button></div>
       <div id="dwSvg"></div>
       <div class="dw-tab"><table id="dwTable"></table></div>
@@ -314,7 +399,7 @@ table{color:inherit;font-size:inherit}
         <h2 id="alarmTitle">ALARM</h2>
         <p id="alarmMsg"></p>
         <small>Mil ve otomatik ilerlemeler durduruldu, kalem kırıldı. Alarmı sıfırlayın, kalemi geri çekin ve yeni bir kalem takın.</small>
-        <button class="btn big stop" id="alarmReset">Alarmı sıfırla</button>
+        <div class="row2"><button class="btn big stop" id="alarmReset">Alarmı sıfırla</button><button class="btn big start" id="alarmFix">Sıfırla ve yeni uç tak</button></div>
       </div>
     </div>
     <div class="report" id="report" hidden>
@@ -336,7 +421,7 @@ table{color:inherit;font-size:inherit}
   <aside class="pendant">
     <div class="brand"><h1>Manuel Torna</h1><span id="brandMat">Al 6061 · Ø50 çubuk</span></div>
 
-    <div class="sec">
+    <div class="sec" data-panel="jobs">
       <h2><span>İş emirleri</span><span id="starTotal">0 / 15 yıldız</span></h2>
       <div class="jobs" id="jobList"></div>
       <div class="job-card" id="jobCard">
@@ -350,7 +435,7 @@ table{color:inherit;font-size:inherit}
       </div>
     </div>
 
-    <div class="sec">
+    <div class="sec" data-panel="dro">
       <h2><span>Dijital okuma (DRO)</span><span>mm · X çap</span></h2>
       <div class="dro">
         <div class="axis"><span class="ax">X</span><output id="droX">+0.000</output><input id="setX" inputmode="decimal" placeholder="Ø" aria-label="X çap değeri ata"><button class="btn sm" data-set="x">Ata</button><button class="btn sm" data-zero="x">X0</button></div>
@@ -361,7 +446,7 @@ table{color:inherit;font-size:inherit}
       <div class="dro-note">X kalem ucunun çapını gösterir. Z sıfırı başlangıçta ham çubuğun alnında; alın tornaladıktan sonra kalemi alna değdirip Z0'a basın. W gelincikteki takımın ucudur (Z ile aynı sıfıra göre). U üst kızağın kendi ekseni boyunca yolunu gösterir.</div>
     </div>
 
-    <div class="sec">
+    <div class="sec" data-panel="wheels">
       <h2><span>El çarkları</span><span>sürükle · kaydır</span></h2>
       <div class="seg" id="muls">
         <button data-mul="0.01" class="on">×1 · 0.01</button><button data-mul="0.1">×10 · 0.1</button><button data-mul="1">×100 · 1</button>
@@ -375,8 +460,9 @@ table{color:inherit;font-size:inherit}
       <div class="dro-note">Saat yönü artı yön: Z ve W'de aynadan uzaklaşır, X'te çap büyür. Enine kızak çarkı çap okur; bir çentik çapta 0.01 mm demek, kalem yarıçapta yarısı kadar ilerler.</div>
     </div>
 
-    <div class="sec">
+    <div class="sec" data-panel="spindle">
       <h2><span>İş mili</span><span id="spinState">DURUYOR</span></h2>
+      <canvas id="spGauge" class="gauge" aria-label="Devir göstergesi"></canvas>
       <div class="spin-row">
         <button class="btn big start" id="spStart">MİL START</button>
         <button class="btn big stop" id="spStop">MİL STOP</button>
@@ -390,7 +476,7 @@ table{color:inherit;font-size:inherit}
       </div>
     </div>
 
-    <div class="sec">
+    <div class="sec" data-panel="feed">
       <h2><span>Otomatik ilerleme</span><span id="autoState">kapalı</span></h2>
       <div class="seg-label"><span>İlerleme (mm/dev)</span><span>mil dönerken ilerler</span></div>
       <div class="seg" id="feeds">
@@ -409,14 +495,14 @@ table{color:inherit;font-size:inherit}
       <div class="dro-note" id="zStopNote">Durdurucu yok. Otomatik boyuna ilerleme ve somun kolu durdurucuya gelince kendiliğinden ayrılır.</div>
     </div>
 
-    <div class="sec">
+    <div class="sec" data-panel="taper">
       <h2><span>Üst kızak (konik)</span><span id="taperState">0.00°</span></h2>
       <div class="taper"><span>Açı (°)</span><input id="tsAngIn" inputmode="decimal" value="0"><button class="btn" id="tsAngSet">Döndür</button></div>
       <div class="taper"><span>D · d · L</span><input id="tsCalc" placeholder="40 30 30"><button class="btn" id="tsCalcBtn">Hesapla</button></div>
       <div class="dro-note">Üst kızak döndürülünce U çarkı kalemi bu açıyla hem Z hem X'te götürür: konik tornalanır. Açı = atan((D − d) / (2·L)); örneğin Ø40'tan Ø30'a 30 mm'de 9.46°. Otomatik ilerleme üst kızağı sürmez, U elle çevrilir.</div>
     </div>
 
-    <div class="sec">
+    <div class="sec" data-panel="jog">
       <h2><span>Eksen hareketi</span><span id="rapidState">ilerleme</span></h2>
       <div class="seg-label"><span>Kol adımı (mm, X'te çap)</span><span>tıkla: 1 adım · basılı tut: sürekli</span></div>
       <div class="seg" id="steps">
@@ -434,7 +520,7 @@ table{color:inherit;font-size:inherit}
       <div class="goto"><span>Ø</span><input id="gx" inputmode="decimal" value="55"><span>Z</span><input id="gz" inputmode="decimal" value="5"><button class="btn" id="goBtn">Git</button></div>
     </div>
 
-    <div class="sec">
+    <div class="sec" data-panel="tools">
       <h2><span>Kalemler</span><span>taret</span></h2>
       <div class="cur-tool" id="curTool"><span class="tno" id="ctNo">T1</span><span class="tname" id="ctName">—</span><span class="tmeta" id="ctMeta">—</span></div>
       <div class="stopline" style="grid-template-columns:1fr auto"><span class="dro-note" id="ctWear">VB 0.00 mm</span><button class="btn" id="flipInsert">Ucu çevir</button></div>
@@ -444,12 +530,12 @@ table{color:inherit;font-size:inherit}
       <div class="taper" id="tailSizeRow" hidden><span>Ölçü</span><select id="tailSize" aria-label="Gelincik takımı ölçüsü"></select><span class="dro-note" id="tailSizeNote"></span></div>
     </div>
 
-    <div class="sec">
+    <div class="sec" data-panel="log">
       <h2><span>Olay kaydı</span></h2>
       <ul class="log" id="log"></ul>
     </div>
 
-    <div class="sec">
+    <div class="sec" data-panel="part">
       <h2><span>Parça</span></h2>
       <div class="stats">
         <div class="stat"><span>Kaldırılan talaş</span><b id="stVol">0.00 cm³</b></div>
@@ -464,7 +550,7 @@ table{color:inherit;font-size:inherit}
       <button class="btn start" id="benchOpen">Parça masası: incele, ölç, ters bağla</button>
     </div>
 
-    <details>
+    <details open data-panel="keys">
       <summary>Klavye kısayolları</summary>
       <div class="keys">
         <kbd>← →</kbd><span>Z ekseni (taşıyıcı)</span>
@@ -477,10 +563,11 @@ table{color:inherit;font-size:inherit}
         <kbd>F</kbd><span>otomatik boyuna ilerleme</span>
         <kbd>T</kbd><span>somun kolu (diş çekme)</span>
         <kbd>C</kbd><span>soğutma sıvısı</span>
-        <kbd>Esc</kbd><span>tüm hareketleri durdur</span>
+        <kbd>Esc</kbd><span>acil stop: mil ve tüm hareketler</span>
       </div>
     </details>
   </aside>
+  <div class="panel-layer" id="panelLayer"></div>
 </div>
 
 <div class="bench" id="bench" hidden>
@@ -2226,7 +2313,7 @@ function updateToolUI() {
   const T = tool(), Tt = tailT();
   $('ctNo').textContent = T.no;
   $('ctName').textContent = `${T.name}${S.broken ? ' · KIRIK' : ''}`;
-  [...$('tailRack').children].forEach((b, i) => { b.querySelector('.nm').textContent = TAILS[i].name; b.querySelector('.d').textContent = tailLabel(TAILS[i]); });
+  [...$('tailRack').children].forEach((b, i) => { b.querySelector('.nm').innerHTML = `<b>${TAILS[i].no}</b>${TAILS[i].name}`; b.querySelector('.d').textContent = tailLabel(TAILS[i]); });
   const Tz = tailT();
   $('tailSizeRow').hidden = !Tz.sizes;
   if (Tz.sizes) {
@@ -2260,13 +2347,13 @@ function setFeed(f) {
 
 TOOLS.forEach((T, i) => {
   const b = document.createElement('button');
-  b.innerHTML = `<span class="n">${T.no}</span><span class="nm">${T.name}</span><span class="d">${T.mat.split(',')[0]}</span>`;
+  b.innerHTML = `<span class="ico">${toolIcon(T)}</span><span class="nm"><b>${T.no}</b>${T.name}</span><span class="d">${T.mat.split(',')[0]}</span>`;
   b.addEventListener('click', () => requestChange('tool', i));
   $('rack').append(b);
 });
 TAILS.forEach((T, i) => {
   const b = document.createElement('button');
-  b.innerHTML = `<span class="n">${T.no}</span><span class="nm">${T.name}</span><span class="d">${tailLabel(T)}</span>`;
+  b.innerHTML = `<span class="ico">${toolIcon(T)}</span><span class="nm"><b>${T.no}</b>${T.name}</span><span class="d">${tailLabel(T)}</span>`;
   b.addEventListener('click', () => requestChange('tail', i));
   $('tailRack').append(b);
 });
@@ -2832,7 +2919,7 @@ window.addEventListener('keydown', e => {
   else if (e.code === 'KeyC') toggleCoolant();
   else if (e.code === 'KeyF') toggleAuto('z');
   else if (e.code === 'KeyT') toggleAuto('h');
-  else if (e.code === 'Escape') stopAll();
+  else if (e.code === 'Escape') estop();
   else if (/^Digit[1-4]$/.test(e.code)) setStep([0.01, 0.1, 1, 10][+e.code.slice(5) - 1]);
 });
 window.addEventListener('keyup', e => { if (e.key === 'Shift') S.rapidKey = false; if (KEYMAP[e.code]) release('key-' + e.code); });
@@ -3363,7 +3450,7 @@ function frame(now) {
   if ((S.hcT = (S.hcT || 0) + dt) > 0.5) { S.hcT = 0; computeHeatCap(); }
   buildWrap();
   updateBench(dt);
-  drawWheels();
+  drawWheels(); drawGauge();
   if (camAnim) {
     camAnim.t = Math.min(1, camAnim.t + dt * 2.2);
     const e = camAnim.t < .5 ? 2 * camAnim.t * camAnim.t : 1 - Math.pow(-2 * camAnim.t + 2, 2) / 2;
@@ -3379,6 +3466,7 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 function updateHud() {
+  updateLamps();
   const T = tool(), d = droVals();
   $('droX').textContent = fmt(d.x); $('droZ').textContent = fmt(d.z); $('droW').textContent = fmt(d.w);
   $('hwzv').textContent = fmt(d.z); $('hwxv').textContent = fmt(d.x); $('hwwv').textContent = fmt(d.w);
@@ -3441,12 +3529,247 @@ function updateHud() {
   updateRec();
 }
 
+/* ---------------- Takım simgeleri (kalem kartları için) ---------------- */
+function toolIcon(T) {
+  const s = '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round">';
+  switch (T.type) {
+    case 'turn': return s + '<rect x="12" y="4" width="8" height="18" rx="1"/><path d="M8 28l4-8h8l-2 6z" fill="currentColor" fill-opacity=".35"/></svg>';
+    case 'chamfer': return s + '<rect x="12" y="4" width="8" height="16" rx="1"/><path d="M10 20h12l-6 8z" fill="currentColor" fill-opacity=".35"/></svg>';
+    case 'groove': return s + '<rect x="11" y="4" width="10" height="12" rx="1"/><path d="M14.5 16h3v12h-3z" fill="currentColor" fill-opacity=".35"/></svg>';
+    case 'thread': return s + '<rect x="12" y="4" width="8" height="17" rx="1"/><path d="M11 21h10l-5 7z" fill="currentColor" fill-opacity=".35"/></svg>';
+    case 'bore': return s + '<path d="M4 18h20"/><path d="M4 15h20v6H4"/><path d="M24 13l4 3-4 3z" fill="currentColor" fill-opacity=".35"/><rect x="18" y="6" width="8" height="9" rx="1"/></svg>';
+    case 'spot': return s + '<path d="M6 13h14v6H6z"/><path d="M20 13l7 3-7 3z" fill="currentColor" fill-opacity=".35"/></svg>';
+    case 'drill': return s + '<path d="M3 13h8v6H3z"/><path d="M11 12.5h13l4 3.5-4 3.5H11z"/><path d="M14 13l3 6M18 13l3 6M22 13l2 4"/></svg>';
+    case 'center': return s + '<path d="M3 11h11v10H3z"/><path d="M14 13h6l8 3-8 3h-6z" fill="currentColor" fill-opacity=".35"/></svg>';
+    case 'tap': return s + '<path d="M3 13h7v6H3z"/><path d="M10 12h16l2 4-2 4H10z"/><path d="M13 12l2 8M17 12l2 8M21 12l2 8"/></svg>';
+    case 'die': return s + '<circle cx="16" cy="16" r="12"/><circle cx="16" cy="16" r="5"/><path d="M16 9v2M16 21v2M9 16h2M21 16h2"/></svg>';
+  }
+  return s + '<circle cx="16" cy="16" r="10"/></svg>';
+}
+
+/* ---------------- Paneller: taşınabilir, ölçeklenebilir kumanda pencereleri ---------------- */
+const PM = (() => {
+  const TOP = 46, KEY = 'torna-panels-v1';
+  const CFG = [
+    { id:'hud',     title:'Durum',            col:'L', w:290 },
+    { id:'jobs',    title:'İş emirleri',      col:'L', w:340 },
+    { id:'part',    title:'Parça',            col:'L', w:320 },
+    { id:'log',     title:'Olay kaydı',       col:'L', w:340 },
+    { id:'spindle', title:'İş mili',          col:'R', w:330 },
+    { id:'tools',   title:'Takımlar',         col:'R', w:340 },
+    { id:'dro',     title:'DRO',              col:'R', w:360 },
+    { id:'feed',    title:'Otomatik ilerleme', col:'R', w:340 },
+    { id:'taper',   title:'Üst kızak',        col:'R', w:320 },
+    { id:'wheels',  title:'El çarkları',      col:'B', w:520 },
+    { id:'jog',     title:'Hareket',          col:'BL', w:330 },
+    { id:'drawing', title:'Teknik resim',     col:'C', w:340 },
+    { id:'keys',    title:'Kısayollar',       col:'C', w:300 },
+  ];
+  const PRESETS = {
+    temel: ['hud', 'spindle', 'dro', 'tools', 'wheels', 'jog'],
+    tam:   ['hud', 'jobs', 'spindle', 'dro', 'tools', 'feed', 'wheels', 'jog'],
+    dis:   ['hud', 'spindle', 'dro', 'tools', 'feed', 'wheels'],
+  };
+  const P = {};
+  let z = 30, store = {}, leftEdge = 310;
+  try { store = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { store = {}; }
+  const save = () => {
+    const o = {};
+    for (const id in P) { const p = P[id]; o[id] = { x:p.x, y:p.y, w:p.w, h:p.h, vis:p.vis, col:p.collapsed }; }
+    try { localStorage.setItem(KEY, JSON.stringify(o)); } catch (e) {}
+  };
+  const narrow = () => window.innerWidth <= 900;
+  const vh = () => window.innerHeight - TOP;
+
+  function place(p) {
+    if (narrow()) return;
+    const W = window.innerWidth, H = vh();
+    p.w = clamp(p.w, 210, W - 8);
+    p.x = clamp(p.x, 0, Math.max(0, W - 60));
+    p.y = clamp(p.y, 0, Math.max(0, H - 34));
+    Object.assign(p.el.style, { left:p.x + 'px', top:p.y + 'px', width:p.w + 'px', height:p.h ? p.h + 'px' : '', maxHeight:(H - p.y - 6) + 'px' });
+  }
+  function front(p) { p.el.style.zIndex = ++z; }
+  function setVis(id, v, noSave) {
+    const p = P[id]; if (!p) return;
+    p.vis = v; p.el.hidden = !v;
+    const chip = document.querySelector(`.chip[data-p="${id}"]`); if (chip) chip.classList.toggle('on', v);
+    if (v) { front(p); place(p); }
+    if (!noSave) save();
+  }
+  function build(cfg) {
+    let body = document.querySelector(`[data-panel="${cfg.id}"]`);
+    if (!body) return;
+    const el = document.createElement('section'); el.className = 'panel'; el.hidden = true;
+    el.innerHTML = `<div class="ph"><span class="lamp"></span><b>${cfg.title}</b><span class="pstat"></span><button class="pcol" title="Küçült" aria-label="Paneli küçült">–</button><button class="pclose" title="Kapat" aria-label="Paneli kapat">×</button></div><div class="pb"></div><div class="grip" title="Boyutlandır"></div>`;
+    el.querySelector('.pb').append(body);
+    $('panelLayer').append(el);
+    // başlıktaki durum yazısı: bölümün başlığındaki ikinci alanı (ör. mil durumu) başlığa taşı
+    const h2s = body.querySelector && body.querySelector(':scope > h2 > span:last-child');
+    if (h2s && h2s.id) el.querySelector('.pstat').append(h2s);
+    const p = P[cfg.id] = { cfg, el, lamp:el.querySelector('.lamp'), x:0, y:0, w:cfg.w, h:0, vis:false, collapsed:false };
+    const ph = el.querySelector('.ph');
+    el.addEventListener('pointerdown', () => front(p));
+    // sürükle
+    ph.addEventListener('pointerdown', e => {
+      if (e.target.closest('button') || narrow()) return;
+      e.preventDefault(); ph.setPointerCapture(e.pointerId);
+      const sx = e.clientX - p.x, sy = e.clientY - p.y;
+      const mv = ev => { p.x = ev.clientX - sx; p.y = ev.clientY - sy; place(p); };
+      const up = () => { ph.removeEventListener('pointermove', mv); ph.removeEventListener('pointerup', up); ph.removeEventListener('pointercancel', up); save(); };
+      ph.addEventListener('pointermove', mv); ph.addEventListener('pointerup', up); ph.addEventListener('pointercancel', up);
+    });
+    ph.addEventListener('dblclick', e => { if (!e.target.closest('button')) toggleCollapse(p); });
+    // boyutlandır: içerik pencere genişliğiyle ölçeklenir
+    const grip = el.querySelector('.grip');
+    grip.addEventListener('pointerdown', e => {
+      e.preventDefault(); e.stopPropagation(); grip.setPointerCapture(e.pointerId);
+      const sx = e.clientX, sy = e.clientY, w0 = p.w, h0 = el.offsetHeight;
+      const mv = ev => { p.w = Math.max(210, w0 + ev.clientX - sx); p.h = Math.max(80, h0 + ev.clientY - sy); place(p); };
+      const up = () => { grip.removeEventListener('pointermove', mv); grip.removeEventListener('pointerup', up); grip.removeEventListener('pointercancel', up); save(); };
+      grip.addEventListener('pointermove', mv); grip.addEventListener('pointerup', up); grip.addEventListener('pointercancel', up);
+    });
+    el.querySelector('.pcol').addEventListener('click', () => toggleCollapse(p));
+    el.querySelector('.pclose').addEventListener('click', () => { if (cfg.id === 'drawing') $('drawing').hidden = true; else setVis(cfg.id, false); });
+  }
+  function toggleCollapse(p) { p.collapsed = !p.collapsed; p.el.classList.toggle('collapsed', p.collapsed); p.el.querySelector('.pcol').textContent = p.collapsed ? '+' : '–'; save(); }
+  // Görünür panelleri sütunlara diz: sağda mil/DRO/takımlar, solda durum/iş, altta çarklar ve hareket
+  function autoLayout() {
+    const W = window.innerWidth, H = vh();
+    // önce alttaki çark ve hareket panelleri; sütunlar onların üstünde biter
+    const wh = P.wheels, jg = P.jog, low = [];
+    let wx = W / 2;
+    if (wh && wh.vis) { wh.w = Math.min(wh.cfg.w, W - 40); wh.h = 0; place(wh); wh.x = (W - wh.w) / 2; wh.y = H - wh.el.offsetHeight - 10; place(wh); wx = wh.x; low.push(wh); }
+    if (jg && jg.vis) { jg.w = jg.cfg.w; jg.h = 0; place(jg); jg.x = Math.max(10, wx - jg.w - 10); jg.y = H - jg.el.offsetHeight - 10; place(jg); low.push(jg); }
+    const floor = (x0, x1) => low.reduce((f, q) => (x1 > q.x && x0 < q.x + q.w) ? Math.min(f, q.y - 10) : f, H - 10);
+    const cols = { L:{ x:10, y:10, dir:1, wm:0 }, R:{ x:W - 10, y:10, dir:-1, wm:0 } };
+    for (const cfg of CFG) {
+      const p = P[cfg.id]; if (!p || !p.vis || !['L', 'R'].includes(cfg.col)) continue;
+      p.h = 0; p.w = cfg.w; place(p);
+      const c = cols[cfg.col], nat = p.el.offsetHeight;
+      let x = cfg.col === 'L' ? c.x : c.x - cfg.w, fl = floor(x, x + cfg.w);
+      if (c.y + Math.min(nat, 220) > fl && c.y > 10) {
+        c.x += c.dir * (c.wm + 10); c.y = 10; c.wm = 0;
+        x = cfg.col === 'L' ? c.x : c.x - cfg.w; fl = floor(x, x + cfg.w);
+      }
+      p.x = x; p.y = c.y; c.wm = Math.max(c.wm, cfg.w);
+      if (c.y + nat > fl) p.h = Math.max(120, fl - c.y);
+      place(p);
+      c.y += p.el.offsetHeight + 10;
+    }
+    leftEdge = cols.L.x + cols.L.wm + 10;
+    for (const id of ['drawing', 'keys']) { const p = P[id]; if (p && p.vis) { p.w = p.cfg.w; p.h = 0; place(p); p.x = id === 'drawing' ? leftEdge : (W - p.w) / 2; p.y = 10; place(p); } }
+    save();
+  }
+  function preset(name) {
+    const set = PRESETS[name] || PRESETS.temel;
+    for (const id in P) if (id !== 'drawing') setVis(id, set.includes(id), true);
+    for (const id in P) { P[id].collapsed = false; P[id].el.classList.remove('collapsed'); P[id].el.querySelector('.pcol').textContent = '–'; }
+    autoLayout();
+    log(`Panel düzeni: ${{ temel:'Temel', tam:'Tam', dis:'Diş çekme' }[name] || 'Temel'}.`);
+  }
+  function init() {
+    CFG.forEach(build);
+    // üst çubuk: marka, panel düğmeleri, düzenler, kamera, acil stop
+    const tb = $('topbar');
+    tb.querySelector('.tb-panels').innerHTML = CFG.filter(c => c.id !== 'drawing').map(c => `<button class="chip" data-p="${c.id}">${c.title}</button>`).join('');
+    tb.querySelector('.tb-panels').addEventListener('click', e => { const b = e.target.closest('.chip'); if (b) setVis(b.dataset.p, !P[b.dataset.p].vis); });
+    tb.querySelector('.tb-layouts').addEventListener('click', e => { const b = e.target.closest('button'); if (b) preset(b.dataset.l); });
+    const views = document.querySelector('.views'); if (views) tb.querySelector('.tb-views').append(views);
+    // kaydedilmiş düzen ya da varsayılan
+    const has = Object.keys(store).length > 0;
+    for (const id in P) {
+      const s = store[id], p = P[id];
+      if (s) { Object.assign(p, { x:s.x, y:s.y, w:s.w || p.w, h:s.h || 0, collapsed:!!s.col }); p.el.classList.toggle('collapsed', p.collapsed); p.el.querySelector('.pcol').textContent = p.collapsed ? '+' : '–'; }
+      if (id !== 'drawing') setVis(id, has ? !!(s && s.vis) : PRESETS.temel.includes(id), true);
+    }
+    if (!has) requestAnimationFrame(() => autoLayout()); else for (const id in P) if (P[id].vis) place(P[id]);
+    // teknik resim paneli, resmin kendi görünürlüğünü izler
+    const dw = $('drawing');
+    if (dw && P.drawing) {
+      const sync = () => { const v = !dw.hidden; P.drawing.vis = v; P.drawing.el.hidden = !v; if (v) { if (!P.drawing.x && !P.drawing.y) { P.drawing.x = leftEdge; P.drawing.y = 10; } front(P.drawing); place(P.drawing); } };
+      new MutationObserver(sync).observe(dw, { attributes:true, attributeFilter:['hidden'] }); sync();
+    }
+    window.addEventListener('resize', () => { for (const id in P) if (P[id].vis) place(P[id]); });
+  }
+  function flash(id) { const p = P[id]; if (!p) return; if (!p.vis) setVis(id, true); front(p); p.el.classList.remove('flash'); void p.el.offsetWidth; p.el.classList.add('flash'); }
+  function lamp(id, state) { const p = P[id]; if (!p) return; p.lamp.className = 'lamp' + (state ? ' ' + state : ''); }
+  return { init, preset, flash, lamp, setVis, P };
+})();
+
+/* ---------------- İş mili göstergesi: devir ibresi ve motor yükü ---------------- */
+let gaugeV = 0;
+function drawGauge() {
+  const c = $('spGauge'); if (!c || !c.clientWidth || c.closest('.panel[hidden]')) return;
+  const w = c.clientWidth, h = c.clientHeight, dpr = Math.min(2, window.devicePixelRatio || 1);
+  if (c.width !== Math.round(w * dpr)) { c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); }
+  const g = c.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
+  const cx = w / 2, cy = h * 0.9, Rr = Math.min(w / 2 - 12, h * 0.8), MAXR = 2500;
+  const target = S.spindle ? (S.rpmEff || S.rpm) : 0;
+  gaugeV += (target - gaugeV) * 0.25;
+  const ang = v => Math.PI + Math.PI * clamp(v / MAXR, 0, 1);
+  g.lineCap = 'round';
+  g.strokeStyle = COL.panel2; g.lineWidth = Rr * 0.16; g.beginPath(); g.arc(cx, cy, Rr, Math.PI, 2 * Math.PI); g.stroke();
+  // yük yayı: motor gücünün yüzdesi
+  const pw = clamp(S.power || 0, 0, 1.5) / 1.5;
+  if (pw > 0.01) { g.strokeStyle = S.power > 1 ? COL.bad : S.power > 0.8 ? COL.safety : COL.ok; g.lineWidth = Rr * 0.07; g.beginPath(); g.arc(cx, cy, Rr * 0.78, Math.PI, Math.PI + Math.PI * pw); g.stroke(); }
+  // ölçek
+  g.strokeStyle = COL.muted; g.fillStyle = COL.muted; g.lineWidth = 1.2; g.font = `${Math.max(9, Rr * 0.11)}px "Share Tech Mono", monospace`; g.textAlign = 'center'; g.textBaseline = 'middle';
+  for (let v = 0; v <= MAXR; v += 250) {
+    const a = ang(v), major = v % 500 === 0, r0 = Rr * (major ? 1.1 : 1.04), r1 = Rr * 1.16;
+    g.beginPath(); g.moveTo(cx + Math.cos(a) * r0, cy + Math.sin(a) * r0); g.lineTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1); g.stroke();
+    if (major) g.fillText(v >= 1000 ? (v / 1000) + 'k' : String(v), cx + Math.cos(a) * Rr * 0.6, cy + Math.sin(a) * Rr * 0.6);
+  }
+  // ayarlanan devir işareti
+  const as = ang(S.rpm); g.fillStyle = COL.safety; g.beginPath(); g.arc(cx + Math.cos(as) * Rr, cy + Math.sin(as) * Rr, Rr * 0.06, 0, TAU); g.fill();
+  // ibre
+  const a = ang(gaugeV);
+  g.strokeStyle = S.spindle ? COL.fg : COL.muted; g.lineWidth = Math.max(2, Rr * 0.035);
+  g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + Math.cos(a) * Rr * 0.92, cy + Math.sin(a) * Rr * 0.92); g.stroke();
+  g.fillStyle = COL.steel; g.beginPath(); g.arc(cx, cy, Rr * 0.07, 0, TAU); g.fill();
+  g.fillStyle = S.spindle ? tok('--vfd') : COL.muted; g.font = `${Math.max(14, Rr * 0.26)}px "Share Tech Mono", monospace`;
+  g.fillText(Math.round(gaugeV), cx, cy - Rr * 0.34);
+  g.fillStyle = COL.muted; g.font = `${Math.max(9, Rr * 0.1)}px "IBM Plex Sans", sans-serif`;
+  g.fillText(S.spindle ? (S.dir < 0 ? 'dev/dk · GERİ ⟳' : 'dev/dk · İLERİ ⟲') : 'dev/dk · duruyor', cx, cy - Rr * 0.14);
+}
+COL.ok = tok('--ok'); COL.bad = tok('--bad');
+
+/* ---------------- Acil stop ve hızlı kurtarma ---------------- */
+function estop() {
+  initAudio();
+  const was = S.spindle || S.autoZ || S.autoX || S.halfNut;
+  if (S.spindle) { S.spindle = false; updateSpindleUI(); }
+  stopAll();
+  if (was) { log('ACİL STOP: mil ve tüm hareketler durduruldu.', 'bad'); beep(400, 0.25, 0.1); }
+}
+{ const _crash = crash;
+  crash = function (msg, isTail) { _crash(msg, isTail); PM.flash('tools'); };
+}
+$('alarmFix').addEventListener('click', () => {
+  S.alarm = false; $('alarm').hidden = true;
+  if (S.broken) requestChange('tool', S.tool); else if (S.tailBroken) requestChange('tail', S.tail);
+  PM.flash('tools');
+});
+$('estopBtn').addEventListener('click', estop);
+function updateLamps() {
+  PM.lamp('spindle', S.spindle ? (S.dir < 0 ? 'warn' : 'on') : '');
+  PM.lamp('tools', S.broken || S.tailBroken ? 'bad' : S.changing ? 'warn' : (S.wear[S.tool] > 0.3 ? 'warn' : ''));
+  PM.lamp('feed', S.halfNut || S.autoZ || S.autoX ? 'warn' : '');
+  PM.lamp('hud', S.alarm ? 'bad' : S.lastStress > 1.2 || S.damage > 0.5 ? 'warn' : S.spindle ? 'on' : '');
+  PM.lamp('wheels', S.tap ? 'warn' : '');
+  PM.lamp('jobs', S.job && !S.job.done ? 'on' : '');
+}
+
 // Başlangıç
 buildToolVisual(); buildTailVisual(); updateToolUI(); updateSpindleUI(); updateAutoUI();
 setRpm(800); setFeed(0.1);
 resetPart('short');
 renderJobs(); selectJob(-1);
 log('Torna hazır. T1 sağ torna kalemi takılı, gelincikte punta matkabı. Z sıfırı ham çubuğun alnında.', 'ok');
+for (const id of ['alarm', 'report', 'toast']) document.body.append($(id));
+$('tbMat').textContent = $('brandMat').textContent;
+new MutationObserver(() => { $('tbMat').textContent = $('brandMat').textContent; }).observe($('brandMat'), { childList:true, characterData:true, subtree:true });
+PM.init();
 requestAnimationFrame(frame);
 })();
 </script>
