@@ -836,10 +836,10 @@ scene.add(sun);
 const fill = new THREE.DirectionalLight(0x9fc4ff, 0.18); fill.position.set(-400, 200, -300); scene.add(fill);
 
 const M = {
-  paint: new THREE.MeshStandardMaterial({ color:0x56766f, roughness:0.62, metalness:0.15 }),
-  paintDark: new THREE.MeshStandardMaterial({ color:0x3e5651, roughness:0.7, metalness:0.1 }),
-  steel: new THREE.MeshStandardMaterial({ color:0x9aa3a8, roughness:0.38, metalness:0.75 }),
-  ground: new THREE.MeshStandardMaterial({ color:0x6f777b, roughness:0.32, metalness:0.8 }),
+  paint: new THREE.MeshStandardMaterial({ color:0x5f7d72, roughness:0.86, metalness:0.04 }),
+  paintDark: new THREE.MeshStandardMaterial({ color:0x44574f, roughness:0.88, metalness:0.04 }),
+  steel: new THREE.MeshStandardMaterial({ color:0x8a9196, roughness:0.58, metalness:0.55 }),
+  ground: new THREE.MeshStandardMaterial({ color:0x7a8286, roughness:0.48, metalness:0.6 }),
   dark: new THREE.MeshStandardMaterial({ color:0x24292c, roughness:0.5, metalness:0.6 }),
   black: new THREE.MeshStandardMaterial({ color:0x111416, roughness:0.6, metalness:0.3 }),
   yellow: new THREE.MeshStandardMaterial({ color:0xf0b429, roughness:0.5, metalness:0.1 }),
@@ -864,12 +864,15 @@ function cylX(r0, r1, x0, x1, mat, parent, seg = 32) {
 }
 
 /* ---- Ortam yansıması, ton eşleme ve işleme izleri ---- */
-renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 0.9;
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 0.85;
 if (THREE.RoomEnvironment) {
   const pm = new THREE.PMREMGenerator(renderer);
   scene.environment = pm.fromScene(new THREE.RoomEnvironment(), 0.04).texture;
   pm.dispose();
-  for (const k of ['paint', 'paintDark', 'dark', 'black', 'yellow', 'floor']) M[k].envMapIntensity = 0.35;
+  for (const k of ['paint', 'paintDark', 'dark', 'black', 'yellow', 'floor']) M[k].envMapIntensity = 0.25;
+  // gövde renkleri sRGB olarak verildi; doğrusal uzaya çevrilmezse soluk, beyazımsı görünür
+  for (const k of ['paint', 'paintDark', 'steel', 'ground']) M[k].color.convertSRGBToLinear();
+  M.steel.envMapIntensity = 0.45; M.ground.envMapIntensity = 0.5;   // makine mat; parlak kalan tek şey işlenen parça
 }
 // İşlenmiş yüzeye ilerlemeye göre helis tornalama izleri, tırlamada dalgalanma çizer.
 // mark özniteliği: x = ilerleme (mm/dev), y = Ra (µm), z = tırlama şiddeti
@@ -975,7 +978,7 @@ partGeo.setAttribute('color', new THREE.BufferAttribute(pCol, 3));
 partGeo.setAttribute('mark', new THREE.BufferAttribute(pMark, 3));
 partGeo.setIndex(new THREE.BufferAttribute(pIdx, 1));
 partGeo.boundingSphere = new THREE.Sphere(new THREE.Vector3(100, 0, 0), 140);
-const partMat = new THREE.MeshStandardMaterial({ vertexColors:true, roughness:0.24, metalness:0.8, side:THREE.DoubleSide });
+const partMat = new THREE.MeshStandardMaterial({ vertexColors:true, roughness:0.3, metalness:0.8, side:THREE.DoubleSide });
 addMarks(partMat);
 const partMesh = new THREE.Mesh(partGeo, partMat);
 partMesh.castShadow = true; partMesh.receiveShadow = true; spinG.add(partMesh);
@@ -1746,7 +1749,7 @@ function buildWrap() {
 function setMaterial(k) {
   matKey = MATS[k] ? k : 'al'; mat = MATS[matKey]; S.mat = matKey;
   wrapMat.color.setRGB(...mat.chipCol); wrapMat.metalness = mat.nonMetal ? 0 : 0.85;
-  partMat.metalness = mat.nonMetal ? 0.0 : 0.8; partMat.roughness = mat.nonMetal ? 0.45 : 0.24;
+  partMat.metalness = mat.nonMetal ? 0.0 : 0.8; partMat.roughness = mat.nonMetal ? 0.45 : 0.3;
   markDirty(0, NS - 1);
 }
 function computeRa(T, fRev, vr) {
