@@ -343,6 +343,7 @@ table{color:inherit;font-size:inherit}
 .alarm,.report{position:fixed;inset:46px 0 0 0}
 .toast{position:fixed;top:58px;bottom:auto}
 .bench{z-index:85}
+.ia-tip{position:absolute;z-index:15;pointer-events:none;background:rgba(14,18,20,.88);border:1px solid var(--line);border-left:3px solid var(--safety);border-radius:4px;padding:5px 9px;font-size:12.5px;white-space:nowrap;color:var(--fg)}
 </style>
 
 <div class="app">
@@ -1088,6 +1089,7 @@ function lever(parent, x, y, z, len, tilt, knob = 11, mat = M.steel) {
   const arm = new THREE.Group(); arm.rotation.x = tilt; g.add(arm);
   const rod = cyl(3.2, 3.2, len, mat, 10); rod.position.y = len / 2; arm.add(rod);
   const kn = new THREE.Mesh(new THREE.SphereGeometry(knob, 16, 12), M.black); kn.position.y = len; kn.castShadow = true; arm.add(kn);
+  const hit = new THREE.Mesh(new THREE.SphereGeometry(knob * 2.2, 8, 6), M.black); hit.visible = false; hit.position.y = len * 0.8; arm.add(hit);   // fareyle tutması kolay olsun
   return arm;
 }
 function dialTexture(label, n, big) {
@@ -1345,6 +1347,7 @@ rbox(-80, 80, BED_TOP, -100, -170, 170, 5, M.paint, carG);        // taşıyıc�
 rbox(-80, 80, -275, -100, 170, 200, 8, M.paint, carG);            // önlük (apron)
 const apronHalf = lever(carG, 48, -160, 202, 44, 0.4, 9);         // somun kolu
 const apronFeed = lever(carG, 48, -236, 202, 40, 0.4, 9);         // ilerleme kolu
+const apronSpin = lever(carG, 70, -262, 202, 52, 0.55, 10);       // mil kolu: yukarı İLERİ, orta DUR, aşağı GERİ
 { const g = cyl(7, 7, 4, smat(0x8fd0ff, 0.1, 0, 0.6, { emissive:0x0b2a3a }), 16); g.rotation.x = Math.PI / 2; g.position.set(-55, -130, 201); carG.add(g); }   // yağ gözü
 const zWheel3 = new THREE.Group(); zWheel3.position.set(-40, -200, 214); carG.add(zWheel3);
 const crossG = new THREE.Group(); carG.add(crossG);              // z = kalem ucunun yarıçapı
@@ -1552,7 +1555,14 @@ function updateHose() {
   nozzle.position.copy(nozzleEnd).addScaledVector(nozzleDir, -8);
   nozzle.quaternion.setFromUnitVectors(UP, nozzleDir);
 }
-boxR(70, 110, -100, 40, -110, -70, M.paintDark, carG);   // soğutma borusu ayağı
+rbox(66, 114, -100, -90, -114, -66, 3, M.paintDark, carG);          // soğutma borusu ayağı: flanş
+for (const [x, z] of [[72, -108], [108, -108], [72, -72], [108, -72]]) { const b = cyl(3, 3, 4, M.black, 6); b.position.set(x, -88, z); carG.add(b); }
+{ const p = cyl(7, 7, 130, MX.chrome, 16); p.position.set(90, -25, -90); carG.add(p); }
+const coolValve = new THREE.Group(); coolValve.position.set(90, 4, -90); carG.add(coolValve);
+{ const b = cyl(12, 12, 24, smat(0xb8913a, 0.35, 0.85, 0.5), 6); coolValve.add(b);
+  const s = cyl(3, 3, 10, M.steel, 8); s.position.y = 16; coolValve.add(s); }
+const coolHandle = new THREE.Group(); coolHandle.position.y = 21; coolValve.add(coolHandle);
+rbox(-4, 48, -3, 3, -5, 5, 2.5, MX.red, coolHandle);
 const MAXDROP = 1100, G_COOL = 3400;
 const dropMesh = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.55, 0.55, 1, 6),
   new THREE.MeshStandardMaterial({ color:0x8fd0ff, emissive:0x0c3a5a, roughness:0.05, metalness:0.2, transparent:true, opacity:0.62 }), MAXDROP);
@@ -1633,33 +1643,42 @@ function buildToolVisual() {
   while (postG.children.length) postG.remove(postG.children[0]);
   const T = tool();
   if (T.type !== 'bore') {
-    boxR(-28, 38, -62, 18, 95, 160, M.dark, postG);                     // dört yollu kalem bağlama
-    boxR(-24, 34, 18, 26, 105, 150, M.steel, postG);
-    const bolt = cyl(6, 6, 30, M.black, 10); bolt.position.set(5, 34, 128); postG.add(bolt);
+    // dört yollu kalem bağlama: alt gövde, üst kapak, arka duvar; kalem aradaki yuvada görünür
+    rbox(-30, 40, -62, -21, 92, 162, 3, M.dark, postG);
+    rbox(-30, 40, -3.5, 20, 92, 162, 3, M.dark, postG);
+    rbox(-30, 40, -21.5, -3, 140, 162, 2, M.dark, postG);
+    rbox(-28, 38, 20, 24, 94, 160, 2, M.ground, postG);
+    for (const z of [112, 134]) {                                         // sıkma cıvataları (altıgen başlı)
+      const b = cyl(4.5, 4.5, 14, M.steel, 12); b.position.set(10, 26, z); postG.add(b);
+      const h = cyl(8, 8, 7, M.black, 6); h.position.set(10, 34, z); postG.add(h);
+    }
+    const piv = cyl(9, 11, 14, M.steel, 20); piv.position.set(5, 28, 150); postG.add(piv);   // orta saplama ve döndürme kolu
+    const hnd = cyl(3, 3, 70, M.steel, 10); hnd.rotation.z = Math.PI / 2; hnd.rotation.y = -0.5; hnd.position.set(32, 40, 165); postG.add(hnd);
+    const hk = new THREE.Mesh(new THREE.SphereGeometry(8, 14, 10), M.black); hk.position.set(62, 40, 182); hk.castShadow = true; postG.add(hk);
   }
   const brk = S.broken;
   const insMat = brk ? new THREE.MeshStandardMaterial({ color:0x6b2a22, roughness:0.8 }) : M.insert;
   switch (T.type) {
     case 'turn':
       postG.add(prism([[0,0],[10,0.875],[12,10],[0.875,10]].map(([u, r]) => brk ? [u, r + 3] : [u, r]), 4.5, insMat, 0));
-      boxR(1, 20, -20, -4.5, 10, 150, M.steel, postG);
+      rbox(1, 20, -20, -4.5, 10, 150, 1, M.steel, postG);
       break;
     case 'chamfer':
       postG.add(prism([[0, brk ? 3 : 0],[6,6],[-6,6]], 4.5, insMat, 0));
-      boxR(-8, 8, -20, -4.5, 6, 150, M.steel, postG);
+      rbox(-8, 8, -20, -4.5, 6, 150, 1, M.steel, postG);
       break;
     case 'groove':
       postG.add(prism([[0, brk ? 4 : 0],[T.w, brk ? 4 : 0],[T.w, T.reach],[0, T.reach]], 18, T.no === 'T4' ? M.hss : insMat, 0));
-      boxR(-4, T.w + 12, -24, 0, T.reach, 150, M.steel, postG);
+      rbox(-4, T.w + 12, -24, 0, T.reach, 150, 1, M.steel, postG);
       break;
     case 'thread':
       postG.add(prism([[0, brk ? 2.5 : 0],[3,5.2],[-3,5.2]], 4.5, insMat, 0));
-      boxR(-6, 6, -20, -4.5, 5.2, 150, M.steel, postG);
+      rbox(-6, 6, -20, -4.5, 5.2, 150, 1, M.steel, postG);
       break;
     case 'bore': {
       const bar = cylX(T.rb, T.rb, 1, 120, M.steel, postG, 24); bar.position.set(60.5, -T.rb * 0.6, -T.rb);
       postG.add(prism([[0, brk ? -1 : 0],[4,-0.4],[4,-4],[0,-4]], 3, insMat, 0));
-      boxR(100, 145, -40, 20, -2 * T.rb - 6, 160, M.dark, postG);
+      rbox(100, 145, -40, 20, -2 * T.rb - 6, 160, 3, M.dark, postG);
       break;
     }
   }
@@ -3751,6 +3770,7 @@ function frame(now) {
   spLampMat.emissiveIntensity += ((S.spindle ? 2.4 : 0) - spLampMat.emissiveIntensity) * Math.min(1, dt * 10);
   startBtnMat.emissiveIntensity = S.spindle ? 0.9 : 0;
   mush.position.z = S.alarm ? 27 : 32;
+  IA.update(dt);
   apronHalf.rotation.x += ((S.halfNut ? 1.25 : 0.4) - apronHalf.rotation.x) * Math.min(1, dt * 12);
   apronFeed.rotation.x += ((S.autoZ || S.autoX ? 1.25 : 0.4) - apronFeed.rotation.x) * Math.min(1, dt * 12);
   // parça soğur (soğutma sıvısı hızlandırır), motor yükü boşalınca devir toparlanır
@@ -4069,6 +4089,105 @@ function updateLamps() {
   PM.lamp('wheels', S.tap ? 'warn' : '');
   PM.lamp('jobs', S.job && !S.job.done ? 'on' : '');
 }
+
+/* ---------------- Makine üstünde kumanda: çarkları çevir, kolları indir, düğmelere bas ----------------
+   Fare bir kumandanın üstündeyken kamera dönmez; çark sürüklenerek ya da tekerlekle çevrilir, kollara ve düğmelere tıklanır. */
+const IA = (() => {
+  const RPMS = [50, 80, 125, 200, 315, 500, 800, 1250, 2000, 2500], FEEDS = [0.02, 0.05, 0.1, 0.15, 0.2, 0.3];
+  const flick = arm => { arm.userData.kick = 1; };
+  const step = (list, v, d) => d > 0 ? (list.find(x => x > v + 1e-9) ?? list[list.length - 1])
+                                    : ([...list].reverse().find(x => x < v - 1e-9) ?? list[0]);
+  const T = [
+    { o:zWheel3, wheel:'z', tip:'Taşıyıcı çarkı (Z) · sürükle ya da tekerlekle çevir' },
+    { o:xWheel3, wheel:'x', tip:'Enine kızak çarkı (X) · sürükle ya da tekerlekle çevir' },
+    { o:wWheel3, wheel:'w', tip:'Gelincik kovanı çarkı (W) · sürükle ya da tekerlekle çevir' },
+    { o:apronSpin.parent, tip:() => S.spindle ? 'Mil kolu · tıkla: MİLİ DURDUR' : 'Mil kolu · tıkla: MİLİ ÇALIŞTIR', act:() => $(S.spindle ? 'spStop' : 'spStart').click() },
+    { o:apronHalf.parent, tip:() => 'Somun kolu (diş çekme) · ' + (S.halfNut ? 'tıkla: ayır' : 'tıkla: kapat'), act:() => $('halfNut').click() },
+    { o:apronFeed.parent, tip:() => 'Otomatik boyuna ilerleme · ' + (S.autoZ ? 'tıkla: ayır' : 'tıkla: tak'), act:() => $('autoZ').click() },
+    { o:headLevers[0].parent, tip:() => `Devir kolu · tıkla: devri artır (${S.rpm} dev/dk)`, act:() => { flick(headLevers[0]); setRpm(step(RPMS, S.rpm, 1)); } },
+    { o:headLevers[1].parent, tip:() => `Devir kolu · tıkla: devri azalt (${S.rpm} dev/dk)`, act:() => { flick(headLevers[1]); setRpm(step(RPMS, S.rpm, -1)); } },
+    { o:headLevers[2].parent, tip:() => 'Mil yönü kolu · ' + (S.dir < 0 ? 'şimdi GERİ' : 'şimdi İLERİ'), act:() => { flick(headLevers[2]); $('spDir').click(); } },
+    { o:feedLevers[0].parent, tip:() => `İlerleme kolu · tıkla: artır (${S.feedRev} mm/dev)`, act:() => { flick(feedLevers[0]); setFeed(step(FEEDS, S.feedRev, 1)); } },
+    { o:feedLevers[1].parent, tip:() => `İlerleme kolu · tıkla: azalt (${S.feedRev} mm/dev)`, act:() => { flick(feedLevers[1]); setFeed(step(FEEDS, S.feedRev, -1)); } },
+    { o:bStart, tip:'MİL START', act:() => $('spStart').click() },
+    { o:mush, tip:'ACİL STOP', act:() => $('estopBtn').click() },
+    { o:coolValve, tip:() => 'Soğutma vanası · ' + (S.coolant ? 'tıkla: kapat' : 'tıkla: aç'), act:() => $('coolant').click() },
+  ];
+  T.forEach(t => t.o.traverse(m => { m.userData.ia = t; }));
+  const objs = T.map(t => t.o), ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+  const tip = document.createElement('div'); tip.className = 'ia-tip'; tip.hidden = true; stage.append(tip);
+  let hover = null, drag = null;
+  function pick(e) {
+    const r = canvas.getBoundingClientRect();
+    ndc.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1);
+    ray.setFromCamera(ndc, camera);
+    const h = ray.intersectObjects(objs, true)[0];
+    return h ? h.object.userData.ia : null;
+  }
+  function setHover(t, e) {
+    if (hover && hover !== t) hover.o.scale.setScalar(1);
+    hover = t;
+    canvas.style.cursor = t ? (t.wheel ? (drag ? 'grabbing' : 'grab') : 'pointer') : '';
+    if (!t) { tip.hidden = true; return; }
+    t.o.scale.setScalar(1.06);
+    const r = stage.getBoundingClientRect();
+    tip.textContent = typeof t.tip === 'function' ? t.tip() : t.tip; tip.hidden = false;
+    tip.style.left = (e.clientX - r.left + 16) + 'px'; tip.style.top = (e.clientY - r.top + 14) + 'px';
+  }
+  // çarkın ekrandaki merkezi ve operatöre bakıp bakmadığı (arkadan bakınca yön ters)
+  const cv = new THREE.Vector3(), nv = new THREE.Vector3();
+  function wheelFrame(t) {
+    t.o.getWorldPosition(cv);
+    nv.set(0, 0, 1).transformDirection(t.o.matrixWorld);
+    const facing = nv.dot(camera.position.clone().sub(cv)) >= 0 ? 1 : -1;
+    cv.project(camera);
+    const r = canvas.getBoundingClientRect();
+    return { x:r.left + (cv.x + 1) / 2 * r.width, y:r.top + (1 - cv.y) / 2 * r.height, facing };
+  }
+  canvas.addEventListener('pointerdown', e => {
+    const t = pick(e); if (!t) return;
+    e.preventDefault(); e.stopImmediatePropagation(); controls.enabled = false; initAudio();
+    if (t.wheel) {
+      canvas.setPointerCapture(e.pointerId);
+      const f = wheelFrame(t);
+      drag = { t, f, last:Math.atan2(e.clientY - f.y, e.clientX - f.x), acc:0 };
+      setHover(t, e);
+    } else { t.act(); thud(200, 0.08, 0.06); setHover(t, e); }
+  }, true);
+  canvas.addEventListener('pointermove', e => {
+    if (drag) {
+      const a = Math.atan2(e.clientY - drag.f.y, e.clientX - drag.f.x);
+      let d = a - drag.last; if (d > Math.PI) d -= TAU; if (d < -Math.PI) d += TAU;
+      drag.last = a; drag.acc += d * drag.f.facing;
+      const n = Math.trunc(drag.acc / TICK);
+      if (n) { drag.acc -= n * TICK; wheelTicks(drag.t.wheel, n); }
+      return;
+    }
+    if (e.buttons) return;          // kamera döndürülürken üstünden geçilen kumandayı vurgulama
+    setHover(pick(e), e);
+  });
+  const end = () => { if (drag) { drag = null; canvas.style.cursor = hover ? 'grab' : ''; } controls.enabled = true; };
+  canvas.addEventListener('pointerup', end); canvas.addEventListener('pointercancel', end);
+  canvas.addEventListener('pointerleave', () => { if (!drag) setHover(null); });
+  canvas.addEventListener('wheel', e => {
+    const t = pick(e); if (!t || !t.wheel) return;
+    e.preventDefault(); e.stopImmediatePropagation(); initAudio();
+    const f = wheelFrame(t);
+    wheelTicks(t.wheel, (e.deltaY < 0 ? 1 : -1) * f.facing);
+  }, { capture:true, passive:false });
+  function update(dt) {
+    apronSpin.rotation.x += ((S.spindle ? (S.dir < 0 ? -0.2 : 1.25) : 0.55) - apronSpin.rotation.x) * Math.min(1, dt * 12);
+    for (const arm of [...headLevers, ...feedLevers]) {
+      if (arm.userData.base === undefined) arm.userData.base = arm.rotation.x;
+      const k = arm.userData.kick || 0;
+      arm.rotation.x = arm.userData.base + (k > 0 ? Math.sin(Math.PI * (1 - k)) * 0.45 : 0);
+      if (k > 0) arm.userData.kick = Math.max(0, k - dt * 4);
+    }
+    coolHandle.rotation.y += ((S.coolant ? 0 : Math.PI / 2) - coolHandle.rotation.y) * Math.min(1, dt * 10);
+    if (hover && !tip.hidden && typeof hover.tip === 'function') tip.textContent = hover.tip();
+  }
+  return { update };
+})();
 
 // Başlangıç
 buildToolVisual(); buildTailVisual(); updateToolUI(); updateSpindleUI(); updateAutoUI();
