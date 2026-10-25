@@ -1339,6 +1339,10 @@ function normRow(s) {
 }
 let dirty = null;
 function markDirty(i0, i1) {
+  // alın ve uçtaki istasyonların ötesindeki satırlar o istasyonun profilinden çizilir (alın yüzeyi, delik ağzı);
+  // uca dokunan her değişiklikte onlar da yenilenmeli, yoksa delik alından görünmez
+  if (i1 >= endIdx) i1 = NS - 1;
+  if (i0 <= startIdx) i0 = 0;
   if (!dirty) dirty = [i0, i1];
   else { dirty[0] = Math.min(dirty[0], i0); dirty[1] = Math.max(dirty[1], i1); }
 }
