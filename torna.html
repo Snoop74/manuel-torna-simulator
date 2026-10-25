@@ -924,7 +924,7 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputEncoding = THREE.sRGBEncoding;
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x151b1d);
-scene.fog = new THREE.Fog(0x151b1d, 1500, 3400);
+scene.fog = new THREE.Fog(0x151b1d, 2600, 8000);
 const camera = new THREE.PerspectiveCamera(40, 1, 2, 7000);
 const controls = new THREE.OrbitControls(camera, canvas);
 controls.enableDamping = true; controls.dampingFactor = 0.12; controls.maxPolarAngle = Math.PI * 0.95;
@@ -933,7 +933,7 @@ scene.add(new THREE.HemisphereLight(0xdfe9ff, 0x2a2622, 0.25));
 const sun = new THREE.DirectionalLight(0xffffff, 0.75);
 sun.position.set(200, 700, 500); sun.castShadow = true;
 sun.shadow.mapSize.set(2048, 2048);
-Object.assign(sun.shadow.camera, { left:-450, right:550, top:400, bottom:-400, near:100, far:1800 });
+Object.assign(sun.shadow.camera, { left:-650, right:950, top:520, bottom:-820, near:100, far:2400 });
 sun.shadow.bias = -0.0008;
 scene.add(sun);
 const fill = new THREE.DirectionalLight(0x9fc4ff, 0.18); fill.position.set(-400, 200, -300); scene.add(fill);
@@ -1026,24 +1026,203 @@ function addMarks(m) {
   plate.position.set(-210, 15, 170.6); scene.add(plate);
 }
 
-/* ---- Tezgâh ---- */
+/* ---- Tezgâh ve atölye görünümü ----
+   Çarpışma ölçüleri (ayna, çeneler, taşıyıcı ve gelincik sınırları) değişmedi; burada yalnızca görünüş var.
+   Döküm boya ve beton için dünya koordinatında gürültü: UV'siz kutularda da eşit ölçekte benek verir. */
 const BED_TOP = -138;
-const floor = new THREE.Mesh(new THREE.PlaneGeometry(7000, 7000), M.floor);
-floor.rotation.x = -Math.PI / 2; floor.position.y = -760; floor.receiveShadow = true; scene.add(floor);
-boxR(-420, 760, -300, -150, -170, 170, M.paint);          // kızak (yatak)
-boxR(-420, -300, -760, -300, -170, 170, M.paint);         // ayak (sol)
-boxR(620, 760, -760, -300, -170, 170, M.paint);           // ayak (sağ)
-for (const z of [-120, 110]) boxR(-420, 760, -150, BED_TOP, z - 18, z + 18, M.ground);   // kızak yolları
-boxR(-420, -80, -150, 170, -170, 170, M.paint);           // fener mili kutusu
-boxR(-410, -90, 60, 150, 172, 176, M.paintDark);          // ön panel
-for (let k = 0; k < 3; k++) {                              // devir kolları (dekor)
-  const l = cyl(5, 5, 60, M.steel, 10); l.position.set(-360 + k * 90, 80, 200); l.rotation.x = Math.PI / 2; scene.add(l);
-  const kn = new THREE.Mesh(new THREE.SphereGeometry(12, 14, 10), M.black); kn.position.set(-360 + k * 90, 80, 232); scene.add(kn);
+const NOISE_GLSL = `
+float h3(vec3 p) { p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
+float vnoise(vec3 x) {
+  vec3 i = floor(x), f = fract(x); f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(mix(h3(i), h3(i + vec3(1,0,0)), f.x), mix(h3(i + vec3(0,1,0)), h3(i + vec3(1,1,0)), f.x), f.y),
+             mix(mix(h3(i + vec3(0,0,1)), h3(i + vec3(1,0,1)), f.x), mix(h3(i + vec3(0,1,1)), h3(i + vec3(1,1,1)), f.x), f.y), f.z);
+}`;
+function addMottle(m, sc, amt) {
+  m.onBeforeCompile = sh => {
+    sh.uniforms.mSc = { value:sc }; sh.uniforms.mAmt = { value:amt };
+    sh.vertexShader = 'varying vec3 vWp;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n  vWp = (modelMatrix * vec4(position, 1.0)).xyz;');
+    sh.fragmentShader = 'uniform float mSc;\nuniform float mAmt;\nvarying vec3 vWp;\n' + NOISE_GLSL + '\n' + sh.fragmentShader
+      .replace('#include <color_fragment>', `#include <color_fragment>
+        float nz = vnoise(vWp * mSc) * 0.55 + vnoise(vWp * mSc * 4.3) * 0.3 + vnoise(vWp * mSc * 17.0) * 0.15;
+        diffuseColor.rgb *= 1.0 - mAmt + 2.0 * mAmt * nz;`)
+      .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
+        roughnessFactor = clamp(roughnessFactor + (nz - 0.5) * mAmt * 1.6, 0.05, 1.0);`);
+  };
+  m.customProgramCacheKey = () => 'mottle';
 }
-cylX(60, 60, -80, -76, M.dark);                            // mil burnu flanşı
-// Vida mili ve ilerleme mili (önde)
-const leadscrew = cylX(10, 10, -80, 740, M.steel, scene, 12); leadscrew.position.set(330, -205, 182);
+const lin = h => new THREE.Color(h).convertSRGBToLinear();
+function smat(hex, rough, metal, env = 0.3, extra) {
+  const m = new THREE.MeshStandardMaterial(Object.assign({ color:lin(hex), roughness:rough, metalness:metal }, extra || {}));
+  m.envMapIntensity = env; return m;
+}
+addMottle(M.paint, 0.08, 0.07); addMottle(M.paintDark, 0.08, 0.07);
+M.floor = smat(0x5a5e5c, 0.92, 0, 0.15); addMottle(M.floor, 0.004, 0.16);
+const MX = {
+  cream: smat(0xc9c6b6, 0.8, 0.02, 0.2),
+  wallLow: smat(0x3f5a51, 0.9, 0, 0.12), wallHigh: smat(0x9fa39a, 0.95, 0, 0.1),
+  rubber: smat(0x1b1d1e, 0.95, 0, 0.05),
+  tray: smat(0x6a7176, 0.55, 0.6, 0.35),
+  red: smat(0xb3261e, 0.45, 0.05, 0.3), green: smat(0x2f8f4e, 0.45, 0.05, 0.3),
+  stripe: smat(0xe0a92a, 0.7, 0, 0.15),
+  cabinet: smat(0x9b2b24, 0.6, 0.15, 0.3), cabinetDark: smat(0x2b2f33, 0.6, 0.3, 0.3),
+  wood: smat(0x7a5a3a, 0.85, 0, 0.1), chrome: smat(0xd8dde0, 0.18, 1, 0.8),
+  glow: new THREE.MeshBasicMaterial({ color:0xf4f1e6 }),
+};
+addMottle(MX.wallLow, 0.006, 0.08); addMottle(MX.wallHigh, 0.006, 0.08); addMottle(MX.cabinet, 0.05, 0.05);
+// Yuvarlatılmış kenarlı kutu (döküm ve sac parçalar için)
+function rbox(x0, x1, y0, y1, z0, z1, r, mat, parent, shadow = true) {
+  const w = x1 - x0, h = y1 - y0, d = z1 - z0;
+  r = Math.min(r, w / 2 - 0.01, h / 2 - 0.01, d / 2 - 0.01);
+  const sh = new THREE.Shape(), hw = w / 2 - r, hh = h / 2 - r;
+  sh.moveTo(-hw, -hh); sh.lineTo(hw, -hh); sh.lineTo(hw, hh); sh.lineTo(-hw, hh); sh.lineTo(-hw, -hh);
+  const g = new THREE.ExtrudeGeometry(sh, { depth:Math.max(0.01, d - 2 * r), bevelEnabled:r > 0.05, bevelSize:r, bevelThickness:r, bevelSegments:3, curveSegments:1 });
+  g.translate(0, 0, -(d - 2 * r) / 2);
+  const m = new THREE.Mesh(g, mat);
+  m.position.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
+  m.castShadow = shadow; m.receiveShadow = true; (parent || scene).add(m); return m;
+}
+// Kol: göbek, eğik çubuk ve siyah topuz
+function lever(parent, x, y, z, len, tilt, knob = 11, mat = M.steel) {
+  const g = new THREE.Group(); g.position.set(x, y, z); parent.add(g);
+  const boss = cyl(9, 11, 12, M.paintDark, 16); boss.rotation.x = Math.PI / 2; g.add(boss);
+  const arm = new THREE.Group(); arm.rotation.x = tilt; g.add(arm);
+  const rod = cyl(3.2, 3.2, len, mat, 10); rod.position.y = len / 2; arm.add(rod);
+  const kn = new THREE.Mesh(new THREE.SphereGeometry(knob, 16, 12), M.black); kn.position.y = len; kn.castShadow = true; arm.add(kn);
+  return arm;
+}
+function dialTexture(label, n, big) {
+  const cv = document.createElement('canvas'); cv.width = cv.height = 256;
+  const g = cv.getContext('2d');
+  g.fillStyle = '#d7d8d0'; g.beginPath(); g.arc(128, 128, 126, 0, TAU); g.fill();
+  g.strokeStyle = '#1c2224'; g.fillStyle = '#1c2224'; g.lineWidth = 3; g.textAlign = 'center'; g.textBaseline = 'middle';
+  for (let k = 0; k < n; k++) {
+    const a = k / n * TAU - Math.PI / 2, major = k % (n / 10) === 0;
+    g.beginPath(); g.moveTo(128 + Math.cos(a) * 124, 128 + Math.sin(a) * 124); g.lineTo(128 + Math.cos(a) * (major ? 100 : 112), 128 + Math.sin(a) * (major ? 100 : 112)); g.stroke();
+    if (big && major) { g.font = 'bold 20px sans-serif'; g.fillText(String(k / (n / 10) * (big)), 128 + Math.cos(a) * 82, 128 + Math.sin(a) * 82); }
+  }
+  g.font = 'bold 22px sans-serif'; if (label) g.fillText(label, 128, 128);
+  const t = new THREE.CanvasTexture(cv); t.encoding = THREE.sRGBEncoding; t.anisotropy = 4; return t;
+}
+
+/* -- atölye: zemin, güvenlik çizgileri, duvarlar, tavan lambaları, dolap ve tezgâh -- */
+const FLOOR_Y = -760;
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(9000, 9000), M.floor);
+floor.rotation.x = -Math.PI / 2; floor.position.y = FLOOR_Y; floor.receiveShadow = true; scene.add(floor);
+{
+  const y = FLOOR_Y + 0.6, W = 46;
+  const lines = [[-760, 1080, 430, 430 + W], [-760, 1080, -420 - W, -420], [-760 - W, -760, -420 - W, 430 + W], [1080, 1080 + W, -420 - W, 430 + W]];
+  for (const [x0, x1, z0, z1] of lines) boxR(x0, x1, y - 0.5, y + 0.5, z0, z1, MX.stripe).castShadow = false;
+  // operatörün durduğu kauçuk paspas
+  rbox(-160, 760, FLOOR_Y, FLOOR_Y + 14, 470, 1050, 6, MX.rubber).castShadow = false;
+  for (let x = -130; x < 740; x += 40) boxR(x, x + 14, FLOOR_Y + 14, FLOOR_Y + 17, 480, 1040, MX.rubber).castShadow = false;
+  // duvarlar: altı boyalı lambri, üstü açık renk
+  const wall = (x0, x1, z0, z1) => { boxR(x0, x1, FLOOR_Y, FLOOR_Y + 1300, z0, z1, MX.wallLow).castShadow = false; boxR(x0, x1, FLOOR_Y + 1300, FLOOR_Y + 3600, z0, z1, MX.wallHigh).castShadow = false; boxR(x0 - 4, x1 + 4, FLOOR_Y + 1290, FLOOR_Y + 1320, z0 - 4, z1 + 4, MX.stripe).castShadow = false; };
+  wall(-3400, 3600, -1640, -1600); wall(-3400, -3360, -1600, 3000);
+  // tavan floresanları
+  for (const x of [-1200, 300, 1800]) for (const z of [-700, 700]) {
+    boxR(x - 600, x + 600, 2450, 2480, z - 60, z + 60, MX.cabinetDark).castShadow = false;
+    boxR(x - 580, x + 580, 2440, 2452, z - 40, z + 40, MX.glow).castShadow = false;
+  }
+  // takım dolabı (sol arka)
+  const cx = -1650, cz = -1480;
+  rbox(cx - 380, cx + 380, FLOOR_Y, FLOOR_Y + 1050, cz - 120, cz + 120, 8, MX.cabinet);
+  for (let k = 0; k < 6; k++) {
+    const y0 = FLOOR_Y + 70 + k * 160;
+    rbox(cx - 360, cx + 360, y0, y0 + 140, cz + 120, cz + 128, 3, MX.cabinet);
+    rbox(cx - 120, cx + 120, y0 + 100, y0 + 112, cz + 128, cz + 142, 4, MX.chrome);
+  }
+  rbox(cx - 400, cx + 400, FLOOR_Y + 1050, FLOOR_Y + 1080, cz - 140, cz + 140, 5, MX.wood);
+  // dolabın üstünde kumpas kutusu ve yağdanlık
+  rbox(cx - 250, cx - 30, FLOOR_Y + 1080, FLOOR_Y + 1130, cz - 60, cz + 40, 4, MX.cabinetDark);
+  const can = cyl(55, 70, 150, MX.stripe, 24); can.position.set(cx + 200, FLOOR_Y + 1155, cz); scene.add(can);
+  const spout = cyl(6, 9, 180, MX.chrome, 10); spout.position.set(cx + 270, FLOOR_Y + 1280, cz); spout.rotation.z = -0.9; scene.add(spout);
+  // delikli pano ve anahtarlar
+  rbox(cx - 380, cx + 380, FLOOR_Y + 1250, FLOOR_Y + 1900, -1600, -1585, 3, MX.cream);
+  for (let k = 0; k < 7; k++) { const w = rbox(cx - 320 + k * 100, cx - 300 + k * 100, FLOOR_Y + 1380, FLOOR_Y + 1620 - k * 18, -1585, -1575, 6, MX.chrome); w.castShadow = false; }
+  // sağ arkada çalışma tezgâhı ve mengene
+  const bx = 2000, bz = -1350;
+  rbox(bx - 700, bx + 700, FLOOR_Y + 820, FLOOR_Y + 880, bz - 300, bz + 300, 6, MX.wood);
+  for (const sx of [-650, 650]) for (const sz of [-250, 250]) rbox(bx + sx - 30, bx + sx + 30, FLOOR_Y, FLOOR_Y + 820, bz + sz - 30, bz + sz + 30, 4, MX.cabinetDark);
+  rbox(bx - 680, bx + 680, FLOOR_Y + 120, FLOOR_Y + 150, bz - 280, bz + 280, 4, MX.cabinetDark);
+  rbox(bx + 300, bx + 520, FLOOR_Y + 880, FLOOR_Y + 1010, bz + 150, bz + 290, 8, M.paint);
+  rbox(bx + 280, bx + 540, FLOOR_Y + 1000, FLOOR_Y + 1060, bz + 170, bz + 270, 6, M.ground);
+  // talaş varili
+  const drum = cyl(280, 280, 880, smat(0x2f4f7a, 0.55, 0.3), 32); drum.position.set(2500, FLOOR_Y + 440, -700); scene.add(drum);
+  for (const y of [180, 700]) { const r = new THREE.Mesh(new THREE.TorusGeometry(282, 7, 8, 48), MX.tray); r.rotation.x = Math.PI / 2; r.position.set(2500, FLOOR_Y + y, -700); scene.add(r); }
+}
+
+/* -- tezgâh gövdesi -- */
+// yatak: yuvarlatılmış döküm, önde kremayer, iki yanında kızak yolları
+rbox(-420, 760, -300, -150, -160, 160, 10, M.paint);
+rbox(-430, 770, -318, -296, -170, 170, 6, M.paint);                         // yatak alt flanşı
+for (const z of [-120, 110]) rbox(-420, 760, -151, BED_TOP, z - 18, z + 18, 2.5, M.ground);   // taşlanmış kızak yolları
+for (let x = -380; x < 740; x += 120) boxR(x, x + 16, -151, -149, -100, 90, M.paintDark).castShadow = false;   // yatak nervürleri (yollar arası)
+{
+  const n = 205, rack = new THREE.InstancedMesh(new THREE.BoxGeometry(2.4, 10, 8), M.ground, n), o = new THREE.Object3D();
+  for (let k = 0; k < n; k++) { o.position.set(-80 + k * 4, -168, 163); o.updateMatrix(); rack.setMatrixAt(k, o.matrix); }
+  rack.receiveShadow = true; scene.add(rack);
+  boxR(-82, 740, -176, -172, 158, 168, M.ground);
+}
+// ayaklar: kapaklı dolap ayaklar, kaide ve havalandırma
+function pedestal(x0, x1, vents) {
+  rbox(x0, x1, -742, -300, -175, 175, 10, M.paint);
+  rbox(x0 - 12, x1 + 12, FLOOR_Y, -736, -190, 190, 6, M.paintDark);
+  rbox(x0 + 22, x1 - 22, -700, -360, 172, 182, 6, M.paintDark);                  // kapak
+  rbox(x1 - 60, x1 - 44, -560, -470, 180, 196, 5, MX.chrome);                     // kapak kolu
+  if (vents) for (let k = 0; k < 6; k++) boxR(x0 + 50, x1 - 80, -660 + k * 22, -652 + k * 22, 181, 184, M.black).castShadow = false;
+}
+pedestal(-440, -250, true); pedestal(590, 770, false);
+// talaş teknesi: ayaklar arasında, kenarları kalkık
+rbox(-250, 590, -476, -462, -200, 240, 4, MX.tray);
+rbox(-250, 590, -476, -400, 232, 242, 3, MX.tray); rbox(-250, 590, -476, -420, -205, -195, 3, MX.tray);
+// arka sıçrama koruması
+rbox(-80, 770, -300, 250, -214, -204, 4, M.paintDark);
+rbox(-80, 770, 244, 256, -220, -196, 4, M.paintDark);
+// sağ uçta vida mili yatağı
+rbox(735, 772, -262, -178, 152, 204, 6, M.paint);
+
+/* -- fener mili kutusu -- */
+rbox(-420, -80, -150, 170, -170, 170, 14, M.paint);
+rbox(-414, -86, 166, 184, -164, 164, 8, M.paint);                              // kapak
+rbox(-300, -200, 182, 190, -40, 40, 4, M.paintDark);                            // kapak tutamağı
+rbox(-470, -416, -296, 150, -150, 150, 26, M.paint);                           // kayış muhafazası (sol uç)
+for (let k = 0; k < 4; k++) rbox(-478, -470, 0 + k * 26, 12 + k * 26, -90, 90, 2, M.black, scene, false);
+cylX(78, 78, -92, -80, M.paintDark, scene, 48);                                 // mil yatağı muhafazası
+cylX(60, 60, -80, -76, M.dark);                                                 // mil burnu flanşı
+// ön yüz: hız kolları, devir kadranı, kumanda kutusu
+rbox(-412, -172, 60, 152, 168, 178, 5, M.paintDark);                             // kol paneli
+const headLevers = [-360, -280, -200].map((x, k) => lever(scene, x, 106, 180, 58 + k * 6, 0.55 + k * 0.25, 11));
+{
+  const dial = new THREE.Mesh(new THREE.CylinderGeometry(34, 36, 10, 40), [M.dark, new THREE.MeshStandardMaterial({ map:dialTexture('', 40, 250), roughness:0.6 }), M.dark]);
+  dial.rotation.x = Math.PI / 2; dial.position.set(-380, 15, 176); scene.add(dial);
+  const ptr = box(5, 26, 4, M.black, -380 + Math.sin(-0.8) * 13, 15 + Math.cos(-0.8) * 13, 183); ptr.rotation.z = 0.8;
+}
+// kumanda kutusu: start (yeşil), stop (kırmızı mantar), mil lambası
+const ctrlG = new THREE.Group(); ctrlG.position.set(-125, 100, 170); scene.add(ctrlG);
+rbox(-34, 34, -42, 52, 0, 26, 6, MX.cream, ctrlG);
+const spLampMat = new THREE.MeshStandardMaterial({ color:0x4a3a12, emissive:0xffb020, emissiveIntensity:0, roughness:0.3 });
+const spLamp = new THREE.Mesh(new THREE.SphereGeometry(9, 16, 10, 0, TAU, 0, Math.PI / 2), spLampMat); spLamp.rotation.x = Math.PI / 2; spLamp.position.set(0, 36, 26); ctrlG.add(spLamp);
+const startBtnMat = new THREE.MeshStandardMaterial({ color:lin(0x2f8f4e), emissive:0x2fd060, emissiveIntensity:0, roughness:0.4 });
+const bStart = cyl(9, 9, 8, startBtnMat, 20); bStart.rotation.x = Math.PI / 2; bStart.position.set(0, 10, 30); ctrlG.add(bStart);
+const eRing = cyl(17, 17, 3, MX.stripe, 24); eRing.rotation.x = Math.PI / 2; eRing.position.set(0, -22, 27); ctrlG.add(eRing);
+const mush = new THREE.Mesh(new THREE.SphereGeometry(14, 20, 12, 0, TAU, 0, Math.PI / 2), MX.red); mush.rotation.x = Math.PI / 2; mush.position.set(0, -22, 32); mush.castShadow = true; ctrlG.add(mush);
+const mushStem = cyl(6, 6, 6, MX.red, 12); mushStem.rotation.x = Math.PI / 2; mushStem.position.set(0, -22, 29); ctrlG.add(mushStem);
+// ilerleme kutusu (Norton): fener mili altında, plakalı ve kollu
+rbox(-420, -100, -300, -158, 150, 206, 10, M.paint);
+rbox(-400, -250, -282, -176, 205, 209, 3, MX.cream);
+for (let r = 0; r < 3; r++) for (let c = 0; c < 6; c++) boxR(-392 + c * 24, -376 + c * 24, -272 + r * 30, -254 + r * 30, 209, 210, M.dark).castShadow = false;
+const feedLevers = [-210, -150].map((x, k) => lever(scene, x, -230, 208, 40, 0.9 - k * 0.5, 9));
+// vida mili (diş görünümü dokuyla) ve ilerleme mili
+const threadTex = (() => {
+  const cv = document.createElement('canvas'); cv.width = 8; cv.height = 64; const g = cv.getContext('2d');
+  for (let y = 0; y < 64; y++) { const v = 128 + 110 * Math.sin(y / 64 * TAU); g.fillStyle = `rgb(${v},${v},${v})`; g.fillRect(0, y, 8, 1); }
+  const t = new THREE.CanvasTexture(cv); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1, 205); return t;
+})();
+const leadMat = new THREE.MeshStandardMaterial({ color:lin(0x9aa1a6), roughness:0.45, metalness:0.7, bumpMap:threadTex, bumpScale:1.4 }); leadMat.envMapIntensity = 0.5;
+const leadscrew = cylX(10, 10, -80, 740, leadMat, scene, 16); leadscrew.position.set(330, -205, 182);
 const feedrod = cylX(8, 8, -80, 740, M.ground, scene, 12); feedrod.position.set(330, -240, 182);
+// mil start/stop kolu (önlüğün yanında, ilerleme milinin altında)
+const ctrlRod = cylX(6, 6, -80, 740, M.steel, scene, 10); ctrlRod.position.set(330, -268, 186);
 
 /* ---- Dönen grup: ayna + çeneler + parça ---- */
 const spinG = new THREE.Group(); scene.add(spinG);
@@ -1062,6 +1241,12 @@ function buildJaws(r) {           // çeneler bağlanan çapa kadar kapanır
   }
 }
 buildJaws(STOCK_R);
+cylX(CHUCK_R, CHUCK_R - 4, -4, 0.2, M.ground, spinG, 48);       // ayna alnı pahı
+cylX(80, 80, -88, -75, M.black, spinG, 48);                      // ayna flanşı
+for (let k = 0; k < 3; k++) {                                     // anahtar yuvaları (altıgen)
+  const a = k * TAU / 3 + TAU / 6, m = cylX(6, 6, -1, 0.6, M.black, spinG, 6);
+  m.position.y = 66 * Math.cos(a); m.position.z = 66 * Math.sin(a);
+}
 
 /* ---- Parça mesh'i: dış profil + alın + delik tek bir dönel yüzeyde ---- */
 const RS = 0.2, RMIN = -2, MR = Math.round((AMAX - RMIN) / RS) + 1, ROWS = MR * 2, SEG = 64;
@@ -1156,30 +1341,46 @@ markDirty(0, NS - 1);
 
 /* ---- Taşıyıcı, enine kızak, kalem ---- */
 const carG = new THREE.Group(); scene.add(carG);
-boxR(-80, 80, BED_TOP, -100, -170, 170, M.paint, carG);          // taşıyıcı kızağı (saddle)
-boxR(-80, 80, -275, -100, 170, 200, M.paint, carG);              // önlük (apron)
+rbox(-80, 80, BED_TOP, -100, -170, 170, 5, M.paint, carG);        // taşıyıcı kızağı (saddle)
+rbox(-80, 80, -275, -100, 170, 200, 8, M.paint, carG);            // önlük (apron)
+const apronHalf = lever(carG, 48, -160, 202, 44, 0.4, 9);         // somun kolu
+const apronFeed = lever(carG, 48, -236, 202, 40, 0.4, 9);         // ilerleme kolu
+{ const g = cyl(7, 7, 4, smat(0x8fd0ff, 0.1, 0, 0.6, { emissive:0x0b2a3a }), 16); g.rotation.x = Math.PI / 2; g.position.set(-55, -130, 201); carG.add(g); }   // yağ gözü
 const zWheel3 = new THREE.Group(); zWheel3.position.set(-40, -200, 214); carG.add(zWheel3);
 const crossG = new THREE.Group(); carG.add(crossG);              // z = kalem ucunun yarıçapı
-boxR(-55, 55, -100, -62, 30, 260, M.ground, crossG);              // enine kızak
+rbox(-55, 55, -100, -62, 30, 260, 3, M.ground, crossG);           // enine kızak
+for (const x of [-59, 55]) rbox(x, x + 4, -98, -70, 30, 250, 1.5, M.paintDark, crossG);   // kırlangıç kuyruğu kamaları
 const xWheel3 = new THREE.Group(); xWheel3.position.set(0, -82, 280); crossG.add(xWheel3);
 const compG = new THREE.Group(); compG.position.set(5, 0, 125); crossG.add(compG);   // üst kızak tablası (açıyla döner)
 boxR(-50, 50, -62, -54, -42, 42, M.ground, compG);
 boxR(-6, 6, -63, -53, -46, -40, M.yellow, compG);
 const postG = new THREE.Group(); crossG.add(postG);              // kalem bağlama (taret) ve kalem
+const collarMat = new THREE.MeshStandardMaterial({ map:dialTexture('', 100, 0), roughness:0.45, metalness:0.5 });
 function handwheel(parent, axis) {
-  const rim = new THREE.Mesh(new THREE.TorusGeometry(42, 4.5, 10, 36), M.steel); rim.castShadow = true; parent.add(rim);
-  const hub = cyl(11, 11, 26, M.steel, 16); hub.rotation.x = Math.PI / 2; parent.add(hub);
-  for (let k = 0; k < 3; k++) { const sp = box(4, 42, 5, M.steel, 0, 0, 0, parent); sp.rotation.z = k * TAU / 3; sp.position.set(-Math.sin(k * TAU / 3) * 21, Math.cos(k * TAU / 3) * 21, 0); }
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(42, 5, 14, 48), MX.chrome); rim.castShadow = true; parent.add(rim);
+  const hub = cyl(12, 14, 26, MX.chrome, 24); hub.rotation.x = Math.PI / 2; parent.add(hub);
+  for (let k = 0; k < 3; k++) {                                   // hafif çanak kollar
+    const a = k * TAU / 3, sp = cyl(3, 4.4, 32, MX.chrome, 10);
+    sp.position.set(-Math.sin(a) * 25, Math.cos(a) * 25, -3); sp.rotation.z = a; sp.castShadow = true; parent.add(sp);
+  }
+  const col = new THREE.Mesh(new THREE.CylinderGeometry(24, 24, 10, 48), [M.ground, collarMat, M.ground]);   // bölüntülü bilezik
+  col.rotation.x = Math.PI / 2; col.position.z = -16; parent.add(col);
   const h = cyl(6, 6, 34, M.black, 12); h.rotation.x = Math.PI / 2; h.position.set(0, 36, 20); parent.add(h);
+  const hb = cyl(3, 3, 8, MX.chrome, 8); hb.rotation.x = Math.PI / 2; hb.position.set(0, 36, 2); parent.add(hb);
   if (axis === 'x') parent.rotation.y = Math.PI / 2;
 }
 handwheel(zWheel3); handwheel(xWheel3);
 
 /* ---- Gelincik ---- */
 const tailG = new THREE.Group(); scene.add(tailG);               // orijin: matkap aynasının arkası (kovan ucu)
-boxR(60, 230, BED_TOP, 60, -110, 110, M.paint, tailG);
-boxR(50, 240, BED_TOP, -110, -140, 140, M.paint, tailG);
+rbox(50, 240, BED_TOP, -112, -140, 140, 5, M.paint, tailG);       // taban
+rbox(62, 228, -114, 0, -100, 100, 10, M.paint, tailG);            // gövde
+cylX(52, 52, 60, 230, M.paint, tailG, 40);                        // kovan gövdesi
+cylX(30, 34, 52, 60, M.paintDark, tailG, 32);                     // burun bileziği
+cylX(30, 30, 228, 236, M.paintDark, tailG, 32);
 cylX(24, 24, 0, 70, M.ground, tailG, 32);
+{ const l = lever(tailG, 110, 52, 0, 40, 0.5, 8); l.parent.rotation.x = -Math.PI / 2; }   // kovan kilidi
+lever(tailG, 200, -125, 141, 46, 0.35, 9);                        // gelincik bağlama kolu
 const wWheel3 = new THREE.Group(); wWheel3.position.set(244, 0, 0); tailG.add(wWheel3);
 handwheel(wWheel3); wWheel3.rotation.y = Math.PI / 2;
 const tailToolG = new THREE.Group(); tailG.add(tailToolG);
@@ -1187,6 +1388,7 @@ const tailToolG = new THREE.Group(); tailG.add(tailToolG);
 /* ---------------- Talaşlar (dünya koordinatları) ---------------- */
 function groundAtW(x, z) {
   if (x >= -420 && x <= 760 && z >= -170 && z <= 170) return -150;
+  if (x >= -250 && x <= 590 && z >= -200 && z <= 232) return -462;   // talaş teknesi
   return -760;
 }
 const MAXCHIP = 2400;            // talaşlar kızakta birikir; süpürülene kadar kalır
@@ -3546,6 +3748,11 @@ function frame(now) {
   if (now - S.lastCut > 300) { S.lastB = 0; S.defl = 0; }
   spinG.position.y = now - S.lastCut < 200 && S.defl > 0.02 ? (Math.random() - 0.5) * Math.min(1.5, S.defl * 6) : 0;
   compG.rotation.y = S.tsAng * Math.PI / 180;
+  spLampMat.emissiveIntensity += ((S.spindle ? 2.4 : 0) - spLampMat.emissiveIntensity) * Math.min(1, dt * 10);
+  startBtnMat.emissiveIntensity = S.spindle ? 0.9 : 0;
+  mush.position.z = S.alarm ? 27 : 32;
+  apronHalf.rotation.x += ((S.halfNut ? 1.25 : 0.4) - apronHalf.rotation.x) * Math.min(1, dt * 12);
+  apronFeed.rotation.x += ((S.autoZ || S.autoX ? 1.25 : 0.4) - apronFeed.rotation.x) * Math.min(1, dt * 12);
   // parça soğur (soğutma sıvısı hızlandırır), motor yükü boşalınca devir toparlanır
   S.temp = Math.max(0, S.temp - S.temp * dt * S.sim * (S.coolant && !mat.dry ? 1 / 25 : 1 / 400));
   S.thermF = 1 + mat.alpha * S.temp;

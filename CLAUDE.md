@@ -26,6 +26,7 @@
 - **Görsel:** RoomEnvironment + ACES; `addMarks(material)` shader'ı `mark` özniteliğinden (ilerleme, Ra, tırlama) helis izi ve dalga çizer; `surfColor()` malzeme ve ısı rengi.
 
 - **Kılavuz/pafta:** `METRIC`, `applyTailSize()` (G5 matkap Ø, G6 kılavuz, G7 pafta). `tryTapDie()` temas kontrolleri ve `S.tap` (kovanı mil sürer: −dir·p·rpm), `tapCut()` dişi helis faz uzayında açar: pafta `Gr`/`S.zone`, kılavuz `GrI`/`S.zoneI` (iç diş, `threadRI`). Mil yönü `S.dir` (geri yönde kalemler kesmez, otomatik ilerleme ters döner).
+- **Tezgâh görünümü:** `rbox()` yuvarlatılmış kutu (ExtrudeGeometry), `lever()`, `dialTexture()`; `addMottle()` döküm boya ve beton için dünya koordinatında gürültü (UV gerekmez). Atölye (zemin çizgileri, duvarlar, dolap, tezgâh, varil) ve tezgâh ayrıntıları yalnızca görsel; çarpışma ölçüleri `carriageHit`/`tailHit` sabitlerinde, onlara dokunmadan değiştirilebilir. Mil lambası, start düğmesi, acil stop mantarı ve önlük kolları durumla oynar.
 - **Arayüz:** bölümler `data-panel` id'li; `PM` (panel yöneticisi) başlangıçta onları `.panel` pencerelerine sarar (`#panelLayer`). `.pendant` gizli kalır, yalnızca kaynak. Konum/boyut `localStorage['torna-panels-v1']`'de. İçerik ölçeği container query (`cqw`) ile. `PM.lamp()` `updateHud`'dan, `drawGauge()` her karede. Alarm/rapor/toast `body`'ye taşınır ki panellerin üstünde kalsın. 900 px altında paneller sahnenin altında alt alta dizilir.
 - **Esneme:** değişken kesitli kiriş integrali δ = F/E·∫(L−s)²/I(s) ds + en narin bölümün L/d oranı.
 
