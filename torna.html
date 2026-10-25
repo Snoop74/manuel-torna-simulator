@@ -344,6 +344,7 @@ table{color:inherit;font-size:inherit}
 .toast{position:fixed;top:58px;bottom:auto}
 .bench{z-index:85}
 .ia-tip{position:absolute;z-index:15;pointer-events:none;background:rgba(14,18,20,.88);border:1px solid var(--line);border-left:3px solid var(--safety);border-radius:4px;padding:5px 9px;font-size:12.5px;white-space:nowrap;color:var(--fg)}
+.polish-row{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px;align-items:center}
 </style>
 
 <div class="app">
@@ -529,6 +530,9 @@ table{color:inherit;font-size:inherit}
       <div class="rack" id="rack"></div>
       <div class="sub">Gelincik</div>
       <div class="rack" id="tailRack"></div>
+      <div class="sub">El aletleri</div>
+      <div class="polish-row"><button class="btn" id="polishOn">Zımpara: KAPALI</button><div class="seg" id="grits"><button data-g="120">120</button><button data-g="240" class="on">240</button><button data-g="400">400</button><button data-g="pasta">Cila</button></div></div>
+      <div class="dro-note">Mil dönerken işlenmiş yüzeyin üstünde fareyi basılı tutup sürtün. Her kum bir yere kadar parlatır (120 ≈ Ra 1.2, 240 ≈ 0.5, 400 ≈ 0.2, cila ≈ 0.05); kaba kum ince yüzeyi yeniden çizer. Tek yerde fazla durmak çapı küçültür.</div>
       <div class="taper" id="tailSizeRow" hidden><span>Ölçü</span><select id="tailSize" aria-label="Gelincik takımı ölçüsü"></select><span class="dro-note" id="tailSizeNote"></span></div>
     </div>
 
@@ -565,6 +569,7 @@ table{color:inherit;font-size:inherit}
         <kbd>F</kbd><span>otomatik boyuna ilerleme</span>
         <kbd>T</kbd><span>somun kolu (diş çekme)</span>
         <kbd>C</kbd><span>soğutma sıvısı</span>
+        <kbd>P</kbd><span>zımparayı al / bırak</span>
         <kbd>Esc</kbd><span>acil stop: mil ve tüm hareketler</span>
       </div>
     </details>
@@ -838,6 +843,7 @@ function initAudio() {
     SN.buzz.connect(SN.buzzD); SN.buzzD.connect(SN.chatMod.gain); SN.buzz.start();
     const wc = src(white, 1.1); wc.connect(SN.chatF); wc.connect(SN.chatF2); SN.chatF.connect(SN.chatMod); SN.chatF2.connect(SN.chatMod); chain(SN.chatMod, SN.chatG, bus);
     // soğutma sıvısı: yumuşak şırıltı
+    SN.polF = filt('bandpass', 2600, 0.8); SN.polG = gain(); chain(src(white, 0.9), SN.polF, filt('highshelf', 5000), SN.polG, bus);
     SN.coolG = gain(); chain(src(brown, 2.5), filt('bandpass', 1300, 0.5), filt('lowpass', 2400), SN.coolG, bus);   // tiz tıslama yerine boğuk akış
     SN.spd = 0;
   } catch (e) { ac = null; }
@@ -918,6 +924,7 @@ function updateAudio() {
   SN.buzzD.gain.setTargetAtTime(ch * 0.5, t, 0.1); SN.buzz.frequency.setTargetAtTime(18 + fr * 0.6, t, 0.2);
   SN.chatG.gain.setTargetAtTime(ch * 0.9, t, 0.06);
   SN.coolG.gain.setTargetAtTime(S.coolant ? 0.03 : 0, t, 0.3);
+  SN.polG.gain.setTargetAtTime((S.polishNow || 0) * 0.05, t, 0.05); SN.polF.frequency.setTargetAtTime(1800 + (S.polishNow || 0) * 1200, t, 0.1);
 }
 
 /* ---------------- Three.js sahnesi ---------------- */
@@ -1004,6 +1011,7 @@ function addMarks(m) {
         if (vMark.z > 0.01) rip = vMark.z * (0.5 + 0.5 * sin(thN * 6.2831853 * 27.0 + vLoc.x * 1.7));
         diffuseColor.rgb *= 1.0 - 0.14 * mkAmp * mkG - 0.12 * rip;`)
       .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
+        if (vMark.y > 0.0001) roughnessFactor = mix(0.07, roughnessFactor, clamp(vMark.y, 0.0, 1.0));
         roughnessFactor = clamp(roughnessFactor + mkAmp * (mkG - 0.35) * 0.5 + rip * 0.35, 0.04, 1.0);`);
   };
 }
@@ -3823,7 +3831,7 @@ function frame(now) {
   spLampMat.emissiveIntensity += ((S.spindle ? 2.4 : 0) - spLampMat.emissiveIntensity) * Math.min(1, dt * 10);
   startBtnMat.emissiveIntensity = S.spindle ? 0.9 : 0;
   mush.position.z = S.alarm ? 27 : 32;
-  IA.update(dt);
+  IA.update(dt); PL.update(dt);
   apronHalf.rotation.x += ((S.halfNut ? 1.25 : 0.4) - apronHalf.rotation.x) * Math.min(1, dt * 12);
   apronFeed.rotation.x += ((S.autoZ || S.autoX ? 1.25 : 0.4) - apronFeed.rotation.x) * Math.min(1, dt * 12);
   // parça soğur (soğutma sıvısı hızlandırır), motor yükü boşalınca devir toparlanır
@@ -4241,6 +4249,100 @@ const IA = (() => {
     if (hover && !tip.hidden && typeof hover.tip === 'function') tip.textContent = hover.tip();
   }
   return { update };
+})();
+
+/* ---------------- Zımpara ve cila: dönen parçada fareyle sürterek parlatma ----------------
+   Her kumun inebileceği bir Ra sınırı var; kaba kum ince yüzeyi yeniden çizer, yani sırayla gitmek gerekir.
+   Her saniye çok az malzeme de alır: tek yerde fazla durmak çapı küçültür. */
+const PL = (() => {
+  const GRIT = {
+    '120':  { name:'120 kum', floor:1.2,  k:1.6, cut:0.0030, col:0x8a5a2b },
+    '240':  { name:'240 kum', floor:0.5,  k:1.3, cut:0.0016, col:0x6e3529 },
+    '400':  { name:'400 kum', floor:0.2,  k:1.0, cut:0.0008, col:0x4d5256 },
+    pasta:  { name:'Cila (keçe + pasta)', floor:0.05, k:0.7, cut:0.0001, col:0xe9e3d2 },
+  };
+  const HALF = 10;                                   // bez genişliğinin yarısı (mm)
+  let on = false, grit = '240', drag = false, a0 = null, raNow = null;
+  const clothMats = {}; for (const g in GRIT) clothMats[g] = smat(GRIT[g].col, 0.95, 0, 0.1, { side:THREE.DoubleSide });
+  const cloth = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, HALF * 2, 28, 1, true, -Math.PI / 2 - 0.35, Math.PI / 2 + 0.7), clothMats[grit]);
+  cloth.rotation.z = -Math.PI / 2; cloth.visible = false; cloth.castShadow = true; scene.add(cloth);
+  const tip = document.createElement('div'); tip.className = 'ia-tip'; tip.hidden = true; stage.append(tip);
+  const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), pl = new THREE.Plane(), hitP = new THREE.Vector3(), nrm = new THREE.Vector3();
+  // fare ışınını eksenden geçen ve kameraya bakan düzlemle kesip parçanın eksenel konumunu bul
+  function axialHit(e) {
+    const r = canvas.getBoundingClientRect();
+    ndc.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1);
+    ray.setFromCamera(ndc, camera);
+    nrm.set(0, camera.position.y, camera.position.z).normalize(); pl.set(nrm, 0);
+    if (!ray.ray.intersectPlane(pl, hitP)) return null;
+    const i = idx(hitP.x);
+    if (i < startIdx || i > endIdx || !hasMat(i)) return null;
+    return Math.hypot(hitP.y, hitP.z) <= R[i] + 4 ? hitP.x : null;
+  }
+  function setOn(v) {
+    on = v; drag = false; a0 = null; cloth.visible = false; tip.hidden = true; canvas.style.cursor = '';
+    $('polishOn').textContent = 'Zımpara: ' + (on ? 'ELDE' : 'KAPALI'); $('polishOn').classList.toggle('start', on);
+    if (on) log(`${GRIT[grit].name} elde. Mil dönerken parçanın üstünde fareyi basılı tutup sağa sola sürtün. Kaba kumdan inceye doğru gidin.`, 'ok');
+  }
+  function setGrit(g) {
+    grit = g; cloth.material = clothMats[g];
+    [...$('grits').children].forEach(b => b.classList.toggle('on', b.dataset.g === g));
+  }
+  $('polishOn').addEventListener('click', () => setOn(!on));
+  $('grits').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setGrit(b.dataset.g); });
+  canvas.addEventListener('pointerdown', e => {
+    if (!on || e.button !== 0) return;
+    const a = axialHit(e); if (a === null) return;
+    e.preventDefault(); e.stopImmediatePropagation(); controls.enabled = false; initAudio();
+    try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
+    drag = true; a0 = a;
+    if (!S.spindle) warnOnce('polishSpin', 'Mil dönmüyor: zımpara için mili çalıştırın (300–800 dev/dk yeter).', 'warn', 5000);
+  }, true);
+  canvas.addEventListener('pointermove', e => {
+    if (!on) return;
+    const a = axialHit(e);
+    if (drag) a0 = a;
+    canvas.style.cursor = a !== null ? (drag ? 'grabbing' : 'grab') : '';
+    if (a === null && !drag) { tip.hidden = true; return; }
+    const r = stage.getBoundingClientRect(), i = a !== null ? idx(a) : -1;
+    const ra = i >= 0 && CUTO[i] ? RA[i] : null;
+    tip.textContent = `${GRIT[grit].name} · ${ra !== null ? 'Ra ' + ra.toFixed(2) + ' µm' : 'işlenmemiş yüzey'}${i >= 0 ? ' · Ø' + (2 * R[i]).toFixed(3) : ''}`;
+    tip.hidden = false; tip.style.left = (e.clientX - r.left + 16) + 'px'; tip.style.top = (e.clientY - r.top + 14) + 'px';
+  });
+  const end = () => { if (drag) { drag = false; a0 = null; controls.enabled = true; } };
+  canvas.addEventListener('pointerup', end); canvas.addEventListener('pointercancel', end);
+  canvas.addEventListener('pointerleave', () => { if (!drag) tip.hidden = true; });
+  document.addEventListener('keydown', e => { if (e.code === 'KeyP' && !e.target.closest('input, select, textarea')) setOn(!on); });
+  function update(dt) {
+    S.polishNow = 0;
+    if (!on || !drag || a0 === null) { cloth.visible = false; return; }
+    const ic = idx(a0); if (ic < 0 || ic >= NS) return;
+    cloth.visible = true; cloth.position.set(a0, spinG.position.y, 0);
+    const rc = Math.max(R[ic], 1) + 0.7; cloth.scale.set(rc, 1, rc);
+    const rpm = S.spindle ? S.rpmEff || S.rpm : 0;
+    if (rpm < 20) return;
+    if (rpm > 1600) warnOnce('polishRpm', 'Yüksek devir: zımpara bezi ısınır ve parçaya sarılabilir. 300–800 dev/dk yeter.', 'warn', 8000);
+    const G = GRIT[grit], vsF = clamp(Math.PI * 2 * R[ic] * rpm / 1000 / 100, 0.3, 2);
+    const n = Math.round(HALF / DZ), i0 = Math.max(startIdx, ic - n), i1 = Math.min(endIdx, ic + n);
+    let touched = false;
+    for (let i = i0; i <= i1; i++) {
+      if (!CUTO[i] || !hasMat(i) || (S.zone && i >= S.zone.i0 && i <= S.zone.i1)) continue;
+      const w = 1 - Math.abs(i - ic) / (n + 1);
+      R[i] = Math.max(Ri[i] + 0.05, R[i] - G.cut * vsF * w * dt);
+      const k = 1 - Math.exp(-G.k * vsF * w * dt);
+      RA[i] += (G.floor - RA[i]) * (RA[i] > G.floor ? k : k * 0.5);      // kaba kum ince yüzeyi yeniden çizer
+      CHO[i] *= Math.exp(-2 * w * dt);                                   // tırlama dalgaları silinir
+      if (RA[i] < 0.35) FRO[i] *= Math.exp(-3 * w * dt);                 // helis ilerleme izleri kaybolur
+      touched = true;
+    }
+    if (!touched) return;
+    markDirty(i0, i1);
+    S.polishNow = clamp(vsF, 0.3, 1.5); raNow = RA[ic]; S.lastRa = raNow;
+    S.temp += 0.04 * dt * vsF;
+    if (Math.random() < dt * 30) emit('dust', a0 + (Math.random() - .5) * HALF * 1.6, R[ic] * 0.6, R[ic] * 0.8, (Math.random() - .5) * 60, 30 + Math.random() * 60, 40 + Math.random() * 80, 0.8);
+    if (!mat.nonMetal && grit === '120' && Math.random() < dt * 6) emit('spark', a0, R[ic] * 0.5, R[ic] * 0.9, (Math.random() - .5) * 200, 80 + Math.random() * 120, 150 + Math.random() * 150, 0.25);
+  }
+  return { update, setOn };
 })();
 
 // Başlangıç

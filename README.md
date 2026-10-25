@@ -20,6 +20,7 @@ Tarayıcıda çalışan, 3B bir manuel torna tezgâhı simülasyonu ve oyunu. Te
 - **Görsel:** metallerde ortam yansıması, ilerlemeye göre görünen helis tornalama izleri, tırlama dalgaları, çelikte ısı rengi (saman → mavi), atölye lambası ve devir tablosu.
 - **Ses:** kayıt dosyası yok, tamamı fizikten üretiliyor. Devirle değişen motor uğultusu ve dişli vınlaması; malzemeye göre değişen kesme hışırtısı (alüminyum yumuşak, paslanmaz tiz, döküm çıtırtılı); tırlamada ötme; mil durunca yavaşça sönen ses; kırılmada metal çınlaması; kavrama, somun kolu ve çark çentiği tıkırtıları; küçük atölye yankısı.
 - **Talaş biçimi:** ilerleme ve pasoya göre değişir. İnce bitiş pasosunda ya da düşük ilerlemede uzun tel yumağı (parçaya sarılır), sınırda uzun spiral, uygun pencerede kısa kırık "6-9" ve C talaşı, çok ağır pasoda sıkı ve sıcak kıvrık; kanal kaleminde saat yayı, dökümde toz, pirinçte iğne, plastikte şerit. Durum panelinde canlı gösterilir; uzun talaşta nasıl kırılacağı yazılır.
+- **Zımpara ve cila:** Takımlar panelinden ya da P tuşuyla zımpara alınır (120, 240, 400 kum, keçe + pasta). Mil dönerken işlenmiş yüzeyin üstünde fareyi basılı tutup sürtünce yüzey parlar, işleme izleri kaybolur. Her kumun inebileceği bir Ra sınırı var ve kaba kum ince yüzeyi yeniden çizer. Tek yerde fazla durmak çapı küçültür.
 - **Soğutma ve partiküller:** eklemli hortum, dönen parçadan savrulan sıvı, buğu, spiral talaşlar, kırılma kıvılcımları, ısınma dumanı.
 - **Parça masası:** kesilen ya da aynadan sökülen parçalar ayrı bir masada döndürülerek incelenir; yarım kesit, dış/iç çap için kumpas (0.02 mm), boy ölçümü ve mikrometre (0.01 mm). Parça buradan aynaya düz ya da ters bağlanır.
 - **Ters bağlama:** parçanın profili, deliği ve diş helisi çevrilerek seçilen çıkıntıyla aynaya bağlanır; çeneler çapa göre kapanır.
@@ -41,4 +42,5 @@ Tarayıcıda çalışan, 3B bir manuel torna tezgâhı simülasyonu ve oyunu. Te
 | F | Otomatik boyuna ilerleme |
 | T | Somun kolu (diş çekme) |
 | C | Soğutma sıvısı |
+| P | Zımparayı al / bırak |
 | Esc | Acil stop: mil ve tüm hareketler |
