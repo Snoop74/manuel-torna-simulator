@@ -22,7 +22,7 @@
 - **Üst kızak:** U ekseni hareketi `um·cos(α)` Z'ye, `−um·sin(α)` X'e dağıtılır.
 
 - **Malzemeler:** `MATS` (kc, vcf, ff, rho, c, alpha, E, talaş tipi, renkler). `vcOf(T)` önerilen hızı malzemeye göre ölçekler; yük `kcR = (kc/700)^0.25` ile hafifçe artar (zorluk asıl olarak ff, vcf, aşınma ve güçte). `setMaterial(k)` parçayı yeniden renklendirir.
-- **Gerçekçilik:** uç aşınması `S.wear[]` (Taylor, vr^2.5) → Ra, çap ofseti `wearOff`, yük; ısı `S.temp` + `thermF` (taramalarda kalem konumu thermF'e bölünür, R soğuk geometridir); talaş sarılması `S.wrap` (+ `buildWrap` kuş yuvası); tırlama `chatterLimit()` lobları; el çarkı boşluğu `S.cs` vida konumu modeli; mil gücü `P_MAX`, `S.rpmEff`, boğulma.
+- **Gerçekçilik:** uç aşınması `S.wear[]` (Taylor, vr^2.5) → Ra, çap ofseti `wearOff`, yük; ısı `S.temp` + `thermF` (taramalarda kalem konumu thermF'e bölünür, R soğuk geometridir); talaş sarılması `S.wrap` (+ `buildWrap` kuş yuvası); tırlama `chatterLimit()` lobları; mil gücü `P_MAX`, `S.rpmEff`, boğulma.
 - **Görsel:** RoomEnvironment + ACES; `addMarks(material)` shader'ı `mark` özniteliğinden (ilerleme, Ra, tırlama) helis izi ve dalga çizer; `surfColor()` malzeme ve ısı rengi.
 
 - **Kılavuz/pafta:** `METRIC`, `applyTailSize()` (G5 matkap Ø, G6 kılavuz, G7 pafta). `tryTapDie()` temas kontrolleri ve `S.tap` (kovanı mil sürer: −dir·p·rpm), `tapCut()` dişi helis faz uzayında açar: pafta `Gr`/`S.zone`, kılavuz `GrI`/`S.zoneI` (iç diş, `threadRI`). Mil yönü `S.dir` (geri yönde kalemler kesmez, otomatik ilerleme ters döner).

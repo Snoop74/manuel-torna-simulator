@@ -649,7 +649,6 @@ let mat = MATS.al, matKey = 'al';
 const vcOf = T => T.vc * mat.vcf;
 // İstasyon başına işleme izleri: son kesmenin ilerlemesi (mm/dev), tırlama, ısı rengi, işlem sertleşmesi
 const FRO = new Float32Array(NS), FRI = new Float32Array(NS), CHO = new Float32Array(NS), TINT = new Float32Array(NS), HARD = new Uint8Array(NS);
-const BL = { z:0.05, x:0.025 };       // el çarkı boşluğu (x yarıçapta; çapta 0.05)
 const P_MAX = 4;                       // mil motoru (kW), 500 dev/dk altında sabit tork
 // Yüzey rengi: ham / işlenmiş (Ra'ya göre hafif matlaşır) ve çelikte ısı rengi (saman → mavi)
 function surfColor(Mt, cut, ra, tint, out) {
@@ -738,7 +737,7 @@ const S = {
   muted:false, job:null, zone:null, cutAcc:0, cutting:0, spinAng:0,
   stock:'short', u:0, tsAng:0, lastB:0, defl:0, deflNow:0, supported:false, lastPiece:null,
   mat:'al', temp:0, heatCap:500, thermF:1, wear:TOOLS.map(() => 0), wearT:TAILS.map(() => 0), wearOff:0, frNow:0, chatNow:0, tintNow:0, hardNow:false,
-  power:0, rpmEff:800, wrap:0, wrapA:100, cs:{ z:125, x:40 }, dir:1, tap:null, zoneI:null
+  power:0, rpmEff:800, wrap:0, wrapA:100, dir:1, tap:null, zoneI:null
 };
 const tool = () => TOOLS[S.tool];
 const tailT = () => TAILS[S.tail];
@@ -2541,13 +2540,7 @@ function motion(dt) {
   // Üst kızak: U ekseni kalemi açılı yönde götürür (konik tornalama)
   const tsa = S.tsAng * Math.PI / 180, um = jm.u + wm.u;
   let mz = jm.z + wm.z + az + um * Math.cos(tsa), mx = jm.x + wm.x + ax2 - um * Math.sin(tsa);
-  // El çarkı boşluğu: vida komut kadar döner, kızak ancak boşluk kapandıktan sonra takip eder.
-  // Yön değiştirince ilk 0.05 mm boşa gider; DRO kızağın gerçek konumunu gösterir.
-  const bz = BL.z / 2, bx = BL.x / 2, commanded = !!(mz || mx);
-  S.cs.z = clamp(S.cs.z, S.at - bz, S.at + bz) + mz;
-  S.cs.x = clamp(S.cs.x, S.rt - bx, S.rt + bx) + mx;
-  mz = (S.cs.z > S.at + bz ? S.cs.z - bz : S.cs.z < S.at - bz ? S.cs.z + bz : S.at) - S.at;
-  mx = (S.cs.x > S.rt + bx ? S.cs.x - bx : S.cs.x < S.rt - bx ? S.cs.x + bx : S.rt) - S.rt;
+  const commanded = !!(mz || mx);
   let blocked = false;
   if (mz || mx) {
     const step = S.halfNut ? 0.05 : 0.1;
